@@ -6,6 +6,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { setAppCookie } from "@/lib/userPreferences";
 import AuthFooter from "@/components/AuthFooter";
+import { Loader2 } from "lucide-react";
 
 const PiAuthPage = () => {
   const [piUser, setPiUser] = useState<{ uid: string; username: string } | null>(null);
@@ -193,9 +194,20 @@ const PiAuthPage = () => {
               <Button
                 onClick={handlePiAuth}
                 disabled={busyAuth}
-                className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]"
+                className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5] relative overflow-hidden"
               >
-                {busyAuth ? "Authenticating..." : "Authenticate with Pi"}
+                <div className="flex items-center justify-center gap-2">
+                  {busyAuth ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Authenticating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Authenticate with Pi</span>
+                    </>
+                  )}
+                </div>
               </Button>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {/* <Button

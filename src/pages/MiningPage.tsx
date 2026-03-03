@@ -236,7 +236,16 @@ const MiningPage = () => {
         }
 
         try {
-          // Use the exact same Pi ad flow as official Pi Platform documentation
+          // Follow official Pi Platform documentation exactly
+          await window.Pi.authenticate(["username"]);
+
+          if (window.Pi.nativeFeaturesList) {
+            const features = await window.Pi.nativeFeaturesList();
+            if (!features.includes("ad_network")) {
+              throw new Error("Pi Ad Network is not supported on this Pi Browser version");
+            }
+          }
+
           const isAdReadyResponse = await window.Pi.Ads.isAdReady("rewarded");
 
           if (isAdReadyResponse.ready === false) {
