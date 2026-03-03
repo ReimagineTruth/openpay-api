@@ -180,6 +180,9 @@ const PiAuthPage = () => {
             <p className="mt-1 text-sm text-gray-600">
               Connect your Pi account securely with Pi authentication.
             </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Note: OpenPay works in the Pi Browser.
+            </p>
             {!!searchParams.get("ref") && (
               <p className="mt-1 text-xs text-paypal-blue">
                 Referral code detected: {(searchParams.get("ref") || "").trim().toLowerCase()}
