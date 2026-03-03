@@ -56,7 +56,17 @@ const PiAuthPage = () => {
   const signInPiBackedAccount = async (piUid: string, piUsername: string, referralCode?: string) => {
     const piEmail = `pi_${piUid}@openpay.local`;
     const piPassword = `OpenPay-Pi-${piUid}-v1!`;
-    const piSignupUsername = `pi_${piUid.replace(/-/g, "").slice(0, 16)}`;
+    // Prefer Pi username when creating OpenPay account; fallback to uid-derived handle if missing
+    const cleanPiUsername = (piUsername || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    const piSignupUsername =
+      cleanPiUsername && cleanPiUsername.length >= 3
+        ? cleanPiUsername
+        : `pi_${piUid.replace(/-/g, "").slice(0, 16)}`;
     let created = false;
 
     const doSignIn = async () => {
@@ -100,6 +110,12 @@ const PiAuthPage = () => {
       const secondSignIn = await doSignIn();
       if (secondSignIn.error || !secondSignIn.session) {
         throw new Error(secondSignIn.error?.message || "Failed to sign in Pi account");
+      }
+      // Ensure profile/account records exist and reflect latest metadata
+      try {
+        await supabase.rpc("upsert_my_user_account" as any);
+      } catch {
+        // ignore best-effort
       }
       return { created };
     }
@@ -148,6 +164,11 @@ const PiAuthPage = () => {
       const {
         data: user,
       } = await supabase.auth.getUser();
+      try {
+        await supabase.rpc("upsert_my_user_account" as any);
+      } catch {
+        // ignore best-effort
+      }
 
       setPiUser({ uid: verified.uid, username });
       toast.success(`Authenticated as @${username}`);
@@ -213,18 +234,18 @@ const PiAuthPage = () => {
                 </div>
               </Button>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {/* <Button
+                <Button
                   asChild
                   variant="outline"
                   className="h-11 w-full rounded-2xl"
                 >
                   <Link to="/sign-in?mode=signin">Use Email Sign In</Link>
-                </Button> */}
+                </Button>
                 <Button
                   asChild
                   type="button"
                   variant="outline"
-                  className="h-11 w-full rounded-2xl sm:col-span-2"
+                  className="h-11 w-full rounded-2xl"
                 >
                   <a href="https://openpaylandingpage.vercel.app/" target="_blank" rel="noreferrer">
                     OpenPay Website
