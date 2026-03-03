@@ -180,11 +180,9 @@ export const saveCookieConsent = (consent: Partial<CookieConsentOptions>): void 
 export const hasAcceptedCookies = (): boolean => {
   if (typeof window === "undefined") return false;
   
-  const consent = loadCookieConsent();
+  // Check if user has ever made a consent decision
   const timestamp = localStorage.getItem(CONSENT_TIMESTAMP_KEY);
-  
-  // Check if user has made a consent decision
-  return timestamp !== null && (consent.functional || consent.analytics || consent.marketing);
+  return timestamp !== null;
 };
 
 export const canUseFunctionalCookies = (): boolean => {

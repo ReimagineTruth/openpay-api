@@ -56,7 +56,8 @@ export const CookieConsentProvider = ({ children }: CookieConsentProviderProps) 
       canUseMarketingCookies: canUseMarketing,
     });
 
-    // Show cookie dialog if no consent has been given
+    // Show cookie dialog only if no consent has been given at all
+    // Don't show again if user has already made a decision
     if (!hasConsent) {
       // Delay showing the dialog to allow page to load
       const timer = setTimeout(() => {
