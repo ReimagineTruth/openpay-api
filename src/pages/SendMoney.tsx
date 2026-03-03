@@ -552,11 +552,7 @@ const SendMoney = () => {
       setReceiptOpen(true);
       console.log('Receipt modal opened:', true);
       playSendSuccessSound();
-      if (usedFallback) {
-        toast.success(`${currency.symbol}${parseFloat(activeAmount).toFixed(2)} sent to ${activeUser?.full_name || "Unknown"}! (fallback route)`);
-      } else {
-        toast.success(`${currency.symbol}${parseFloat(activeAmount).toFixed(2)} sent to ${activeUser?.full_name || "Unknown"}!`);
-      }
+      toast.success(`${currency.symbol}${parseFloat(activeAmount).toFixed(2)} sent to ${activeUser?.full_name || "Unknown"}!`);
 
       // Clear the amount and note
       setAmount("");
@@ -605,8 +601,24 @@ const SendMoney = () => {
       .from("profiles").select("id, full_name, username, avatar_url").neq("id", user.id);
 
     if (profiles) {
-      setAllUsers(profiles);
-      setContacts(profiles.filter(p => contactIds.includes(p.id)));
+      let openpayProfile = profiles.find((p) => (p.username || "").toLowerCase() === "openpay") || null;
+      if (!openpayProfile) {
+        const { data: openpayRow } = await supabase
+          .from("profiles")
+          .select("id, full_name, username, avatar_url")
+          .eq("username", "openpay")
+          .single();
+        openpayProfile = openpayRow || null;
+      }
+      const combinedProfiles = openpayProfile && !profiles.some((p) => p.id === openpayProfile!.id)
+        ? [openpayProfile, ...profiles]
+        : profiles;
+      setAllUsers(combinedProfiles);
+      const baseContacts = profiles.filter(p => contactIds.includes(p.id));
+      const contactsWithDemo = openpayProfile && !baseContacts.some((p) => p.id === openpayProfile!.id)
+        ? [openpayProfile, ...baseContacts]
+        : baseContacts;
+      setContacts(contactsWithDemo);
     }
 
     const { data: txs } = await supabase

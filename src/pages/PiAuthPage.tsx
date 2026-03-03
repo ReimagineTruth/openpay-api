@@ -227,7 +227,7 @@ const PiAuthPage = () => {
                   className="h-11 w-full rounded-2xl sm:col-span-2"
                 >
                   <a href="https://openpaylandingpage.vercel.app/" target="_blank" rel="noreferrer">
-                    Landing Page
+                    OpenPay Website
                   </a>
                 </Button>
               </div>

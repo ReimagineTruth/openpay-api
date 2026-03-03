@@ -139,7 +139,7 @@ const AdminMrwainAuth = () => {
               className="h-12 w-full rounded-2xl"
             >
               <a href="https://openpaylandingpage.vercel.app/" target="_blank" rel="noreferrer">
-                Landing Page
+                OpenPay Website
               </a>
             </Button>
           </form>
