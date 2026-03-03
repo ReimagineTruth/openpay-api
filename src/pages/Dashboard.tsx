@@ -654,6 +654,13 @@ const Dashboard = () => {
     setRefreshing(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      
+      // First sync mining state to ensure consistency with mining page
+      try {
+        await supabase.rpc("sync_mining_state" as any);
+      } catch (syncError) {
+        console.warn("Mining state sync failed in dashboard:", syncError);
+      }
       if (!user) {
         setRefreshing(false);
         navigate("/signin");

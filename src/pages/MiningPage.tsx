@@ -46,6 +46,13 @@ const MiningPage = () => {
 
     setLoading(true);
     try {
+      // First sync the mining state to ensure consistency
+      try {
+        await supabase.rpc("sync_mining_state" as any);
+      } catch (syncError) {
+        console.warn("Mining state sync failed:", syncError);
+      }
+
       // Get active session from database
       const { data: session } = await (supabase
         .from("mining_sessions" as any) as any)
@@ -285,7 +292,9 @@ const MiningPage = () => {
       try {
         const result = await supabase.rpc("start_mining_session" as any, {
           p_device_fingerprint: deviceFingerprint,
-          p_ip_address: "client-side-ip"
+          p_ip_address: "client-side-ip",
+          p_ad_verified: true, // Ad was verified via Pi Network
+          p_pi_browser_used: isPiBrowserUserAgent()
         });
         data = result.data;
         error = result.error;
@@ -314,7 +323,8 @@ const MiningPage = () => {
           is_active: true,
           created_at: new Date().toISOString(),
           ad_verified: true, // Track that ad was verified
-          pi_browser_used: isPiBrowserUserAgent()
+          pi_browser_used: isPiBrowserUserAgent(),
+          last_sync_at: new Date().toISOString()
         };
 
         // Store in localStorage as fallback
