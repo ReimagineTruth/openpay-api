@@ -188,6 +188,27 @@ const MiningPage = () => {
     return () => clearInterval(interval);
   }, [activeSession]);
 
+  const verifyRewardedAd = async (adId: string) => {
+    const { data, error } = await supabase.functions.invoke("pi-platform", {
+      body: { action: "ad_verify", adId },
+    });
+    if (error) throw new Error(error.message || "Pi ad verification failed");
+
+    const payload = data as
+      | { success?: boolean; data?: any; rewarded?: boolean; error?: string }
+      | null;
+    if (!payload?.success || !payload.data) {
+      throw new Error(payload?.error || "Pi ad verification failed");
+    }
+
+    // Check if mediator_ack_status is "granted" according to Pi Platform docs
+    if (payload.data.mediator_ack_status !== "granted") {
+      throw new Error(`Ad verification status: ${payload.data.mediator_ack_status ?? "null"}`);
+    }
+
+    return payload;
+  };
+
   const handleStartMining = async () => {
     setStarting(true);
     try {
@@ -208,33 +229,18 @@ const MiningPage = () => {
         }
 
         try {
-          // Check for ad network support
-          if (window.Pi.nativeFeaturesList) {
-            const features = await window.Pi.nativeFeaturesList();
-            if (!features.includes("ad_network") || !window.Pi.Ads?.showAd) {
-              console.warn("Pi Ad Network not supported on this version or device");
+          // Use the exact same Pi ad flow as official Pi Platform documentation
+          const isAdReadyResponse = await window.Pi.Ads.isAdReady("rewarded");
+
+          if (isAdReadyResponse.ready === false) {
+            const requestAdResponse = await window.Pi.Ads.requestAd("rewarded");
+
+            if (requestAdResponse.result === "ADS_NOT_SUPPORTED") {
               toast.error("Pi Ad Network not supported. Please update Pi Browser.");
               setStarting(false);
               return;
             }
-          }
 
-          // Advanced ad flow with proper verification
-          toast.info("Preparing rewarded ad...");
-          
-          // Check if ad is ready
-          const isAdReadyResponse = await window.Pi.Ads.isAdReady("rewarded");
-          
-          if (isAdReadyResponse.ready === false) {
-            // Try to request ad if not ready
-            const requestAdResponse = await window.Pi.Ads.requestAd("rewarded");
-            
-            if (requestAdResponse.result === "ADS_NOT_SUPPORTED") {
-              toast.error("Ads not supported. Please update Pi Browser.");
-              setStarting(false);
-              return;
-            }
-            
             if (requestAdResponse.result !== "AD_LOADED") {
               toast.error("Ads temporarily unavailable. Please try again later.");
               setStarting(false);
@@ -242,38 +248,27 @@ const MiningPage = () => {
             }
           }
 
-          // Show the rewarded ad
           const showAdResponse = await window.Pi.Ads.showAd("rewarded");
-          
-          if (showAdResponse.result !== "AD_REWARDED") {
-            toast.error("Ad not completed. You must watch the full video to start mining.");
-            setStarting(false);
-            return;
-          }
 
-          // Get adId for verification
-          const adId = showAdResponse.adId;
-          if (!adId) {
-            toast.error("Ad verification failed. Please try again.");
-            setStarting(false);
-            return;
-          }
+          if (showAdResponse.result === "AD_REWARDED") {
+            if (!showAdResponse.adId) {
+              throw new Error("Rewarded ad returned no adId. Verification is required before granting rewards.");
+            }
 
-          toast.success("Ad completed! Verifying and starting mining...");
-          
-          // Verify ad with backend before proceeding (in a real app)
-          // For now, we'll proceed with the assumption that verification passed
-          // In production, you should call your backend to verify the adId
-          // const verificationResult = await verifyRewardedAd(adId);
-          // if (!verificationResult.granted) {
-          //   toast.error("Ad verification failed. Please contact support.");
-          //   setStarting(false);
-          //   return;
-          // }
+            // Verify ad with backend according to Pi Platform docs
+            const verification = await verifyRewardedAd(showAdResponse.adId);
+            if (verification.data?.mediator_ack_status === "granted") {
+              toast.success("Rewarded ad verified successfully! Starting mining...");
+            } else {
+              throw new Error(`Ad verification status: ${verification.data?.mediator_ack_status ?? "null"}`);
+            }
+          } else {
+            throw new Error(`Ad result: ${showAdResponse.result}. You must watch the full video to start mining.`);
+          }
           
         } catch (adError) {
           console.error("Pi Ad Network error:", adError);
-          toast.error("Ad Network error. Please try again.");
+          toast.error(adError instanceof Error ? adError.message : "Ad Network error. Please try again.");
           setStarting(false);
           return;
         }
