@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ type AdVerifyResult = {
 
 const PiAdsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState<string>("");
 
@@ -77,12 +78,24 @@ const PiAdsPage = () => {
       }
 
       toast.success("Rewarded ad verified successfully");
+      const returnTo = searchParams.get("returnTo");
+      if (returnTo) {
+        navigate(decodeURIComponent(returnTo), { replace: true });
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Rewarded ad flow failed");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const auto = searchParams.get("auto") === "1";
+    const from = searchParams.get("from");
+    if (auto || from === "mining") {
+      void handleWatchRewardedAd();
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-background px-4 pt-4">
@@ -94,9 +107,9 @@ const PiAdsPage = () => {
       </div>
 
       <div className="paypal-surface mt-8 rounded-3xl p-6">
-        <h2 className="text-xl font-semibold text-foreground">Rewarded Ad Test</h2>
+        <h2 className="text-xl font-semibold text-foreground">Watch Rewarded Ad</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          This runs the full Pi rewarded ad workflow and verifies `adId` on the backend.
+          Watch a rewarded ad. When it finishes and verifies, you'll be returned to Mining automatically.
         </p>
 
         <Button

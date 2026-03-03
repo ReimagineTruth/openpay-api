@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Play, Timer, TrendingUp, Users, History, AlertCircle, CheckCircle2, Zap, Cpu, CircleDollarSign, ShieldCheck, Pickaxe } from "lucide-react";
 // Forced refresh to clear stale state
 import { toast } from "sonner";
@@ -39,6 +39,7 @@ type AdVerifyResult = {
 const MiningPage = () => {
   const navigate = useNavigate();
   const { format: formatCurrency } = useCurrency();
+  const [searchParams] = useSearchParams();
   const [lastAdRunAt, setLastAdRunAt] = useState(0);
   const [piSdkInitialized, setPiSdkInitialized] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -46,6 +47,7 @@ const MiningPage = () => {
   const [adModalOpen, setAdModalOpen] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const adResolveRef = useRef<((v: boolean) => void) | null>(null);
+  const [adImgError, setAdImgError] = useState(false);
   const [activeSession, setActiveSession] = useState<MiningSession | null>(null);
   const [claimableSession, setClaimableSession] = useState<MiningSession | null>(null);
   const [rewards, setRewards] = useState<MiningReward[]>([]);
@@ -235,6 +237,13 @@ const MiningPage = () => {
 
   const sandbox = String(import.meta.env.VITE_PI_SANDBOX || "false").toLowerCase() === "true";
 
+  useEffect(() => {
+    const ad = (searchParams.get("ad") || "").toLowerCase();
+    if (ad === "rewarded" && timeLeft <= 0 && !starting && !loading) {
+      void handleStartMining({ auto: true });
+    }
+  }, [searchParams, timeLeft, starting, loading]);
+
   const initPi = () => {
     if (!window.Pi) {
       toast.error("Pi SDK not loaded. Open this app in Pi Browser.");
@@ -310,8 +319,9 @@ const MiningPage = () => {
     const isAuto = Boolean(options?.auto);
     setStarting(true);
     try {
-      // Always require an ad step before mining
-      if (isPiBrowserUserAgent()) {
+      // Always require an ad step before mining unless already verified
+      const skipAd = (searchParams.get("ad") || "").toLowerCase() === "rewarded";
+      if (isPiBrowserUserAgent() && !skipAd) {
         try {
           await runRewardedAd();
           if (!isAuto) {
@@ -325,12 +335,9 @@ const MiningPage = () => {
           setStarting(false);
           return;
         }
-      } else {
+      } else if (!skipAd) {
         const ok = await runSimulatedAd();
-        if (!ok) {
-          setStarting(false);
-          return;
-        }
+        if (!ok) { setStarting(false); return; }
       }
 
       // Basic anti-cheat: in a real app, use a proper fingerprinting library
@@ -783,19 +790,53 @@ const MiningPage = () => {
           <div className="mt-2 text-sm text-muted-foreground">
             Please watch this short ad to unlock your mining session.
           </div>
-          <div className="mt-4 h-32 rounded-xl bg-secondary/50 flex items-center justify-center text-muted-foreground">
+          <div className="mt-4 h-40 w-full overflow-hidden rounded-xl bg-secondary/40">
+            {adImgError ? (
+              <div className="flex h-full w-full items-center justify-center gap-2 text-muted-foreground">
+                <BrandLogo className="h-6 w-6 text-paypal-blue" />
+                <span className="text-sm font-semibold">OpenApp</span>
+              </div>
+            ) : (
+              <img
+                src="https://i.ibb.co/67FqBTmD/photo-2026-03-02-01-43-56.jpg"
+                alt="OpenApp — Discover Pi Ecosystem apps"
+                className="h-full w-full object-cover"
+                loading="eager"
+                referrerPolicy="no-referrer"
+                onError={() => setAdImgError(true)}
+              />
+            )}
+          </div>
+          <div className="mt-3">
+            <p className="text-base font-semibold text-foreground">OpenApp — Discover Pi apps</p>
+            <p className="text-sm text-muted-foreground">
+              Explore and launch applications built within the Pi ecosystem. Find trending apps, categories, and more.
+            </p>
+          </div>
+          <div className="mt-2 h-10 rounded-xl bg-secondary/50 flex items-center justify-center text-muted-foreground text-sm">
             Ad playing... {adCountdown}s
           </div>
+          <Button asChild variant="outline" className="mt-3 w-full rounded-2xl">
+            <a
+              href="https://openapp7296.pinet.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open App
+            </a>
+          </Button>
           <div className="mt-4">
             <Button
               className="w-full rounded-2xl"
               disabled={adCountdown > 0}
               onClick={() => {
+                const ret = encodeURIComponent("/mining?ad=rewarded");
                 setAdModalOpen(false);
                 if (adResolveRef.current) {
-                  adResolveRef.current(true);
+                  adResolveRef.current(false);
                   adResolveRef.current = null;
                 }
+                navigate(`/pi-ads?from=mining&auto=1&returnTo=${ret}`, { replace: true });
               }}
             >
               Continue

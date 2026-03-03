@@ -1,11 +1,63 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Store, CreditCard, QrCode, Link2, BookOpen, Wallet, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const OPENAPP_URL = "https://openapp7296.pinet.com/";
 
 const OpenAppPage = () => {
   const navigate = useNavigate();
+
+  const apps = [
+    {
+      icon: Store,
+      title: "Merchant POS",
+      category: "Business",
+      description: "In-person checkout with QR and session receipts.",
+      action: () => navigate("/merchant-pos"),
+    },
+    {
+      icon: Link2,
+      title: "Payment Links",
+      category: "Business",
+      description: "Create and share remote payment links.",
+      action: () => navigate("/payment-links/create"),
+    },
+    {
+      icon: BookOpen,
+      title: "Merchant Onboarding",
+      category: "Business",
+      description: "Set up store profile, products, and payouts.",
+      action: () => navigate("/merchant-onboarding"),
+    },
+    {
+      icon: CreditCard,
+      title: "Virtual Card",
+      category: "Utility",
+      description: "Set up virtual card for spend routing.",
+      action: () => navigate("/virtual-card"),
+    },
+    {
+      icon: QrCode,
+      title: "Public Wallet Pay",
+      category: "Utility",
+      description: "Accept wallet payments via public payment page.",
+      action: () => navigate("/public-payment"),
+    },
+    {
+      icon: Wallet,
+      title: "OpenPay Official",
+      category: "Explore",
+      description: "Overview of features and supported flows.",
+      action: () => navigate("/openpay-official"),
+    },
+    {
+      icon: Globe,
+      title: "OpenApp Directory",
+      category: "Explore",
+      description: "Discover apps in the Pi ecosystem.",
+      action: () => window.open(OPENAPP_URL, "_blank", "noopener,noreferrer"),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background px-4 pt-4 pb-10">
@@ -69,6 +121,28 @@ const OpenAppPage = () => {
             Pioneers, and handle merchant checkout in real-world scenarios. OpenPay is built for stable day-to-day use and
             supports physical, digital, and online payments.
           </p>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <h2 className="mb-3 text-lg font-bold text-paypal-dark">Features</h2>
+        <div className="grid gap-3 md:grid-cols-2">
+          {apps.map(({ icon: Icon, title, category, description, action }) => (
+            <div key={title} className="paypal-surface flex items-center justify-between rounded-2xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-paypal-blue/10">
+                  <Icon className="h-5 w-5 text-paypal-blue" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">{title}</p>
+                  <p className="text-xs text-muted-foreground">{category} · {description}</p>
+                </div>
+              </div>
+              <Button variant="outline" className="h-9 rounded-xl" onClick={action}>
+                Open
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
