@@ -193,7 +193,7 @@ const AppRoutes = () => {
         <Route path="/openpay-desktop" element={<OpenPayDesktopPage />} />
         <Route path="/live-customer-service" element={<LiveCustomerServicePage />} />
         <Route path="/support" element={<></>} />
-        <Route path="/swap-withdrawal" element={<SwapWithdrawalPage />} />
+        {/* <Route path="/swap-withdrawal" element={<SwapWithdrawalPage />} /> */}
         <Route path="/confirm-pin" element={<ConfirmPinPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

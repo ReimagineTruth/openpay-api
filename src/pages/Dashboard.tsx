@@ -245,7 +245,8 @@ const Dashboard = () => {
   const [remittanceTxCount, setRemittanceTxCount] = useState(0);
   const [remittanceMonthIncome, setRemittanceMonthIncome] = useState(0);
   const [userAccount, setUserAccount] = useState<UserAccount | null>(null);
-  const [lastAdRunAt, setLastAdRunAt] = useState<number>(0);
+  const [lastAdRunAt, setLastAdRunAt] = useState(0);
+  const [piSdkInitialized, setPiSdkInitialized] = useState(false);
   const [activeSection, setActiveSection] = useState<DashboardSection>("wallet");
   const [savings, setSavings] = useState<SavingsDashboard | null>(null);
   const [savingsTransfers, setSavingsTransfers] = useState<SavingsTransferActivity[]>([]);
@@ -289,7 +290,6 @@ const Dashboard = () => {
   const [virtualCardActive, setVirtualCardActive] = useState(false);
   const [hideCardPreviewDetails, setHideCardPreviewDetails] = useState(false);
   const [buySpendAmount, setBuySpendAmount] = useState("");
-  const [swapSpendAmount, setSwapSpendAmount] = useState("");
   const buyFiatCurrency = "PI";
   const [buyOnrampProvider, setBuyOnrampProvider] = useState<BuyOnrampProvider>("Pi Payment");
   const [buyPaymentMethod, setBuyPaymentMethod] = useState<BuyPaymentMethod>("Pi Payment");
@@ -345,7 +345,7 @@ const Dashboard = () => {
     const { data: { user } } = await supabase.auth.getUser();
     const settings = user ? loadAppSecuritySettings(user.id) : null;
     
-    if (settings?.pinHash && actionName !== "handleSwapOpenUsd") {
+    if (settings?.pinHash) {
       if (
         (actionName === "handleMoveWalletToSavings" && (!Number.isFinite(Number(savingsAmount)) || Number(savingsAmount) <= 0)) ||
         (actionName === "handleMoveSavingsToWallet" && (!Number.isFinite(Number(withdrawAmount)) || Number(withdrawAmount) <= 0)) ||
@@ -364,7 +364,6 @@ const Dashboard = () => {
       if (actionName === "handlePayLoan") actionData.loanPaymentAmount = Number(loanPaymentAmount);
       if (actionName === "handleMoveMerchantToSavings") actionData.merchantSavingsAmount = Number(merchantSavingsAmount);
       if (actionName === "handleMoveMerchantToWallet") actionData.merchantWithdrawAmount = Number(merchantWithdrawAmount);
-      if (actionName === "handleSwapOpenUsd") actionData.swapSpendAmount = Number(swapSpendAmount);
 
       navigate("/confirm-pin", { 
         state: { 
@@ -403,7 +402,6 @@ const Dashboard = () => {
         else if (actionName === "handleMoveMerchantToSavings") void handleMoveMerchantToSavings(data.merchantSavingsAmount);
         else if (actionName === "handleMoveMerchantToWallet") void handleMoveMerchantToWallet(data.merchantWithdrawAmount);
         else if (actionName === "handlePayLoan") void handlePayLoan(data.loanPaymentAmount);
-        else if (actionName === "handleSwapOpenUsd") void handleSwapOpenUsd(data.swapSpendAmount);
 
         // Also update local state so UI is consistent
         if (data?.savingsAmount) setSavingsAmount(data.savingsAmount);
@@ -411,7 +409,6 @@ const Dashboard = () => {
         if (data?.loanPaymentAmount) setLoanPaymentAmount(data.loanPaymentAmount);
         if (data?.merchantSavingsAmount) setMerchantSavingsAmount(data.merchantSavingsAmount);
         if (data?.merchantWithdrawAmount) setMerchantWithdrawAmount(data.merchantWithdrawAmount);
-        if (data?.swapSpendAmount) setSwapSpendAmount(data.swapSpendAmount);
 
         // Clear location state immediately to prevent re-execution
         navigate(location.pathname + location.search, { replace: true, state: {} });
@@ -1028,6 +1025,7 @@ const Dashboard = () => {
 
       try {
         window.Pi.init({ version: "2.0", sandbox });
+        setPiSdkInitialized(true);
 
         if (window.Pi.nativeFeaturesList) {
           const features = await window.Pi.nativeFeaturesList();
@@ -1287,19 +1285,6 @@ const Dashboard = () => {
     await loadDashboard();
   };
 
-  const handleSwapOpenUsd = async (overrideAmount?: number) => {
-    const amount = overrideAmount || Number(swapSpendAmount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error("Enter a valid amount");
-      return;
-    }
-    if (amount < 10) {
-      toast.error("Minimum swap is 10 OPEN USD");
-      return;
-    }
-    const amountForSwap = Math.max(0.01, Number(amount.toFixed(2)));
-    navigate(`/swap-withdrawal?amount=${amountForSwap.toFixed(2)}`);
-  };
 
   const selectedMerchantBalance = merchantBalances[merchantMode];
   const walletCardAmount = walletView === "personal"
@@ -1429,11 +1414,6 @@ const Dashboard = () => {
       ? buyOpenUsdAmount.toFixed(isEwalletBuyFlow ? 6 : 2)
       : "0.00";
   const buyOpenUsdMeetsMinimum = buyOpenUsdAmount >= 1;
-  const parsedSwapSpend = Number(swapSpendAmount);
-  const safeSwapSpend = Number.isFinite(parsedSwapSpend) && parsedSwapSpend > 0 ? parsedSwapSpend : 0;
-  const swapOpenUsdAmount = safeSwapSpend;
-  const swapOpenUsdDisplay = swapOpenUsdAmount > 0 ? swapOpenUsdAmount.toFixed(2) : "0.00";
-  const swapOpenUsdMeetsMinimum = swapOpenUsdAmount >= 10;
   const handleBuyOpenUsd = () => {
     if (safeBuySpend <= 0) {
       toast.error("Enter a valid amount");
@@ -1476,13 +1456,6 @@ const Dashboard = () => {
 
   const openBuyOptions = () => setShowBuyOptions(true);
 
-  const getSwapWithdrawalUrl = () => {
-    if (Number.isFinite(safeSwapSpend) && safeSwapSpend > 0) {
-      const amountForSwap = Math.max(0.01, Number(swapOpenUsdAmount.toFixed(2)));
-      return `/swap-withdrawal?amount=${amountForSwap.toFixed(2)}`;
-    }
-    return "/swap-withdrawal";
-  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background pb-28">
@@ -1587,10 +1560,10 @@ const Dashboard = () => {
             : activeSection === "buy"
               ? "Buy OpenUSD"
               : activeSection === "swap"
-                ? "Swap OpenUSD"
+                ? "Mining"
                 : activeSection === "analytics"
                   ? "Analytics Dashboard"
-                  : `${getGreeting()}, ${userName.split(" ")[0] || "there"}!`}
+                  : `${getGreeting()}, ${userName.split(" ")[0] || "there"}`}
         </h1>
         {activeSection !== "cards" && activeSection !== "buy" && activeSection !== "swap" && activeSection !== "analytics" && username && (
           <p className="text-base text-muted-foreground">@{username}</p>
@@ -1607,7 +1580,7 @@ const Dashboard = () => {
               { key: "loans", label: "Loans" },
               { key: "cards", label: "Cards" },
               { key: "buy", label: "Buy" },
-              { key: "swap", label: "Swap" },
+              { key: "swap", label: "Mining" },
               { key: "analytics", label: "Analytics" },
             ] as Array<{ key: DashboardSection; label: string }>).map((item) => (
               <button
@@ -1639,19 +1612,17 @@ const Dashboard = () => {
                 <p className="text-base text-white/85">Savings balance</p>
               </div>
             </div>
-            <div className="mt-4 grid gap-2 text-white/90 sm:grid-cols-3">
-              <div className="rounded-xl bg-white/10 px-3 py-2">
-                <p className="text-xs uppercase tracking-wide text-white/80">Wallet balance</p>
-                <p className="text-base font-semibold">{balanceHidden ? "****" : formatCurrency(savings?.wallet_balance ?? balance)}</p>
-              </div>
-              <div className="rounded-xl bg-white/10 px-3 py-2">
-                <p className="text-xs uppercase tracking-wide text-white/80">Savings balance</p>
-                <p className="text-base font-semibold">{balanceHidden ? "****" : formatCurrency(savings?.savings_balance ?? 0)}</p>
-              </div>
-              <div className="rounded-xl bg-white/10 px-3 py-2">
-                <p className="text-xs uppercase tracking-wide text-white/80">Estimated APY</p>
-                <p className="text-base font-semibold">{(savings?.apy ?? 0).toFixed(2)}%</p>
-              </div>
+            <div className="mt-4 rounded-2xl bg-white p-4 text-paypal-dark">
+              <p className="text-sm text-muted-foreground">Wallet balance</p>
+              <p className="mt-1 text-base font-semibold">{balanceHidden ? "****" : formatCurrency(savings?.wallet_balance ?? balance)}</p>
+            </div>
+            <div className="mt-4 rounded-2xl bg-white p-4 text-paypal-dark">
+              <p className="text-sm text-muted-foreground">Savings balance</p>
+              <p className="mt-1 text-base font-semibold">{balanceHidden ? "****" : formatCurrency(savings?.savings_balance ?? 0)}</p>
+            </div>
+            <div className="mt-4 rounded-2xl bg-white p-4 text-paypal-dark">
+              <p className="text-sm text-muted-foreground">Estimated APY</p>
+              <p className="mt-1 text-base font-semibold">{(savings?.apy ?? 0).toFixed(2)}%</p>
             </div>
             <div className="mt-4 flex justify-end">
               <button
@@ -1719,19 +1690,18 @@ const Dashboard = () => {
         <div className="mx-4 mt-4 space-y-4">
           <div className="paypal-surface rounded-3xl p-4">
             <div className="rounded-2xl bg-gradient-to-br from-paypal-blue to-[#2f67dc] p-4 text-white shadow-xl shadow-[#004bba]/25">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <HandCoins className="h-5 w-5 text-white" />
-                <h2 className="text-xl font-bold">Credit Overview</h2>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xl font-semibold">Credit Overview</p>
               </div>
-              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+              <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">
                 {currencyTag}
               </span>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-white p-4 text-paypal-dark">
-              <p className="text-sm text-muted-foreground">Credit score</p>
-              <p className="mt-1 text-5xl font-bold">{creditScoreDisplay}</p>
+            <div className="mt-4 rounded-2xl bg-white/10 p-4">
+              <p className="text-sm text-white/80">Credit score</p>
+              <p className="mt-2 text-5xl font-bold">{creditScoreDisplay}</p>
               <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
                   className="h-full rounded-full bg-emerald-500"
@@ -1984,7 +1954,7 @@ const Dashboard = () => {
         <div className="mx-4 mt-4 space-y-4">
         <div className="paypal-surface rounded-3xl p-4">
           <div className="rounded-2xl bg-gradient-to-br from-paypal-blue to-[#2f67dc] p-4 text-white shadow-xl shadow-[#004bba]/25">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xl font-semibold">OpenPay Cards</p>
             </div>
@@ -2227,71 +2197,73 @@ const Dashboard = () => {
         <div className="mx-4 mt-4 space-y-4">
           <div className="paypal-surface rounded-3xl p-4">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-xl font-semibold text-foreground">Swap</p>
-              <span className="rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">OPEN USD to PI</span>
+              <p className="text-xl font-semibold text-foreground">Mining</p>
+              <span className="rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">Earn OPEN USD</span>
             </div>
 
             <div className="space-y-3">
-              <div className="rounded-2xl bg-secondary/50 p-4">
-                <p className="text-sm text-muted-foreground">You spend (OPEN USD amount)</p>
+              <div className="rounded-2xl bg-gradient-to-br from-paypal-blue/20 to-[#0073e6]/20 p-4">
+                <p className="text-sm text-muted-foreground">Current Mining Balance</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <input
-                    value={swapSpendAmount}
-                    onChange={(e) => setSwapSpendAmount(e.target.value)}
-                    type="number"
-                    min="10"
-                    step="0.01"
-                    placeholder="Custom amount (min 10)"
-                    className="h-10 w-full bg-transparent text-4xl font-semibold text-foreground outline-none"
-                  />
+                  <p className="text-4xl font-semibold text-foreground">{miningBalance.toFixed(2)}</p>
                   <span className="inline-flex h-11 items-center rounded-xl bg-white px-3 text-sm font-semibold text-foreground">OPEN USD</span>
                 </div>
-                <p className="mt-2 text-xs font-medium text-foreground">1 OPEN USD = 1 PI</p>
+                <p className="mt-2 text-xs font-medium text-foreground">Earned through mining</p>
               </div>
 
               <div className="rounded-2xl bg-secondary/50 p-4">
-                <p className="text-sm text-muted-foreground">You get (PI amount)</p>
+                <p className="text-sm text-muted-foreground">Mining Status</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <p className="text-4xl font-semibold text-foreground">{swapOpenUsdDisplay}</p>
-                  <span className="inline-flex h-11 items-center rounded-xl bg-white px-3 text-sm font-semibold text-foreground">PI</span>
+                  <div className="flex items-center gap-2">
+                    <div className={`h-3 w-3 rounded-full ${activeMiningSession ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
+                    <span className="text-lg font-semibold text-foreground">
+                      {activeMiningSession ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  {miningTimeLeft > 0 && (
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {Math.floor(miningTimeLeft / 3600)}h {Math.floor((miningTimeLeft % 3600) / 60)}m
+                    </span>
+                  )}
                 </div>
-                <p className="mt-2 text-xs font-medium text-foreground">1 OPEN USD = 1 PI</p>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-3 text-sm text-muted-foreground">
-                  <p>1 PI ~ 1.0000 OUSD</p>
-                  <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                    By OpenPay Balance
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {activeMiningSession 
+                    ? "Mining session is active. Keep earning!" 
+                    : "Start a new mining session to earn OPEN USD"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Mining Rate</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
+                    <Pickaxe className="h-5 w-5 text-paypal-blue" />
+                    0.10 OPEN USD / day
                   </span>
                 </div>
               </div>
             </div>
-
-            <p className="mt-4 text-base text-foreground">Pay using</p>
-            <div className="mt-2 flex h-14 w-full items-center justify-between rounded-2xl border border-border/70 bg-white px-4">
-              <span className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
-                <CircleDollarSign className="h-5 w-5 text-paypal-blue" />
-                OpenPay Balance
-              </span>
-            </div>
             <button
               type="button"
-              onClick={() => handleProtectedAction(handleSwapOpenUsd, "handleSwapOpenUsd")}
-              disabled={!swapOpenUsdMeetsMinimum}
-              className="mt-3 h-11 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white hover:bg-[#004dc5] disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => navigate("/mining")}
+              className="mt-3 h-11 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white hover:bg-[#004dc5] transition-colors"
             >
-              Swap OpenUSD to PI
+              {activeMiningSession ? "Manage Mining" : "Start Mining"}
             </button>
             <button
               type="button"
-              onClick={() => navigate(getSwapWithdrawalUrl())}
+              onClick={() => navigate("/mining")}
               className="mt-2 h-11 w-full rounded-xl border border-paypal-blue/40 bg-white text-sm font-semibold text-paypal-blue"
             >
-              Withdraw OpenUSD to PI Wallet
+              View Mining History
             </button>
             <p className="mt-2 text-xs text-muted-foreground">
-              Minimum swap: 10 OPEN USD. Swap uses OpenPay balance and is processed by admin approval.
+              Mining runs 24 hours. Earn 0.10 OPEN USD daily.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Stable mode enabled: 1 OPEN USD = 1 PI.
+              Powered by OpenPay Network.
             </p>
           </div>
         </div>
@@ -3029,10 +3001,10 @@ const Dashboard = () => {
               className="rounded-2xl border border-border/70 bg-secondary/50 p-3 text-center transition hover:bg-secondary"
             >
               <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-white">
-                <RefreshCw className="h-5 w-5 text-paypal-blue" />
+                <Pickaxe className="h-5 w-5 text-paypal-blue" />
               </div>
-              <p className="text-sm font-semibold text-foreground">Swap</p>
-              <p className="text-xs text-muted-foreground">PI to OpenUSD</p>
+              <p className="text-sm font-semibold text-foreground">Mining</p>
+              <p className="text-xs text-muted-foreground">Earn OpenUSD</p>
             </button>
           </div>
         </DialogContent>
