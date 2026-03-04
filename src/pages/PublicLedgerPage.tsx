@@ -72,7 +72,22 @@ const PublicLedgerPage = () => {
     return `PI ${upper}`;
   };
 
-  const renderProfile = (name?: string, avatar?: string, username?: string) => {
+  const formatAmountWithCurrency = (amount: number, code: string) => {
+    const upper = String(code || "OUSD").toUpperCase();
+    const meta = currencies.find((currency) => currency.code === upper);
+    const symbol = meta?.symbol || (upper === "PI" ? "Ãâ‚¬" : "$");
+    const label = getPiCodeLabel(upper);
+    const flag = meta?.flag || (upper === "PI" ? "PI" : "OP");
+    return `${flag} ${label} ${symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const renderProfile = (
+    name?: string,
+    avatar?: string,
+    username?: string,
+    amount?: number,
+    currencyCode?: string
+  ) => {
     if (!name && !username) return null;
     return (
       <div className="flex items-center gap-2">
@@ -84,8 +99,15 @@ const PublicLedgerPage = () => {
           </div>
         )}
         <div className="flex flex-col">
-          <span className="text-[11px] font-semibold text-foreground leading-tight">{name || username}</span>
+          <span className="text-[11px] font-semibold text-foreground leading-tight">
+            {name || (username ? `@${username}` : "")}
+          </span>
           {username && name && <span className="text-[9px] text-muted-foreground leading-tight">@{username}</span>}
+          {Number.isFinite(amount) && currencyCode && (
+            <span className="text-[9px] text-muted-foreground leading-tight">
+              {formatAmountWithCurrency(Number(amount), currencyCode)}
+            </span>
+          )}
         </div>
       </div>
     );
@@ -199,7 +221,7 @@ const PublicLedgerPage = () => {
             const currencyCode = String(row.currency_code || "OUSD").toUpperCase();
             const currencyMeta = currencies.find((currency) => currency.code === currencyCode);
             const currencyFlag = currencyMeta?.flag || (currencyCode === "PI" ? "PI" : "OP");
-            const currencySymbol = currencyMeta?.symbol || (currencyCode === "PI" ? "π" : "$");
+            const currencySymbol = currencyMeta?.symbol || (currencyCode === "PI" ? "Ï€" : "$");
             const currencyLabel = getPiCodeLabel(currencyCode);
             const senderCurrencyCode = String(row.sender_currency_code || row.payload?.sender_currency_code || currencyCode || "OUSD").toUpperCase();
             const receiverCurrencyCode = String(row.receiver_currency_code || row.payload?.receiver_currency_code || currencyCode || "OUSD").toUpperCase();
@@ -209,8 +231,8 @@ const PublicLedgerPage = () => {
             const receiverAmountValue = Number(receiverAmountRaw || 0);
             const senderMeta = currencies.find((currency) => currency.code === senderCurrencyCode);
             const receiverMeta = currencies.find((currency) => currency.code === receiverCurrencyCode);
-            const senderSymbol = senderMeta?.symbol || (senderCurrencyCode === "PI" ? "π" : "$");
-            const receiverSymbol = receiverMeta?.symbol || (receiverCurrencyCode === "PI" ? "π" : "$");
+            const senderSymbol = senderMeta?.symbol || (senderCurrencyCode === "PI" ? "Ï€" : "$");
+            const receiverSymbol = receiverMeta?.symbol || (receiverCurrencyCode === "PI" ? "Ï€" : "$");
             const senderFlag = senderMeta?.flag || (senderCurrencyCode === "PI" ? "PI" : "OP");
             const receiverFlag = receiverMeta?.flag || (receiverCurrencyCode === "PI" ? "PI" : "OP");
             const senderLabel = getPiCodeLabel(senderCurrencyCode);
@@ -220,7 +242,17 @@ const PublicLedgerPage = () => {
             const primaryName = row.receiver_name || row.sender_name || "";
             const primaryAvatar = row.receiver_avatar || row.sender_avatar || "";
             const primaryUsername = row.receiver_username || row.sender_username || "";
-            const numericAmount = Number(row.amount || 0);
+            const numericAmount = Number(row.amount ?? receiverAmountValue ?? senderAmountValue ?? 0);
+            const displayAmountValue = Number.isFinite(receiverAmountValue)
+              ? receiverAmountValue
+              : Number.isFinite(senderAmountValue)
+                ? senderAmountValue
+                : numericAmount;
+            const displayCurrencySymbol = Number.isFinite(receiverAmountValue)
+              ? receiverSymbol
+              : Number.isFinite(senderAmountValue)
+                ? senderSymbol
+                : currencySymbol;
             const amountClass =
               numericAmount > 0
                 ? "text-green-600"
@@ -262,25 +294,41 @@ const PublicLedgerPage = () => {
                           {currencyFlag} {currencyLabel}
                         </span>
                       )}
-                      {(primaryName || primaryUsername) && (
+                      {(row.sender_name || row.sender_username || row.receiver_name || row.receiver_username) && (
                         <span className="text-[11px] font-semibold text-muted-foreground">
-                          • {primaryName || `@${primaryUsername}`}
+                          â€¢ {(row.sender_name || row.sender_username || "Sender")}
+                          {" â†’ "}
+                          {(row.receiver_name || row.receiver_username || "Receiver")}
                         </span>
                       )}
                     </div>
                     <p className="text-[10px] text-muted-foreground">
-                      {format(new Date(row.occurred_at), "MMM d, yyyy HH:mm")} • {(row.event_type || "").replace(/_/g, " ")}
+                      {format(new Date(row.occurred_at), "MMM d, yyyy HH:mm")} â€¢ {(row.event_type || "").replace(/_/g, " ")}
                     </p>
                     {showTransferAmounts && (
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        Sender: {senderFlag} {senderLabel} {senderSymbol}{senderAmountValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} → Receiver: {receiverFlag} {receiverLabel} {receiverSymbol}{receiverAmountValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        Sender: {senderFlag} {senderLabel} {senderSymbol}{senderAmountValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} â†’ Receiver: {receiverFlag} {receiverLabel} {receiverSymbol}{receiverAmountValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     )}
                     
                     <div className="mt-2 flex items-center gap-2 flex-wrap">
-                      {row.sender_name && renderProfile(row.sender_name, row.sender_avatar, row.sender_username)}
-                      {(row.sender_name && row.receiver_name) && <span className="text-muted-foreground text-[10px]">→</span>}
-                      {row.receiver_name && renderProfile(row.receiver_name, row.receiver_avatar, row.receiver_username)}
+                      {(row.sender_name || row.sender_username) && renderProfile(
+                        row.sender_name,
+                        row.sender_avatar,
+                        row.sender_username,
+                        senderAmountValue,
+                        senderCurrencyCode
+                      )}
+                      {(row.sender_name || row.sender_username) && (row.receiver_name || row.receiver_username) && (
+                        <span className="text-muted-foreground text-[10px]">â†’</span>
+                      )}
+                      {(row.receiver_name || row.receiver_username) && renderProfile(
+                        row.receiver_name,
+                        row.receiver_avatar,
+                        row.receiver_username,
+                        receiverAmountValue,
+                        receiverCurrencyCode
+                      )}
                     </div>
 
                     {row.note && (
@@ -295,7 +343,7 @@ const PublicLedgerPage = () => {
                 </div>
                 <div className="text-right sm:ml-4">
                   <p className={`font-bold ${amountClass}`}>
-                    {currencySymbol}{row.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {displayCurrencySymbol}{displayAmountValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                   <p className="text-[10px] text-muted-foreground uppercase font-semibold">OpenLedger Record</p>
                 </div>
