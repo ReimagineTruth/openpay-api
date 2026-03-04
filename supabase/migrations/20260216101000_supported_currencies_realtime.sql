@@ -1,5 +1,5 @@
 -- USD-based FX rates for the app.
--- Product rule: 1 PI = 1 USD.
+-- Product rule: 1 PI = 3.14 USD.
 
 CREATE TABLE IF NOT EXISTS public.supported_currencies (
   iso_code TEXT PRIMARY KEY,
@@ -86,7 +86,11 @@ SELECT
   v.code,
   v.code,
   '🏳️',
-  CASE WHEN v.code IN ('PI', 'USD') THEN 1 ELSE 1 END,
+  CASE
+    WHEN v.code = 'PI' THEN 3.14
+    WHEN v.code = 'USD' THEN 1
+    ELSE 1
+  END,
   true
 FROM (
   VALUES
@@ -103,11 +107,129 @@ FROM (
   ('MZN'), ('BWP'), ('NAD'), ('SZL'), ('LSL'), ('AOA'), ('CDF'), ('RWF'), ('BIF'), ('DJF'),
   ('SOS'), ('SDG'), ('SSP'), ('DZD'), ('MAD'), ('TND'), ('LYD'), ('XOF'), ('XAF'), ('MUR'), ('SCR'),
   ('AUD'), ('NZD'), ('PGK'), ('FJD'), ('SBD'), ('VUV'), ('WST'), ('TOP')
+  , ('AMD'), ('AZN'), ('ERN'), ('GMD'), ('GNF'), ('HTG'), ('KMF'), ('KYD'), ('MGA'), ('MRU'),
+  ('MVR'), ('SLL'), ('SRD'), ('STN'), ('SVC')
 ) AS v(code)
 ON CONFLICT (iso_code) DO UPDATE
 SET
   is_active = true,
   updated_at = now();
+
+-- Apply fixed USD rates (1 PI = 3.14 USD).
+UPDATE public.supported_currencies
+SET usd_rate = CASE iso_code
+  WHEN 'PI' THEN 3.14
+  WHEN 'USD' THEN 1
+  WHEN 'EUR' THEN 0.8429
+  WHEN 'GBP' THEN 0.7344
+  WHEN 'AUD' THEN 1.428
+  WHEN 'CAD' THEN 1.362
+  WHEN 'JPY' THEN 155.926
+  WHEN 'CNY' THEN 6.901
+  WHEN 'CHF' THEN 0.7786
+  WHEN 'SGD' THEN 1.271
+  WHEN 'HKD' THEN 7.816
+  WHEN 'INR' THEN 90.599
+  WHEN 'BRL' THEN 5.5745
+  WHEN 'MXN' THEN 17.232
+  WHEN 'ZAR' THEN 15.961
+  WHEN 'TRY' THEN 43.645
+  WHEN 'PLN' THEN 3.554
+  WHEN 'RON' THEN 4.292
+  WHEN 'CZK' THEN 20.443
+  WHEN 'NOK' THEN 9.545
+  WHEN 'DKK' THEN 6.298
+  WHEN 'SEK' THEN 8.931
+  WHEN 'AED' THEN 3.6725
+  WHEN 'SAR' THEN 3.75
+  WHEN 'QAR' THEN 3.641
+  WHEN 'KWD' THEN 0.3066
+  WHEN 'BHD' THEN 0.376992
+  WHEN 'OMR' THEN 0.3845
+  WHEN 'JOD' THEN 0.709
+  WHEN 'NGN' THEN 1352
+  WHEN 'KES' THEN 129
+  WHEN 'ETB' THEN 155.05
+  WHEN 'GHS' THEN 11.005
+  WHEN 'MAD' THEN 9.139
+  WHEN 'RWF' THEN 1453
+  WHEN 'XOF' THEN 552.915
+  WHEN 'XAF' THEN 552.915
+  WHEN 'ARS' THEN 1482.94905
+  WHEN 'COP' THEN 3670
+  WHEN 'PEN' THEN 3.355
+  WHEN 'BOB' THEN 6.9269
+  WHEN 'PYG' THEN 6586
+  WHEN 'UYU' THEN 38.557
+  WHEN 'DOP' THEN 62.625
+  WHEN 'CRC' THEN 495.723
+  WHEN 'GTQ' THEN 7.672
+  WHEN 'NIO' THEN 36.715
+  WHEN 'BSD' THEN 1
+  WHEN 'BBD' THEN 2
+  WHEN 'TTD' THEN 6.776
+  WHEN 'CUP' THEN 25.75
+  WHEN 'JMD' THEN 156.252
+  WHEN 'PHP' THEN 58.074
+  WHEN 'THB' THEN 31.082
+  WHEN 'VND' THEN 25961
+  WHEN 'IDR' THEN 16817
+  WHEN 'PKR' THEN 279.6
+  WHEN 'BDT' THEN 122.205858
+  WHEN 'LKR' THEN 309.457
+  WHEN 'NPR' THEN 145.049
+  WHEN 'KHR' THEN 4022
+  WHEN 'LAK' THEN 21445
+  WHEN 'MMK' THEN 2100
+  WHEN 'PGK' THEN 4.299
+  WHEN 'MOP' THEN 8.055
+  WHEN 'AFN' THEN 66.207039
+  WHEN 'ALL' THEN 83.2
+  WHEN 'AMD' THEN 381.473652
+  WHEN 'AZN' THEN 1.7
+  WHEN 'BAM' THEN 1.683408
+  WHEN 'BIF' THEN 2982.243336
+  WHEN 'BWP' THEN 13.115
+  WHEN 'CDF' THEN 2240
+  WHEN 'DJF' THEN 177.5
+  WHEN 'ERN' THEN 15
+  WHEN 'FJD' THEN 2.191
+  WHEN 'GMD' THEN 73.5
+  WHEN 'GNF' THEN 8775
+  WHEN 'HTG' THEN 130.977
+  WHEN 'KMF' THEN 416
+  WHEN 'KYD' THEN 0.8336
+  WHEN 'MGA' THEN 4430
+  WHEN 'MRU' THEN 39.9
+  WHEN 'MVR' THEN 15.46
+  WHEN 'MWK' THEN 1737
+  WHEN 'MZN' THEN 63.91
+  WHEN 'NAD' THEN 15.96
+  WHEN 'RSD' THEN 98.934
+  WHEN 'SBD' THEN 8.048
+  WHEN 'SLL' THEN 20970
+  WHEN 'SOS' THEN 571.5
+  WHEN 'SRD' THEN 37.779
+  WHEN 'SSP' THEN 130.26
+  WHEN 'STN' THEN 20.95
+  WHEN 'SVC' THEN 8.752
+  WHEN 'TJS' THEN 9.418
+  WHEN 'TMT' THEN 3.51
+  WHEN 'TND' THEN 2.835
+  WHEN 'TOP' THEN 2.408
+  WHEN 'TZS' THEN 2600
+  WHEN 'VUV' THEN 119.995
+  ELSE usd_rate
+END,
+updated_at = now()
+WHERE iso_code IN (
+  'PI','USD','EUR','GBP','AUD','CAD','JPY','CNY','CHF','SGD','HKD','INR','BRL','MXN','ZAR','TRY','PLN','RON','CZK',
+  'NOK','DKK','SEK','AED','SAR','QAR','KWD','BHD','OMR','JOD','NGN','KES','ETB','GHS','MAD','RWF','XOF','XAF','ARS',
+  'COP','PEN','BOB','PYG','UYU','DOP','CRC','GTQ','NIO','BSD','BBD','TTD','CUP','JMD','PHP','THB','VND','IDR','PKR',
+  'BDT','LKR','NPR','KHR','LAK','MMK','PGK','MOP','AFN','ALL','AMD','AZN','BAM','BIF','BWP','CDF','DJF','ERN','FJD',
+  'GMD','GNF','HTG','KMF','KYD','MGA','MRU','MVR','MWK','MZN','NAD','RSD','SBD','SLL','SOS','SRD','SSP','STN','SVC',
+  'TJS','TMT','TND','TOP','TZS','VUV'
+);
 
 CREATE OR REPLACE FUNCTION public.apply_usd_exchange_rates(p_rates JSONB)
 RETURNS INTEGER
@@ -127,7 +249,8 @@ BEGIN
 
   -- Hard business rule.
   UPDATE public.supported_currencies
-  SET usd_rate = 1, updated_at = now()
+  SET usd_rate = CASE WHEN iso_code = 'PI' THEN 3.14 ELSE 1 END,
+      updated_at = now()
   WHERE iso_code IN ('PI', 'USD');
 
   FOR v_code, v_rate_text IN
