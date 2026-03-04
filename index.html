@@ -37,19 +37,30 @@
       (function () {
         var ua = (navigator && navigator.userAgent) ? navigator.userAgent : "";
         var inPiBrowser = /pi\s?browser/i.test(ua);
-        if (!inPiBrowser) return;
+        var host = window.location.hostname || "";
+        var isLocal =
+          host === "localhost" ||
+          host === "127.0.0.1" ||
+          host.endsWith(".local") ||
+          host.endsWith(".test");
+        var forceSdk = isLocal || /[?&]pi_sdk=1/i.test(window.location.search || "");
+        if (!inPiBrowser && !forceSdk) return;
 
         var script = document.createElement("script");
         script.src = "https://sdk.minepi.com/pi-sdk.js";
         script.onload = function () {
           try {
             if (window.Pi && typeof window.Pi.init === "function") {
-              var host = window.location.hostname || "";
-              var isLocal = host === "localhost" || host.endsWith(".local") || host.endsWith(".test");
-              window.Pi.init({ version: "2.0", sandbox: isLocal });
+              var sandbox = isLocal;
+              window.Pi.init({ version: "2.0", sandbox: sandbox });
             }
           } catch (e) {
             console.warn("Pi SDK init failed:", e);
+          }
+          try {
+            window.dispatchEvent(new Event("pi-sdk-ready"));
+          } catch (e) {
+            // ignore
           }
         };
         document.head.appendChild(script);

@@ -12,11 +12,20 @@ const PiAuthPage = () => {
   const [piUser, setPiUser] = useState<{ uid: string; username: string } | null>(null);
   const [busyAuth, setBusyAuth] = useState(false);
   const [authorizationCode, setAuthorizationCode] = useState("");
+  const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && !!window.Pi);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const sdkReady = typeof window !== "undefined" && !!window.Pi;
-  const sandbox = String(import.meta.env.VITE_PI_SANDBOX || "false").toLowerCase() === "true";
+  const envSandbox = String(import.meta.env.VITE_PI_SANDBOX || "").trim().toLowerCase();
+  const sandbox =
+    envSandbox.length > 0
+      ? envSandbox === "true"
+      : typeof window !== "undefined"
+        ? window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1" ||
+          window.location.hostname.endsWith(".local") ||
+          window.location.hostname.endsWith(".test")
+        : false;
 
   const initPi = () => {
     if (!window.Pi) {
@@ -36,6 +45,17 @@ const PiAuthPage = () => {
     };
     checkSession();
   }, [navigate]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.Pi) {
+      setSdkReady(true);
+      return;
+    }
+    const handleSdkReady = () => setSdkReady(!!window.Pi);
+    window.addEventListener("pi-sdk-ready", handleSdkReady);
+    return () => window.removeEventListener("pi-sdk-ready", handleSdkReady);
+  }, []);
 
   useEffect(() => {
     const ref = (searchParams.get("ref") || "").trim().toLowerCase();
@@ -124,27 +144,28 @@ const PiAuthPage = () => {
   };
 
   const verifyPiAccessToken = async (accessToken: string) => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-    const res = await fetch(`${supabaseUrl}/functions/v1/pi-platform`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": supabaseAnonKey,
-      },
-      body: JSON.stringify({ action: "auth_verify", accessToken }),
+    const { data, error } = await supabase.functions.invoke("pi-platform", {
+      body: { action: "auth_verify", accessToken },
     });
-
-    const payload = await res.json();
-    if (!res.ok || !payload?.success || !payload.data?.uid) {
+    if (error) throw new Error(error.message || "Pi auth verification failed");
+    const payload = data as { success?: boolean; data?: { uid?: string; username?: string }; error?: string } | null;
+    if (!payload?.success || !payload.data?.uid) {
       throw new Error(payload?.error || "Pi auth verification failed");
     }
-
     return {
       uid: String(payload.data.uid),
       username: String(payload.data.username || ""),
     };
+  };
+
+  const verifyAuthorizationCode = async (code: string) => {
+    if (!code) return true;
+    const { data, error } = await supabase.rpc("verify_my_openpay_authorization_code" as any, {
+      p_code: code,
+    });
+    if (error) throw new Error(error.message || "Authorization code verification failed");
+    if (!data) throw new Error("Authorization code is invalid or expired");
+    return true;
   };
 
   const handlePiAuth = async () => {
@@ -159,6 +180,14 @@ const PiAuthPage = () => {
       const username = verified.username || auth.user.username;
 
       const signInResult = await signInPiBackedAccount(verified.uid, username, referralCode || undefined);
+      if (expectedCode) {
+        try {
+          await verifyAuthorizationCode(expectedCode);
+        } catch (error) {
+          await supabase.auth.signOut();
+          throw error;
+        }
+      }
 
       // Ensure current authenticated user has latest Pi metadata.
       const {
@@ -217,7 +246,7 @@ const PiAuthPage = () => {
             <div className="mt-4 space-y-2">
               <Button
                 onClick={handlePiAuth}
-                disabled={busyAuth}
+                disabled={busyAuth || !sdkReady}
                 className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5] relative overflow-hidden"
               >
                 <div className="flex items-center justify-center gap-2">
@@ -225,6 +254,11 @@ const PiAuthPage = () => {
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span>Authenticating...</span>
+                    </>
+                  ) : !sdkReady ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading Pi SDK...</span>
                     </>
                   ) : (
                     <>
