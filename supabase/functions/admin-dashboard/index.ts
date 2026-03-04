@@ -52,13 +52,13 @@ serve(async (req) => {
       return jsonResponse({ error: "Access denied for this account" }, 403);
     }
 
-    const body = await req.json().catch(() => ({}));
-    const action = (body as { action?: string }).action;
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    const action = body.action as string | undefined;
 
     if (action === "review_self_send") {
-      const transactionId = String((body as { transaction_id?: string }).transaction_id || "");
-      const decision = String((body as { decision?: string }).decision || "").toLowerCase();
-      const reason = String((body as { reason?: string }).reason || "");
+      const transactionId = String(body.transaction_id || "");
+      const decision = String(body.decision || "").toLowerCase();
+      const reason = String(body.reason || "");
 
       if (!transactionId) return jsonResponse({ error: "transaction_id is required" }, 400);
       if (decision !== "approve" && decision !== "reject") {
@@ -76,46 +76,65 @@ serve(async (req) => {
       return jsonResponse({ success: true, data: reviewResult });
     }
 
-    const requestedLimit = Number((body as { limit?: number }).limit);
-    const requestedOffset = Number((body as { offset?: number }).offset);
+    const requestedLimit = Number(body.limit);
+    const requestedOffset = Number(body.offset);
     const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(200, requestedLimit)) : 50;
     const offset = Number.isFinite(requestedOffset) ? Math.max(0, requestedOffset) : 0;
 
-    const { data: historyRows, error: historyError, count: totalHistoryEvents } = await supabase
+    const historyQuery = await supabase
       .from("ledger_events")
       .select("*", { count: "exact" })
       .order("occurred_at", { ascending: false })
       .range(offset, offset + limit - 1);
+
+    const historyRows = historyQuery.data as Record<string, unknown>[] | null;
+    const historyError = historyQuery.error;
+    const totalHistoryEvents = historyQuery.count;
+
     if (historyError) return jsonResponse({ error: historyError.message }, 400);
 
     const userIds = Array.from(
-      new Set((historyRows ?? []).flatMap((row) => [row.actor_user_id, row.related_user_id]).filter(Boolean)),
+      new Set(
+        (historyRows ?? [])
+          .flatMap((row: Record<string, unknown>) => [row.actor_user_id, row.related_user_id])
+          .filter(Boolean)
+      ),
     ) as string[];
 
-    const { data: profiles, error: profilesError } = userIds.length
-      ? await supabase.from("profiles").select("id, full_name, username").in("id", userIds)
-      : { data: [], error: null };
+    let profiles: Record<string, unknown>[] | null = [];
+    let profilesError: { message: string } | null = null;
+
+    if (userIds.length > 0) {
+      const profilesQuery = await supabase.from("profiles").select("id, full_name, username").in("id", userIds);
+      profiles = profilesQuery.data as Record<string, unknown>[] | null;
+      profilesError = profilesQuery.error;
+    }
+
     if (profilesError) return jsonResponse({ error: profilesError.message }, 400);
 
     const profileById = new Map(
-      (profiles ?? []).map((p) => [
-        p.id,
+      (profiles ?? []).map((p: Record<string, unknown>) => [
+        p.id as string,
         {
-          full_name: p.full_name || "",
-          username: p.username || "",
+          full_name: (p.full_name as string) || "",
+          username: (p.username as string) || "",
         },
       ]),
     );
 
-    const normalizedHistory = (historyRows ?? []).map((row) => ({
+    const normalizedHistory = (historyRows ?? []).map((row: Record<string, unknown>) => ({
       ...row,
-      actor_profile: profileById.get(row.actor_user_id) ?? null,
-      related_profile: profileById.get(row.related_user_id) ?? null,
+      actor_profile: profileById.get(row.actor_user_id as string) ?? null,
+      related_profile: profileById.get(row.related_user_id as string) ?? null,
     }));
 
-    const { count: totalUsers, error: usersCountError } = await supabase
+    const usersCountQuery = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true });
+
+    const totalUsers = usersCountQuery.count;
+    const usersCountError = usersCountQuery.error;
+
     if (usersCountError) return jsonResponse({ error: usersCountError.message }, 400);
 
     const pageAmountSum = normalizedHistory.reduce((sum, row) => sum + Number(row.amount || 0), 0);
