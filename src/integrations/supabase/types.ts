@@ -49,6 +49,39 @@ export type Database = {
           },
         ]
       }
+      app_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           contact_id: string
@@ -841,6 +874,86 @@ export type Database = {
           merchant_name?: string
           merchant_username?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mining_rewards: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          referral_id: string | null
+          reward_type: string
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          referral_id?: string | null
+          reward_type: string
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          referral_id?: string | null
+          reward_type?: string
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mining_rewards_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mining_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mining_sessions: {
+        Row: {
+          ad_verified: boolean | null
+          created_at: string
+          device_fingerprint: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          is_active: boolean
+          last_reward_at: string
+          pi_browser_used: boolean | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_verified?: boolean | null
+          created_at?: string
+          device_fingerprint?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          last_reward_at?: string
+          pi_browser_used?: boolean | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_verified?: boolean | null
+          created_at?: string
+          device_fingerprint?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean
+          last_reward_at?: string
+          pi_browser_used?: boolean | null
+          started_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1864,6 +1977,7 @@ export type Database = {
           unlocked: boolean
         }[]
       }
+      claim_mining_rewards: { Args: never; Returns: Json }
       claim_referral_rewards: { Args: never; Returns: Json }
       claim_welcome_bonus: { Args: never; Returns: Json }
       complete_merchant_checkout_with_transaction:
@@ -2196,9 +2310,21 @@ export type Database = {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
           amount: number
+          currency_code: string
           event_type: string
           note: string
           occurred_at: string
+          payload: Json
+          receiver_amount: number
+          receiver_avatar: string
+          receiver_currency_code: string
+          receiver_name: string
+          receiver_username: string
+          sender_amount: number
+          sender_avatar: string
+          sender_currency_code: string
+          sender_name: string
+          sender_username: string
           status: string
         }[]
       }
@@ -2416,6 +2542,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      start_mining_session: {
+        Args: {
+          p_ad_verified?: boolean
+          p_device_fingerprint?: string
+          p_ip_address?: string
+          p_pi_browser_used?: boolean
+        }
+        Returns: Json
+      }
       submit_my_loan_application: {
         Args: {
           p_address_line: string
@@ -2496,6 +2631,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      sync_mining_state: { Args: never; Returns: undefined }
       transfer_funds: {
         Args: {
           p_amount: number
@@ -2702,6 +2838,10 @@ export type Database = {
         Returns: boolean
       }
       verify_my_openpay_code: { Args: { p_code: string }; Returns: boolean }
+      withdraw_mining_earnings: {
+        Args: { p_min_payout?: number }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
