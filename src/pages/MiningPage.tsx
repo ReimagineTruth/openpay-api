@@ -41,7 +41,8 @@ const MiningPage = () => {
   const { format: formatCurrency } = useCurrency();
   const [searchParams] = useSearchParams();
   const [lastAdRunAt, setLastAdRunAt] = useState(0);
-  const [piSdkInitialized, setPiSdkInitialized] = useState(false);
+  const [piSdkInitialized, setPiSdkInitialized] = useState(() => typeof window !== "undefined" && !!window.Pi);
+  const pendingAutoStartRef = useRef(false);
   const [starting, setStarting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [adModalOpen, setAdModalOpen] = useState(false);
@@ -152,6 +153,22 @@ const MiningPage = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.Pi) {
+      setPiSdkInitialized(true);
+      return;
+    }
+    const handleSdkReady = () => setPiSdkInitialized(!!window.Pi);
+    const handleSdkError = () => setPiSdkInitialized(false);
+    window.addEventListener("pi-sdk-ready", handleSdkReady);
+    window.addEventListener("pi-sdk-error", handleSdkError);
+    return () => {
+      window.removeEventListener("pi-sdk-ready", handleSdkReady);
+      window.removeEventListener("pi-sdk-error", handleSdkError);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!activeSession) {
       setTimeLeft(0);
       return;
@@ -193,10 +210,21 @@ const MiningPage = () => {
 
   useEffect(() => {
     const ad = (searchParams.get("ad") || "").toLowerCase();
-    if (ad === "rewarded" && timeLeft <= 0 && !starting && !loading) {
-      void handleStartMining({ auto: true });
+    if (ad !== "rewarded") return;
+    if (timeLeft > 0 || starting || loading) return;
+    if (!piSdkInitialized) {
+      pendingAutoStartRef.current = true;
+      return;
     }
-  }, [searchParams, timeLeft, starting, loading]);
+    void handleStartMining({ auto: true });
+  }, [searchParams, timeLeft, starting, loading, piSdkInitialized]);
+
+  useEffect(() => {
+    if (!piSdkInitialized || !pendingAutoStartRef.current) return;
+    if (timeLeft > 0 || starting || loading) return;
+    pendingAutoStartRef.current = false;
+    void handleStartMining({ auto: true });
+  }, [piSdkInitialized, timeLeft, starting, loading]);
 
   const initPi = () => {
     if (!window.Pi) {
@@ -232,6 +260,14 @@ const MiningPage = () => {
       const features = await window.Pi.nativeFeaturesList();
       if (!features.includes("ad_network")) {
         throw new Error("Pi Ad Network is not supported on this Pi Browser version");
+      }
+    }
+
+    if (typeof window.Pi?.Ads?.requestAd === "function") {
+      try {
+        await window.Pi.Ads.requestAd("rewarded");
+      } catch {
+        // ignore prefetch errors; we'll attempt showAd anyway
       }
     }
 

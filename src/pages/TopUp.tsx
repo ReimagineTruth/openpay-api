@@ -164,10 +164,14 @@ const TopUp = () => {
       });
 
       const verified = await verifyPiAccessToken(auth.accessToken);
+      const resolvedPiUsername =
+        verified.username ||
+        auth.user.username ||
+        `pi_${verified.uid.replace(/-/g, "").slice(0, 16)}`;
       await supabase.auth.updateUser({
         data: {
           pi_uid: verified.uid,
-          pi_username: verified.username || auth.user.username,
+          pi_username: resolvedPiUsername,
           pi_connected_at: new Date().toISOString(),
         },
       });

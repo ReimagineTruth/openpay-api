@@ -87,6 +87,7 @@ const PiAuthPage = () => {
       cleanPiUsername && cleanPiUsername.length >= 3
         ? cleanPiUsername
         : `pi_${piUid.replace(/-/g, "").slice(0, 16)}`;
+    const resolvedPiUsername = piUsername || piSignupUsername;
     let created = false;
 
     const doSignIn = async () => {
@@ -116,7 +117,7 @@ const PiAuthPage = () => {
             username: piSignupUsername,
             referral_code: referralCode,
             pi_uid: piUid,
-            pi_username: piUsername,
+            pi_username: resolvedPiUsername,
             pi_connected_at: new Date().toISOString(),
           },
         },
@@ -177,7 +178,10 @@ const PiAuthPage = () => {
       const referralCode = (searchParams.get("ref") || "").trim().toLowerCase();
       const auth = await window.Pi.authenticate(["username"]);
       const verified = await verifyPiAccessToken(auth.accessToken);
-      const username = verified.username || auth.user.username;
+      const username =
+        verified.username ||
+        auth.user.username ||
+        `pi_${verified.uid.replace(/-/g, "").slice(0, 16)}`;
 
       const signInResult = await signInPiBackedAccount(verified.uid, username, referralCode || undefined);
       if (expectedCode) {

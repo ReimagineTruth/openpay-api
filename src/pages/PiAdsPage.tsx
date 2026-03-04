@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +18,8 @@ const PiAdsPage = () => {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState<string>("");
+  const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && !!window.Pi);
+  const pendingAutoRef = useRef(false);
 
   const sandbox = String(import.meta.env.VITE_PI_SANDBOX || "false").toLowerCase() === "true";
 
@@ -29,6 +31,22 @@ const PiAdsPage = () => {
     window.Pi.init({ version: "2.0", sandbox });
     return true;
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.Pi) {
+      setSdkReady(true);
+      return;
+    }
+    const handleSdkReady = () => setSdkReady(!!window.Pi);
+    const handleSdkError = () => setSdkReady(false);
+    window.addEventListener("pi-sdk-ready", handleSdkReady);
+    window.addEventListener("pi-sdk-error", handleSdkError);
+    return () => {
+      window.removeEventListener("pi-sdk-ready", handleSdkReady);
+      window.removeEventListener("pi-sdk-error", handleSdkError);
+    };
+  }, []);
 
   const verifyRewardedAd = async (adId: string) => {
     const { data, error } = await supabase.functions.invoke("pi-platform", {
@@ -106,10 +124,19 @@ const PiAdsPage = () => {
   useEffect(() => {
     const auto = searchParams.get("auto") === "1";
     const from = searchParams.get("from");
-    if (auto || from === "mining") {
-      void handleWatchRewardedAd();
+    if (!auto && from !== "mining") return;
+    if (!sdkReady) {
+      pendingAutoRef.current = true;
+      return;
     }
-  }, [searchParams]);
+    void handleWatchRewardedAd();
+  }, [searchParams, sdkReady]);
+
+  useEffect(() => {
+    if (!sdkReady || !pendingAutoRef.current) return;
+    pendingAutoRef.current = false;
+    void handleWatchRewardedAd();
+  }, [sdkReady]);
 
   return (
     <div className="min-h-screen bg-background px-4 pt-4">
