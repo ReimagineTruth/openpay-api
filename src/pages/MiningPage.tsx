@@ -86,23 +86,8 @@ const MiningPage = () => {
         persistLocalSession(session as MiningSession);
       }
 
-      // If no database session, check localStorage fallback
       if (!session) {
-        const localSessionStr = localStorage.getItem('mining_session');
-        if (localSessionStr) {
-          try {
-            const localSession = JSON.parse(localSessionStr);
-            if (localSession.user_id === user.id && localSession.is_active && new Date(localSession.expires_at) > new Date()) {
-              // Use localStorage session as fallback
-              setActiveSession(localSession);
-            } else {
-              // Clear expired or invalid session
-              localStorage.removeItem('mining_session');
-            }
-          } catch (parseError) {
-            localStorage.removeItem('mining_session');
-          }
-        }
+        localStorage.removeItem("mining_session");
       }
 
       // If no database session, check for claimable sessions (expired but active=true)
@@ -117,23 +102,8 @@ const MiningPage = () => {
           .limit(1)
           .maybeSingle();
         
-        // If no database claimable session, check localStorage for expired session
         if (!claimable) {
-          const localSessionStr = localStorage.getItem('mining_session');
-          if (localSessionStr) {
-            try {
-              const localSession = JSON.parse(localSessionStr);
-              if (localSession.user_id === user.id && localSession.is_active && new Date(localSession.expires_at) <= new Date()) {
-                // Use expired localStorage session as claimable
-                setClaimableSession(localSession);
-              } else {
-                // Clear invalid sessions
-                localStorage.removeItem('mining_session');
-              }
-            } catch (parseError) {
-              localStorage.removeItem('mining_session');
-            }
-          }
+          localStorage.removeItem("mining_session");
         } else {
           setClaimableSession(claimable as any);
         }
@@ -336,77 +306,49 @@ const MiningPage = () => {
         }
         return;
       }
-      // Always require an ad step before mining unless already verified
-      const skipAd = (searchParams.get("ad") || "").toLowerCase() === "rewarded";
-      if (!skipAd) {
-        const ok = await runAdGate({ usePiAd: isPiBrowserUserAgent() });
-        if (!ok) { setStarting(false); return; }
-        if (isPiBrowserUserAgent() && !isAuto) {
-          toast.success("Rewarded ad verified successfully! Starting mining...");
+      if (!isPiBrowserUserAgent()) {
+        if (!isAuto) {
+          toast.error("Open this app in Pi Browser and watch a rewarded ad to start mining.");
         }
+        return;
+      }
+
+      const ok = await runAdGate({ usePiAd: true });
+      if (!ok) {
+        setStarting(false);
+        return;
+      }
+      if (!isAuto) {
+        toast.success("Rewarded ad verified successfully! Starting mining...");
       }
 
       // Basic anti-cheat: in a real app, use a proper fingerprinting library
       const deviceFingerprint = navigator.userAgent; 
-      const piBrowserUsed = isPiBrowserUserAgent();
-      const adVerified = piBrowserUsed;
+      const piBrowserUsed = true;
+      const adVerified = true;
       
       // Try database function first
-      let data, error;
-      try {
-        const result = await supabase.rpc("start_mining_session" as any, {
-          p_device_fingerprint: deviceFingerprint,
-          p_ip_address: "client-side-ip",
-          p_ad_verified: adVerified,
-          p_pi_browser_used: piBrowserUsed
-        });
-        data = result.data;
-        error = result.error;
-      } catch (rpcError) {
-        console.warn("Database function not available, using client-side fallback");
-        error = { message: "Database function not available" };
-      }
+      const result = await supabase.rpc("start_mining_session" as any, {
+        p_device_fingerprint: deviceFingerprint,
+        p_ip_address: "client-side-ip",
+        p_ad_verified: adVerified,
+        p_pi_browser_used: piBrowserUsed,
+      });
+      const data = result.data;
+      const error = result.error;
 
       if (error) {
-        // Client-side fallback when database functions are not available
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          if (!isAuto) {
-            toast.error("User not authenticated");
-          }
-          return;
-        }
-
-        // Create a mock session in localStorage
-        const sessionId = crypto.randomUUID();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        
-        const mockSession = {
-          id: sessionId,
-          user_id: user.id,
-          started_at: new Date().toISOString(),
-          expires_at: expiresAt,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          ad_verified: adVerified,
-          pi_browser_used: piBrowserUsed,
-          last_sync_at: new Date().toISOString()
-        };
-
-        // Store in localStorage as fallback
-        localStorage.setItem('mining_session', JSON.stringify(mockSession));
-        
-        const bonusText = isPiBrowserUserAgent() ? " with Pi Browser bonus!" : "!";
         if (!isAuto) {
-          toast.success(`Mining started${bonusText} Check back in 24 hours to claim your reward.`);
+          toast.error(error.message || "Failed to start mining");
         }
-        await loadMiningData();
+        return;
       } else if (data && (data as any).error) {
         if (!isAuto) {
           toast.error((data as any).error);
         }
+        return;
       } else {
-        const bonusText = isPiBrowserUserAgent() ? " with Pi Browser bonus!" : "!";
+        const bonusText = " with Pi Browser bonus!";
         if (!isAuto) {
           toast.success(`Mining started${bonusText} Check back in 24 hours to claim your reward.`);
         }

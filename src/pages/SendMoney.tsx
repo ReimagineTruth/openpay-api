@@ -744,33 +744,38 @@ const SendMoney = () => {
       }
     }
 
-    // Load payment purposes
-    try {
-      const { data: purposes } = await (supabase as any)
-        .from("payment_purposes")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order");
-      
-      setPaymentPurposes(purposes || []);
-    } catch (error) {
-      console.warn("Failed to load payment purposes, using fallback:", error);
-      // Fallback purposes when database table doesn't exist yet
-      const fallbackPurposes = [
-        { id: '1', name: 'Rent', category: 'Living Expenses', icon: 'home', color: 'blue' },
-        { id: '2', name: 'Car Payment', category: 'Transportation', icon: 'car', color: 'green' },
-        { id: '3', name: 'Groceries', category: 'Food & Dining', icon: 'shopping-cart', color: 'orange' },
-        { id: '4', name: 'Restaurant', category: 'Food & Dining', icon: 'utensils', color: 'orange' },
-        { id: '5', name: 'Gas/Fuel', category: 'Transportation', icon: 'fuel', color: 'green' },
-        { id: '6', name: 'Electricity', category: 'Utilities', icon: 'lightbulb', color: 'yellow' },
-        { id: '7', name: 'Water', category: 'Utilities', icon: 'droplet', color: 'yellow' },
-        { id: '8', name: 'Internet', category: 'Utilities', icon: 'wifi', color: 'yellow' },
-        { id: '9', name: 'Phone', category: 'Utilities', icon: 'phone', color: 'yellow' },
-        { id: '10', name: 'Insurance', category: 'Living Expenses', icon: 'shield', color: 'blue' },
-        { id: '11', name: 'Subscription', category: 'Other', icon: 'credit-card', color: 'slate' },
-        { id: '12', name: 'General', category: 'Other', icon: 'more-horizontal', color: 'slate' }
-      ];
+    const fallbackPurposes = [
+      { id: "1", name: "Rent", category: "Living Expenses", icon: "home", color: "blue" },
+      { id: "2", name: "Car Payment", category: "Transportation", icon: "car", color: "green" },
+      { id: "3", name: "Groceries", category: "Food & Dining", icon: "shopping-cart", color: "orange" },
+      { id: "4", name: "Restaurant", category: "Food & Dining", icon: "utensils", color: "orange" },
+      { id: "5", name: "Gas/Fuel", category: "Transportation", icon: "fuel", color: "green" },
+      { id: "6", name: "Electricity", category: "Utilities", icon: "lightbulb", color: "yellow" },
+      { id: "7", name: "Water", category: "Utilities", icon: "droplet", color: "yellow" },
+      { id: "8", name: "Internet", category: "Utilities", icon: "wifi", color: "yellow" },
+      { id: "9", name: "Phone", category: "Utilities", icon: "phone", color: "yellow" },
+      { id: "10", name: "Insurance", category: "Living Expenses", icon: "shield", color: "blue" },
+      { id: "11", name: "Subscription", category: "Other", icon: "credit-card", color: "slate" },
+      { id: "12", name: "General", category: "Other", icon: "more-horizontal", color: "slate" },
+    ];
+    const enablePurposeTable =
+      String(import.meta.env.VITE_PAYMENT_PURPOSES_ENABLED || "false").toLowerCase() === "true";
+
+    if (!enablePurposeTable) {
       setPaymentPurposes(fallbackPurposes);
+    } else {
+      try {
+        const { data: purposes } = await (supabase as any)
+          .from("payment_purposes")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order");
+
+        setPaymentPurposes(purposes || fallbackPurposes);
+      } catch (error) {
+        console.warn("Failed to load payment purposes, using fallback:", error);
+        setPaymentPurposes(fallbackPurposes);
+      }
     }
 
     setIsInitialLoadDone(true);
@@ -914,16 +919,51 @@ const SendMoney = () => {
     setShowSendConfirm(true);
   };
 
-  const getInitials = (name: string) => (name || "User").split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase();
+  const getInitials = (name: string) => (name || "User").split(" ").filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase();
   const colors = ["bg-paypal-dark", "bg-paypal-light-blue", "bg-primary", "bg-muted-foreground"];
-  const renderAvatar = (user: UserProfile, colorIndex: number) => (
-    user.avatar_url ? (
-      <img src={user.avatar_url} alt={user.full_name} className="h-12 w-12 rounded-full object-cover border border-border" />
-    ) : (
-      <div className={`w-12 h-12 rounded-full ${colors[colorIndex % colors.length]} flex items-center justify-center`}>
-        <span className="text-base font-bold text-primary-foreground">{getInitials(user.full_name)}</span>
+  const renderAvatar = (user: UserProfile, colorIndex: number) => {
+    const bg = colors[colorIndex % colors.length];
+    return (
+      <div className="relative h-12 w-12">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-full ${bg}`}>
+          <span className="text-base font-bold text-primary-foreground">{getInitials(user.full_name)}</span>
+        </div>
+        {user.avatar_url ? (
+          <img
+            src={user.avatar_url}
+            alt={user.full_name}
+            className="absolute inset-0 h-full w-full rounded-full border border-border object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        ) : null}
       </div>
-    )
+    );
+  };
+  const renderAvatarWithFallback = (
+    name: string,
+    avatarUrl: string | null | undefined,
+    sizeClass: string,
+    fallbackClassName: string,
+    textClassName: string,
+    borderClassName = ""
+  ) => (
+    <div className={`relative ${sizeClass}`}>
+      <div className={`flex ${sizeClass} items-center justify-center rounded-full ${fallbackClassName}`}>
+        <span className={textClassName}>{getInitials(name)}</span>
+      </div>
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          className={`absolute inset-0 ${sizeClass} rounded-full object-cover ${borderClassName}`.trim()}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      ) : null}
+    </div>
   );
 
   if (!isInitialLoadDone) {
@@ -952,12 +992,13 @@ const SendMoney = () => {
             <CurrencySelector />
           </div>
 
-          {myAvatarUrl ? (
-            <img src={myAvatarUrl} alt="Profile" className="h-9 w-9 rounded-full border border-white/20 object-cover" />
-          ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-              <span className="text-sm font-bold">{getInitials(myFullName || "User")}</span>
-            </div>
+          {renderAvatarWithFallback(
+            myFullName || "User",
+            myAvatarUrl,
+            "h-9 w-9",
+            "bg-white/20",
+            "text-sm font-bold text-white",
+            "border border-white/20"
           )}
         </div>
 
@@ -974,12 +1015,14 @@ const SendMoney = () => {
                 <span>Sending to {selectedUsers.length} people</span>
               </div>
               <div className="flex -space-x-2 mt-1">
-                {selectedUsers.slice(0, 5).map((user, i) => (
-                  <div key={user.id} className="h-8 w-8 rounded-full border-2 border-paypal-blue overflow-hidden bg-white/20 flex items-center justify-center">
-                    {user.avatar_url ? (
-                      <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-[10px] font-bold text-white">{getInitials(user.full_name)}</span>
+                {selectedUsers.slice(0, 5).map((user) => (
+                  <div key={user.id} className="rounded-full border-2 border-paypal-blue">
+                    {renderAvatarWithFallback(
+                      user.full_name,
+                      user.avatar_url,
+                      "h-8 w-8",
+                      "bg-white/20",
+                      "text-[10px] font-bold text-white"
                     )}
                   </div>
                 ))}
@@ -1063,13 +1106,13 @@ const SendMoney = () => {
                 <div className="flex flex-wrap gap-2 rounded-2xl bg-secondary/70 p-3">
                   {selectedUsers.map(u => (
                     <div key={u.id} className="flex items-center gap-2 bg-white/20 rounded-full pl-1 pr-3 py-1 border border-white/10">
-                      {u.avatar_url ? (
-                        <img src={u.avatar_url} alt={u.full_name} className="h-6 w-6 rounded-full object-cover" />
-                      ) : (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-paypal-dark text-[8px] font-bold text-white">
-                          {getInitials(u.full_name)}
-                        </div>
-                      )}
+                    {renderAvatarWithFallback(
+                      u.full_name,
+                      u.avatar_url,
+                      "h-6 w-6",
+                      "bg-paypal-dark",
+                      "text-[8px] font-bold text-white"
+                    )}
                       <span className="text-[10px] font-semibold text-foreground">{u.full_name.split(' ')[0]}</span>
                     </div>
                   ))}
@@ -1077,12 +1120,13 @@ const SendMoney = () => {
               </div>
             ) : selectedUser && (
               <div className="mt-3 flex items-center gap-3 rounded-2xl bg-secondary/70 px-3 py-2.5">
-                {selectedUser.avatar_url ? (
-                  <img src={selectedUser.avatar_url} alt={selectedUser.full_name} className="h-12 w-12 rounded-full border border-border object-cover" />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-dark">
-                    <span className="text-base font-bold text-primary-foreground">{getInitials(selectedUser.full_name)}</span>
-                  </div>
+                {renderAvatarWithFallback(
+                  selectedUser.full_name,
+                  selectedUser.avatar_url,
+                  "h-12 w-12",
+                  "bg-paypal-dark",
+                  "text-base font-bold text-primary-foreground",
+                  "border border-border"
                 )}
                 <div>
                   <p className="font-semibold text-foreground">{selectedUser.full_name}</p>
@@ -1362,17 +1406,16 @@ const SendMoney = () => {
           <DialogDescription className="sr-only">Confirm that the selected recipient is correct.</DialogDescription>
           {selectedUser && (
             <div>
-              {selectedUser.avatar_url ? (
-                <img
-                  src={selectedUser.avatar_url}
-                  alt={selectedUser.full_name}
-                  className="mb-3 h-16 w-16 rounded-full border border-border object-cover"
-                />
-              ) : (
-                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-paypal-dark">
-                  <span className="text-lg font-bold text-primary-foreground">{getInitials(selectedUser.full_name)}</span>
-                </div>
-              )}
+              <div className="mb-3">
+                {renderAvatarWithFallback(
+                  selectedUser.full_name,
+                  selectedUser.avatar_url,
+                  "h-16 w-16",
+                  "bg-paypal-dark",
+                  "text-lg font-bold text-primary-foreground",
+                  "border border-border"
+                )}
+              </div>
               <h3 className="text-xl font-bold">{selectedUser.full_name}</h3>
               {selectedUser.username && <p className="text-muted-foreground">@{selectedUser.username}</p>}
               <p className="text-2xl font-bold mt-4 mb-2">Is this the right person?</p>

@@ -33,18 +33,26 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <script>
       (function () {
-        try {
-          if (window.Pi && typeof window.Pi.init === "function") {
-            var host = window.location.hostname || "";
-            var isLocal = host === "localhost" || host.endsWith(".local") || host.endsWith(".test");
-            window.Pi.init({ version: "2.0", sandbox: isLocal });
+        var ua = (navigator && navigator.userAgent) ? navigator.userAgent : "";
+        var inPiBrowser = /pi\s?browser/i.test(ua);
+        if (!inPiBrowser) return;
+
+        var script = document.createElement("script");
+        script.src = "https://sdk.minepi.com/pi-sdk.js";
+        script.onload = function () {
+          try {
+            if (window.Pi && typeof window.Pi.init === "function") {
+              var host = window.location.hostname || "";
+              var isLocal = host === "localhost" || host.endsWith(".local") || host.endsWith(".test");
+              window.Pi.init({ version: "2.0", sandbox: isLocal });
+            }
+          } catch (e) {
+            console.warn("Pi SDK init failed:", e);
           }
-        } catch (e) {
-          console.warn("Pi SDK init failed:", e);
-        }
+        };
+        document.head.appendChild(script);
       })();
     </script>
   </body>

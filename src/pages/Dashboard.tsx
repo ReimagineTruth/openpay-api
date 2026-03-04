@@ -198,6 +198,9 @@ const getGreeting = () => {
   return "Good evening";
 };
 
+const getInitials = (name: string) =>
+  (name || "Unknown").split(" ").filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+
 const toPreviewText = (value: string, max = 68) => {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -553,6 +556,34 @@ const Dashboard = () => {
     }
   }, []);
 
+  const loadMerchantBalances = useCallback(async () => {
+    try {
+      const [sandboxMerchantRes, liveMerchantRes] = await Promise.all([
+        (supabase as any).rpc("get_my_merchant_balance_overview", { p_mode: "sandbox" }),
+        (supabase as any).rpc("get_my_merchant_balance_overview", { p_mode: "live" }),
+      ]);
+      const toMerchantSnapshot = (row: any): MerchantBalanceSnapshot | null => {
+        const payload = Array.isArray(row) ? row[0] : row;
+        if (!payload) return null;
+        return {
+          gross_volume: Number(payload.gross_volume || 0),
+          refunded_total: Number(payload.refunded_total || 0),
+          transferred_total: Number(payload.transferred_total || 0),
+          available_balance: Number(payload.available_balance || 0),
+          wallet_balance: Number(payload.wallet_balance || 0),
+          savings_balance: Number(payload.savings_balance || 0),
+        };
+      };
+      setMerchantBalances({
+        sandbox: sandboxMerchantRes.error ? null : toMerchantSnapshot(sandboxMerchantRes.data),
+        live: liveMerchantRes.error ? null : toMerchantSnapshot(liveMerchantRes.data),
+      });
+    } catch (error) {
+      console.warn("Failed to load merchant balances", error);
+      setMerchantBalances({ sandbox: null, live: null });
+    }
+  }, []);
+
   const loadMerchantActivity = useCallback(async (mode: MerchantMode) => {
     const db = supabase as unknown as {
       rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: MerchantActivityRpcRow[] | null }>;
@@ -699,24 +730,119 @@ const Dashboard = () => {
         navigate("/signin");
         return;
       }
-      setUserId(user.id);
-      const { count: unreadCount } = await supabase
-        .from("app_notifications" as any)
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .is("read_at", null);
-      setUnreadNotifications(Number(unreadCount || 0));
 
-      const { data: claimResult } = await (supabase as any).rpc("claim_welcome_bonus");
-      if ((claimResult as { claimed?: boolean } | null)?.claimed) {
+      const userIdLocal = user.id;
+      setUserId(userIdLocal);
+
+      const miningInfoPromise = (async () => {
+        try {
+          const [{ data: miningRewards }, { data: miningSession }] = await Promise.all([
+            (supabase as any)
+              .from("mining_rewards")
+              .select("amount")
+              .eq("user_id", userIdLocal),
+            (supabase as any)
+              .from("mining_sessions")
+              .select("*")
+              .eq("user_id", userIdLocal)
+              .eq("is_active", true)
+              .gt("expires_at", new Date().toISOString())
+              .maybeSingle(),
+          ]);
+
+          const miningBalance = miningRewards
+            ? miningRewards.reduce((sum, r) => sum + Number(r.amount || 0), 0)
+            : 0;
+          let session: any = miningSession || null;
+          if (!session && typeof window !== "undefined") {
+            const localSessionStr = localStorage.getItem("mining_session");
+            if (localSessionStr) {
+              try {
+                const localSession = JSON.parse(localSessionStr);
+                if (localSession.user_id === userIdLocal && localSession.is_active && new Date(localSession.expires_at) > new Date()) {
+                  session = localSession;
+                } else {
+                  localStorage.removeItem("mining_session");
+                }
+              } catch {
+                localStorage.removeItem("mining_session");
+              }
+            }
+          } else if (session && typeof window !== "undefined") {
+            localStorage.setItem("mining_session", JSON.stringify(session));
+          }
+          return { miningBalance, session };
+        } catch (miningErr) {
+          console.warn("Mining info load error:", miningErr);
+          return { miningBalance: 0, session: null };
+        }
+      })();
+
+      const [
+        unreadRes,
+        claimRes,
+        profileRes,
+        walletRes,
+        pendingReqRes,
+        pendingInvRes,
+        virtualCardRes,
+        accountRes,
+        savingsTransfersRes,
+        txsRes,
+      ] = await Promise.all([
+        supabase
+          .from("app_notifications" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userIdLocal)
+          .is("read_at", null),
+        (supabase as any).rpc("claim_welcome_bonus"),
+        supabase
+          .from("profiles")
+          .select("full_name, username, referral_code")
+          .eq("id", userIdLocal)
+          .single(),
+        supabase
+          .from("wallets")
+          .select("balance")
+          .eq("user_id", userIdLocal)
+          .single(),
+        supabase
+          .from("payment_requests" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("payer_id", userIdLocal)
+          .eq("status", "pending"),
+        supabase
+          .from("invoices" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("recipient_id", userIdLocal)
+          .eq("status", "pending"),
+        supabase
+          .from("virtual_cards")
+          .select("card_number, is_active")
+          .eq("user_id", userIdLocal)
+          .maybeSingle(),
+        supabase.rpc("upsert_my_user_account"),
+        (supabase as any)
+          .from("user_savings_transfers")
+          .select("id, direction, amount, note, created_at")
+          .eq("user_id", userIdLocal)
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("transactions")
+          .select("*")
+          .or(`sender_id.eq.${userIdLocal},receiver_id.eq.${userIdLocal}`)
+          .order("created_at", { ascending: false })
+          .limit(10),
+      ]);
+
+      setUnreadNotifications(Number(unreadRes.count || 0));
+
+      if ((claimRes.data as { claimed?: boolean } | null)?.claimed) {
         toast.success("Welcome bonus claimed: +1 balance");
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, username, referral_code")
-        .eq("id", user.id)
-        .single();
+      const profile = profileRes.data;
       setUserName(profile?.full_name || "");
       setUsername(profile?.username || null);
       if (profile?.full_name) {
@@ -726,96 +852,26 @@ const Dashboard = () => {
         setLoanContactNumber((current) => current || profile.username);
       }
       if (profile?.referral_code) {
-        setAppCookie(`openpay_ref_code_${user.id}`, profile.referral_code);
+        setAppCookie(`openpay_ref_code_${userIdLocal}`, profile.referral_code);
       }
 
-      const { data: wallet } = await supabase
-        .from("wallets")
-        .select("balance")
-        .eq("user_id", user.id)
-        .single();
-      setBalance(wallet?.balance || 0);
-      
-      // Get mining info
-      try {
-        const [{ data: miningRewards }, { data: miningSession }] = await Promise.all([
-          (supabase as any)
-            .from("mining_rewards")
-            .select("amount")
-            .eq("user_id", user.id),
-          (supabase as any)
-            .from("mining_sessions")
-            .select("*")
-            .eq("user_id", user.id)
-            .eq("is_active", true)
-            .gt("expires_at", new Date().toISOString())
-            .maybeSingle()
-        ]);
+      setBalance(walletRes.data?.balance || 0);
 
-        if (miningRewards) {
-          setMiningBalance(miningRewards.reduce((sum, r) => sum + Number(r.amount || 0), 0));
-        } else {
-          setMiningBalance(0);
-        }
-        let session: any = miningSession || null;
-        if (!session && typeof window !== "undefined") {
-          const localSessionStr = localStorage.getItem("mining_session");
-          if (localSessionStr) {
-            try {
-              const localSession = JSON.parse(localSessionStr);
-              if (localSession.user_id === user.id && localSession.is_active && new Date(localSession.expires_at) > new Date()) {
-                session = localSession;
-              } else {
-                localStorage.removeItem("mining_session");
-              }
-            } catch {
-              localStorage.removeItem("mining_session");
-            }
-          }
-        } else if (session && typeof window !== "undefined") {
-          localStorage.setItem("mining_session", JSON.stringify(session));
-        }
-        setActiveMiningSession(session);
-      } catch (miningErr) {
-        console.warn("Mining info load error:", miningErr);
-        setMiningBalance(0);
-        setActiveMiningSession(null);
-      }
+      setPendingRequestCount(Number(pendingReqRes.count || 0));
+      setPendingInvoiceCount(Number(pendingInvRes.count || 0));
 
-      {
-        const { count } = await supabase
-          .from("payment_requests" as any)
-          .select("id", { count: "exact", head: true })
-          .eq("payer_id", user.id)
-          .eq("status", "pending");
-        setPendingRequestCount(Number(count || 0));
-      }
-      {
-        const { count } = await supabase
-          .from("invoices" as any)
-          .select("id", { count: "exact", head: true })
-          .eq("recipient_id", user.id)
-          .eq("status", "pending");
-        setPendingInvoiceCount(Number(count || 0));
-      }
-
-      const { data: virtualCardRow } = await supabase
-        .from("virtual_cards")
-        .select("card_number, is_active")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      const cardNumberRaw = String(virtualCardRow?.card_number || "").replace(/\D/g, "");
+      const cardNumberRaw = String(virtualCardRes.data?.card_number || "").replace(/\D/g, "");
       if (cardNumberRaw.length >= 4) {
         const grouped = cardNumberRaw.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
         setVirtualCardNumber(grouped);
       } else {
         setVirtualCardNumber("**** **** **** 4242");
       }
-      setVirtualCardActive(Boolean(virtualCardRow?.is_active));
+      setVirtualCardActive(Boolean(virtualCardRes.data?.is_active));
 
-      const { data: accountData } = await supabase.rpc("upsert_my_user_account");
-      setUserAccount(accountData as unknown as UserAccount);
-      const normalizedAccount = accountData as unknown as UserAccount | null;
+      const accountData = accountRes.data as unknown as UserAccount;
+      setUserAccount(accountData);
+      const normalizedAccount = accountData as UserAccount | null;
       if (normalizedAccount?.account_name) {
         setLoanApplicantName((current) => current || normalizedAccount.account_name);
       }
@@ -823,13 +879,7 @@ const Dashboard = () => {
         setLoanContactNumber((current) => current || normalizedAccount.account_username);
       }
 
-      const { data: savingsTransferRows } = await (supabase as any)
-        .from("user_savings_transfers")
-        .select("id, direction, amount, note, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
+      const savingsTransferRows = savingsTransfersRes.data;
       if (Array.isArray(savingsTransferRows)) {
         const recentSavingsTransfers: SavingsTransferActivity[] = savingsTransferRows
           .filter(
@@ -849,39 +899,45 @@ const Dashboard = () => {
         setSavingsTransfers([]);
       }
 
-      const { data: txs } = await supabase
-        .from("transactions")
-        .select("*")
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .order("created_at", { ascending: false })
-        .limit(10);
+      const txs = txsRes.data;
+      if (Array.isArray(txs) && txs.length > 0) {
+        const otherIds = Array.from(new Set(
+          txs
+            .map((tx) => (tx.sender_id === userIdLocal ? tx.receiver_id : tx.sender_id))
+            .filter(Boolean),
+        ));
+        let profilesById = new Map<string, { full_name?: string; username?: string; avatar_url?: string | null }>();
+        if (otherIds.length > 0) {
+          const { data: otherProfiles } = await supabase
+            .from("profiles")
+            .select("id, full_name, username, avatar_url")
+            .in("id", otherIds as string[]);
+          (otherProfiles || []).forEach((p: any) => profilesById.set(p.id, p));
+        }
 
-      if (txs) {
-        const enriched = await Promise.all(
-          txs.map(async (tx) => {
-            const otherId = tx.sender_id === user.id ? tx.receiver_id : tx.sender_id;
-            const { data: p } = await supabase
-              .from("profiles")
-              .select("full_name, username, avatar_url")
-              .eq("id", otherId)
-              .single();
-            return {
-              ...tx,
-              other_name: p?.full_name || "Unknown",
-              other_username: p?.username || null,
-              other_avatar_url: p?.avatar_url || null,
-              is_sent: tx.sender_id === user.id,
-              is_topup: tx.sender_id === user.id && tx.receiver_id === user.id,
-            };
-          }),
-        );
+        const enriched = txs.map((tx: any) => {
+          const otherId = tx.sender_id === userIdLocal ? tx.receiver_id : tx.sender_id;
+          const p = profilesById.get(otherId);
+          return {
+            ...tx,
+            other_name: p?.full_name || "Unknown",
+            other_username: p?.username || null,
+            other_avatar_url: p?.avatar_url || null,
+            is_sent: tx.sender_id === userIdLocal,
+            is_topup: tx.sender_id === userIdLocal && tx.receiver_id === userIdLocal,
+          };
+        });
         setTransactions(enriched);
       }
 
-      const agreementKey = `openpay_usage_agreement_v1_${user.id}`;
-      const onboardingKey = `openpay_onboarding_done_v1_${user.id}`;
-      const hideBalanceKey = `openpay_hide_balance_v1_${user.id}`;
-      const refCookie = getAppCookie(`openpay_ref_code_${user.id}`) || getAppCookie("openpay_last_ref");
+      const miningInfo = await miningInfoPromise;
+      setMiningBalance(miningInfo.miningBalance);
+      setActiveMiningSession(miningInfo.session);
+
+      const agreementKey = `openpay_usage_agreement_v1_${userIdLocal}`;
+      const onboardingKey = `openpay_onboarding_done_v1_${userIdLocal}`;
+      const hideBalanceKey = `openpay_hide_balance_v1_${userIdLocal}`;
+      const refCookie = getAppCookie(`openpay_ref_code_${userIdLocal}`) || getAppCookie("openpay_last_ref");
       let prefs = {
         hide_balance: false,
         usage_agreement_accepted: false,
@@ -921,32 +977,11 @@ const Dashboard = () => {
         (typeof window !== "undefined" && localStorage.getItem(hideBalanceKey) === "1");
 
       if (refCookie && !profile?.referral_code) {
-        await upsertUserPreferences(user.id, { reference_code: refCookie }).catch(() => undefined);
+        await upsertUserPreferences(userIdLocal, { reference_code: refCookie }).catch(() => undefined);
       }
 
       setBalanceHidden(hideBalance);
       setOnboardingStep(prefs.onboarding_step || 0);
-      await loadSavingsAndLoan();
-      const [sandboxMerchantRes, liveMerchantRes] = await Promise.all([
-        (supabase as any).rpc("get_my_merchant_balance_overview", { p_mode: "sandbox" }),
-        (supabase as any).rpc("get_my_merchant_balance_overview", { p_mode: "live" }),
-      ]);
-      const toMerchantSnapshot = (row: any): MerchantBalanceSnapshot | null => {
-        const payload = Array.isArray(row) ? row[0] : row;
-        if (!payload) return null;
-        return {
-          gross_volume: Number(payload.gross_volume || 0),
-          refunded_total: Number(payload.refunded_total || 0),
-          transferred_total: Number(payload.transferred_total || 0),
-          available_balance: Number(payload.available_balance || 0),
-          wallet_balance: Number(payload.wallet_balance || 0),
-          savings_balance: Number(payload.savings_balance || 0),
-        };
-      };
-      setMerchantBalances({
-        sandbox: sandboxMerchantRes.error ? null : toMerchantSnapshot(sandboxMerchantRes.data),
-        live: liveMerchantRes.error ? null : toMerchantSnapshot(liveMerchantRes.data),
-      });
 
       if (!hasAcceptedAgreement) {
         setShowAgreement(true);
@@ -955,13 +990,16 @@ const Dashboard = () => {
         setShowOnboarding(true);
       }
       setIsInitialLoadDone(true);
+
+      void loadSavingsAndLoan();
+      void loadMerchantBalances();
     } catch (error) {
       console.error("Dashboard load error:", error);
       // Don't toast here to avoid spamming if user is not logged in
     } finally {
       setRefreshing(false);
     }
-  }, [navigate, loadSavingsAndLoan]);
+  }, [navigate, loadSavingsAndLoan, loadMerchantBalances]);
 
   useEffect(() => {
     void loadDashboard();
@@ -2918,19 +2956,23 @@ const Dashboard = () => {
             {transactions.map((tx) => (
               <button key={tx.id} onClick={() => showReceipt(tx)} className="flex w-full items-center justify-between p-4 text-left hover:bg-secondary/40 transition">
                 <div className="flex items-center gap-3">
-                  {tx.other_avatar_url ? (
-                    <img
-                      src={tx.other_avatar_url}
-                      alt={tx.other_name || "Profile"}
-                      className="h-10 w-10 rounded-full border border-paypal-light-blue/50 object-cover"
-                    />
-                  ) : (
+                  <div className="relative h-10 w-10">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-paypal-light-blue/50 bg-secondary">
                       <span className="text-xs font-bold text-secondary-foreground">
-                        {(tx.other_name || "Unknown").split(" ").filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                        {getInitials(tx.other_name || "Unknown")}
                       </span>
                     </div>
-                  )}
+                    {tx.other_avatar_url ? (
+                      <img
+                        src={tx.other_avatar_url}
+                        alt={tx.other_name || "Profile"}
+                        className="absolute inset-0 h-full w-full rounded-full border border-paypal-light-blue/50 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : null}
+                  </div>
                   <div>
                     <p className="font-semibold text-foreground">{tx.other_name}</p>
                     {tx.other_username && <p className="text-xs text-muted-foreground">@{tx.other_username}</p>}
@@ -2964,6 +3006,9 @@ const Dashboard = () => {
         )}
       </div>
 
+      </>
+      )}
+
       <div className="fixed bottom-24 left-0 right-0 z-40 overflow-x-hidden px-4 pb-1">
         <div className="flex gap-3">
           <button
@@ -2978,8 +3023,6 @@ const Dashboard = () => {
           <button onClick={openBuyOptions} className="min-w-0 flex-1 rounded-full border border-paypal-blue/25 bg-white py-3.5 text-center text-sm font-semibold text-paypal-blue">Buy</button>
         </div>
       </div>
-      </>
-      )}
 
       <BottomNav active="home" />
       <TransactionReceipt open={receiptOpen} onOpenChange={setReceiptOpen} receipt={receiptData} />
