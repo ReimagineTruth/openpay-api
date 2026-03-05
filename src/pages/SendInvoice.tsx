@@ -29,13 +29,18 @@ interface Invoice {
   sender_id: string;
   recipient_id: string;
   amount: number;
-  original_amount?: number | null;
-  original_currency_code?: string | null;
   description: string | null;
   due_date: string | null;
   status: string;
   created_at: string;
 }
+
+const parseOriginalAmount = (note: string | null | undefined): { amount: number; code: string } | null => {
+  if (!note) return null;
+  const m = note.match(/\[(\w+)\s+([\d.]+)\]/);
+  if (!m) return null;
+  return { code: m[1], amount: Number(m[2]) };
+};
 
 const SendInvoice = () => {
   const navigate = useNavigate();
@@ -98,7 +103,7 @@ const SendInvoice = () => {
 
     const { data: invoiceRows } = await supabase
       .from("invoices")
-      .select("id, sender_id, recipient_id, amount, original_amount, original_currency_code, description, due_date, status, created_at")
+      .select("id, sender_id, recipient_id, amount, description, due_date, status, created_at")
       .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
 
@@ -277,10 +282,7 @@ const SendInvoice = () => {
       return { amount: amountNum, code };
     };
 
-    const originalFromColumns = invoice.original_currency_code && invoice.original_amount
-      ? { amount: Number(invoice.original_amount), code: String(invoice.original_currency_code) }
-      : null;
-    const original = originalFromColumns || parseOriginalAmount(invoice.description);
+    const original = parseOriginalAmount(invoice.description);
 
     let invoiceOusdAmount = Number(invoice.amount || 0);
     if (original) {
@@ -632,10 +634,9 @@ const SendInvoice = () => {
           {received.length === 0 && <p className="text-sm text-muted-foreground">No received invoices</p>}
           {received.map((invoice) => {
             const sender = profileMap.get(invoice.sender_id);
-            const originalCurrency = invoice.original_currency_code
-              ? String(invoice.original_currency_code)
-              : parseOriginalAmount(invoice.description)?.code;
-            const originalAmount = invoice.original_amount ?? parseOriginalAmount(invoice.description)?.amount;
+            const parsed = parseOriginalAmount(invoice.description);
+            const originalCurrency = parsed?.code;
+            const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
               <div key={invoice.id} className="border border-border rounded-xl p-3">
@@ -685,10 +686,9 @@ const SendInvoice = () => {
           {sent.length === 0 && <p className="text-sm text-muted-foreground">No sent invoices</p>}
           {sent.map((invoice) => {
             const recipient = profileMap.get(invoice.recipient_id);
-            const originalCurrency = invoice.original_currency_code
-              ? String(invoice.original_currency_code)
-              : parseOriginalAmount(invoice.description)?.code;
-            const originalAmount = invoice.original_amount ?? parseOriginalAmount(invoice.description)?.amount;
+            const parsed = parseOriginalAmount(invoice.description);
+            const originalCurrency = parsed?.code;
+            const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
               <div key={invoice.id} className="border border-border rounded-xl p-3">

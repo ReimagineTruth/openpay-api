@@ -28,7 +28,7 @@ serve(async (req) => {
       return jsonResponse({ error: "Server configuration error" }, 500);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase: any = createClient(supabaseUrl, supabaseServiceKey);
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -36,10 +36,10 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: authData, error: userError } = await supabase.auth.getUser(token);
-    const user = authData?.user;
+    const authResult = await supabase.auth.getUser(token);
+    const user = authResult?.data?.user;
 
-    if (userError || !user) {
+    if (authResult?.error || !user) {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
@@ -81,7 +81,7 @@ serve(async (req) => {
     const limit = Number.isFinite(requestedLimit) ? Math.max(1, Math.min(200, requestedLimit)) : 50;
     const offset = Number.isFinite(requestedOffset) ? Math.max(0, requestedOffset) : 0;
 
-    const historyQuery = await supabase
+    const historyQuery: any = await supabase
       .from("ledger_events")
       .select("*", { count: "exact" })
       .order("occurred_at", { ascending: false })
@@ -105,7 +105,7 @@ serve(async (req) => {
     let profilesError: { message: string } | null = null;
 
     if (userIds.length > 0) {
-      const profilesQuery = await supabase.from("profiles").select("id, full_name, username").in("id", userIds);
+      const profilesQuery: any = await supabase.from("profiles").select("id, full_name, username").in("id", userIds);
       profiles = profilesQuery.data as Record<string, unknown>[] | null;
       profilesError = profilesQuery.error;
     }
@@ -128,7 +128,7 @@ serve(async (req) => {
       related_profile: profileById.get(row.related_user_id as string) ?? null,
     }));
 
-    const usersCountQuery = await supabase
+    const usersCountQuery: any = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true });
 
@@ -137,7 +137,7 @@ serve(async (req) => {
 
     if (usersCountError) return jsonResponse({ error: usersCountError.message }, 400);
 
-    const pageAmountSum = normalizedHistory.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const pageAmountSum = normalizedHistory.reduce((sum: number, row: any) => sum + Number(row.amount || 0), 0);
 
     return jsonResponse({
       success: true,

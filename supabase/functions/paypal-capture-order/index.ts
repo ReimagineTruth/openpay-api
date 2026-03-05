@@ -30,46 +30,32 @@ const getAccessToken = async (clientId: string, secret: string) => {
     body: "grant_type=client_credentials",
   });
   const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.error_description || "PayPal auth failed");
-  }
+  if (!res.ok) throw new Error(data?.error_description || "PayPal auth failed");
   return data.access_token as string;
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { status: 200, headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("Server configuration error");
-    }
+    if (!supabaseUrl || !supabaseServiceKey) throw new Error("Server configuration error");
 
     const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
     const secret = Deno.env.get("PAYPAL_SECRET");
-    if (!clientId || !secret) {
-      throw new Error("PayPal is not configured");
-    }
+    if (!clientId || !secret) throw new Error("PayPal is not configured");
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase: any = createClient(supabaseUrl, supabaseServiceKey);
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new Error("Missing auth token");
-    }
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing auth token");
     const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      throw new Error("Unauthorized");
-    }
+    const authResult = await supabase.auth.getUser(token);
+    const user = authResult?.data?.user;
+    if (authResult?.error || !user) throw new Error("Unauthorized");
 
     const body = await req.json().catch(() => ({}));
-    const orderId = String((body as { orderId?: string }).orderId || "").trim();
+    const orderId = String((body as any).orderId || "").trim();
     if (!orderId) throw new Error("Missing orderId");
 
     const accessToken = await getAccessToken(clientId, secret);
@@ -81,9 +67,7 @@ serve(async (req) => {
       },
     });
     const captureData = await captureRes.json();
-    if (!captureRes.ok) {
-      throw new Error(captureData?.message || "PayPal capture failed");
-    }
+    if (!captureRes.ok) throw new Error(captureData?.message || "PayPal capture failed");
 
     return jsonResponse({ status: captureData.status, id: captureData.id, data: captureData });
   } catch (error: unknown) {

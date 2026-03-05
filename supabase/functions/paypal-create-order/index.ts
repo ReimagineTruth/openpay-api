@@ -30,49 +30,33 @@ const getAccessToken = async (clientId: string, secret: string) => {
     body: "grant_type=client_credentials",
   });
   const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.error_description || "PayPal auth failed");
-  }
+  if (!res.ok) throw new Error(data?.error_description || "PayPal auth failed");
   return data.access_token as string;
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { status: 200, headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("Server configuration error");
-    }
+    if (!supabaseUrl || !supabaseServiceKey) throw new Error("Server configuration error");
 
     const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
     const secret = Deno.env.get("PAYPAL_SECRET");
-    if (!clientId || !secret) {
-      throw new Error("PayPal is not configured");
-    }
+    if (!clientId || !secret) throw new Error("PayPal is not configured");
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase: any = createClient(supabaseUrl, supabaseServiceKey);
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new Error("Missing auth token");
-    }
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing auth token");
     const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      throw new Error("Unauthorized");
-    }
+    const authResult = await supabase.auth.getUser(token);
+    const user = authResult?.data?.user;
+    if (authResult?.error || !user) throw new Error("Unauthorized");
 
     const body = await req.json().catch(() => ({}));
-    const amount = Number((body as { amount?: number }).amount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Error("Invalid amount");
-    }
+    const amount = Number((body as any).amount);
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error("Invalid amount");
     const value = amount.toFixed(2);
 
     const accessToken = await getAccessToken(clientId, secret);
@@ -84,18 +68,11 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         intent: "CAPTURE",
-        purchase_units: [
-          {
-            amount: { currency_code: "USD", value },
-            custom_id: user.id,
-          },
-        ],
+        purchase_units: [{ amount: { currency_code: "USD", value }, custom_id: user.id }],
       }),
     });
     const orderData = await orderRes.json();
-    if (!orderRes.ok) {
-      throw new Error(orderData?.message || "PayPal order creation failed");
-    }
+    if (!orderRes.ok) throw new Error(orderData?.message || "PayPal order creation failed");
 
     return jsonResponse({ orderId: orderData.id });
   } catch (error: unknown) {
