@@ -29,12 +29,9 @@ serve(async (req) => {
     const inboundJobKey = req.headers.get("x-job-key") || "";
     if (inboundJobKey !== jobKey) return jsonResponse({ error: "Unauthorized job key" }, 401);
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-    const requestPayload: unknown = await req.json().catch(() => ({}));
-    const requestLimit =
-      typeof requestPayload === "object" && requestPayload !== null && "limit" in requestPayload
-        ? Number((requestPayload as { limit?: number }).limit)
-        : 25;
+    const supabase: any = createClient(supabaseUrl, serviceRoleKey);
+    const requestPayload: any = await req.json().catch(() => ({}));
+    const requestLimit = Number(requestPayload?.limit);
     const limit = Math.min(Math.max(Number.isFinite(requestLimit) ? requestLimit : 25, 1), 100);
 
     const { data: jobs, error: jobsError } = await supabase
@@ -54,54 +51,26 @@ serve(async (req) => {
       try {
         const sendRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: fromEmail,
-            to: [job.to_email],
-            subject: job.subject,
-            text: String(job.body || ""),
-          }),
+          headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: fromEmail, to: [job.to_email], subject: job.subject, text: String(job.body || "") }),
         });
+        if (!sendRes.ok) throw new Error(`Resend error: ${await sendRes.text()}`);
 
-        if (!sendRes.ok) {
-          const errText = await sendRes.text();
-          throw new Error(`Resend error: ${errText}`);
-        }
-
-        const { error: updateErr } = await supabase
-          .from("email_notifications_outbox")
-          .update({
-            status: "sent",
-            sent_at: new Date().toISOString(),
-            attempts: Number(job.attempts || 0) + 1,
-            last_error: null,
-          })
-          .eq("id", job.id);
-        if (updateErr) throw updateErr;
+        await supabase.from("email_notifications_outbox").update({
+          status: "sent", sent_at: new Date().toISOString(), attempts: Number(job.attempts || 0) + 1, last_error: null,
+        }).eq("id", job.id);
         sent += 1;
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "Unknown send error";
-        await supabase
-          .from("email_notifications_outbox")
-          .update({
-            status: "failed",
-            attempts: Number(job.attempts || 0) + 1,
-            last_error: errorMessage,
-          })
-          .eq("id", job.id);
+        await supabase.from("email_notifications_outbox").update({
+          status: "failed", attempts: Number(job.attempts || 0) + 1, last_error: errorMessage,
+        }).eq("id", job.id);
         failed += 1;
       }
     }
 
-    const { count: pending } = await supabase
-      .from("email_notifications_outbox")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending");
-
-    return jsonResponse({ ok: true, sent, failed, pending: pending || 0 });
+    const pendingResult: any = await supabase.from("email_notifications_outbox").select("id", { count: "exact", head: true }).eq("status", "pending");
+    return jsonResponse({ ok: true, sent, failed, pending: pendingResult?.count || 0 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unexpected error";
     return jsonResponse({ error: message }, 400);

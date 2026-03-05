@@ -27,7 +27,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase: any = createClient(supabaseUrl, supabaseServiceKey);
 
     const { action, paymentId, txid, accessToken, adId } = await req.json();
     if (!action || typeof action !== "string") {
@@ -42,9 +42,7 @@ serve(async (req) => {
 
       const piResponse = await fetch("https://api.minepi.com/v2/me", {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       const data = parseJson(await piResponse.text());
@@ -59,18 +57,16 @@ serve(async (req) => {
         return jsonResponse({ error: "Pi auth response missing uid" }, 400);
       }
 
-      return jsonResponse({
-        success: true,
-        data: { uid, username },
-      });
+      return jsonResponse({ success: true, data: { uid, username } });
     }
 
     // All other actions require a valid Supabase session
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return jsonResponse({ error: "Missing auth token" }, 401);
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) return jsonResponse({ error: "Unauthorized" }, 401);
+    const authResult = await supabase.auth.getUser(token);
+    const user = authResult?.data?.user;
+    if (authResult?.error || !user) return jsonResponse({ error: "Unauthorized" }, 401);
 
     const apiKey = Deno.env.get("PI_API_KEY");
     if (!apiKey) return jsonResponse({ error: "PI_API_KEY is not configured" }, 500);
@@ -82,9 +78,7 @@ serve(async (req) => {
 
       const piResponse = await fetch(`https://api.minepi.com/v2/ads_network/status/${adId}`, {
         method: "GET",
-        headers: {
-          Authorization: `Key ${apiKey}`,
-        },
+        headers: { Authorization: `Key ${apiKey}` },
       });
 
       const data = parseJson(await piResponse.text());

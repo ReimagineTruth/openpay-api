@@ -23,13 +23,14 @@ serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     if (!supabaseUrl || !supabaseServiceKey) throw new Error("Server configuration error");
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase: any = createClient(supabaseUrl, supabaseServiceKey);
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing auth token");
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized");
+    const authResult = await supabase.auth.getUser(token);
+    const user = authResult?.data?.user;
+    if (authResult?.error || !user) throw new Error("Unauthorized");
 
     const body = await req.json();
     const {
@@ -48,10 +49,10 @@ serve(async (req: Request) => {
 
     let receiverId = receiver_id;
 
-    // If receiver_email provided (and not the bypass marker), find by email
     if (receiver_email && receiver_email !== "__by_id__") {
       const receiverAuth = await supabase.auth.admin.listUsers();
-      const receiver = receiverAuth?.users?.find((u: { email?: string; id: string }) => u.email === receiver_email);
+      const users = receiverAuth?.data?.users || receiverAuth?.users || [];
+      const receiver = users.find((u: any) => u.email === receiver_email);
       if (!receiver) throw new Error("Recipient not found");
       receiverId = receiver.id;
     }
@@ -79,9 +80,8 @@ serve(async (req: Request) => {
     transferError = primary.error;
 
     if (transferError) {
-      const msg = (transferError as { message?: string })?.message || "";
-      const shouldFallback =
-        /function transfer_funds|does not exist|schema cache/i.test(msg);
+      const msg = (transferError as any)?.message || "";
+      const shouldFallback = /function transfer_funds|does not exist|schema cache/i.test(msg);
       if (shouldFallback) {
         const legacy = await supabase.rpc("transfer_funds", {
           p_sender_id: user.id,
@@ -96,8 +96,8 @@ serve(async (req: Request) => {
 
     if (transferError) {
       const msg =
-        (transferError as { message?: string })?.message ||
-        (transferError as { details?: string })?.details ||
+        (transferError as any)?.message ||
+        (transferError as any)?.details ||
         "Transfer failed";
       throw new Error(msg);
     }

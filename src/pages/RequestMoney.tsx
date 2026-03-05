@@ -31,12 +31,17 @@ interface PaymentRequest {
   requester_id: string;
   payer_id: string;
   amount: number;
-  original_amount?: number | null;
-  original_currency_code?: string | null;
   note: string | null;
   status: string;
   created_at: string;
 }
+
+const parseOriginalAmount = (note: string | null | undefined): { amount: number; code: string } | null => {
+  if (!note) return null;
+  const m = note.match(/\[(\w+)\s+([\d.]+)\]/);
+  if (!m) return null;
+  return { code: m[1], amount: Number(m[2]) };
+};
 
 const RequestMoney = () => {
   const navigate = useNavigate();
@@ -107,7 +112,7 @@ const RequestMoney = () => {
 
     const { data: requestRows } = await supabase
       .from("payment_requests")
-      .select("id, requester_id, payer_id, amount, original_amount, original_currency_code, note, status, created_at")
+      .select("id, requester_id, payer_id, amount, note, status, created_at")
       .or(`requester_id.eq.${user.id},payer_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
 
@@ -454,10 +459,7 @@ const RequestMoney = () => {
       return { amount: amountNum, code };
     };
 
-    const originalFromColumns = request.original_currency_code && request.original_amount
-      ? { amount: Number(request.original_amount), code: String(request.original_currency_code) }
-      : null;
-    const original = originalFromColumns || parseOriginalAmount(request.note);
+    const original = parseOriginalAmount(request.note);
 
     let requestOusdAmount = Number(request.amount || 0);
     if (original) {
@@ -831,10 +833,9 @@ const RequestMoney = () => {
           {incoming.length === 0 && <p className="text-sm text-muted-foreground">No incoming requests</p>}
           {incoming.map((request) => {
             const requester = profileMap.get(request.requester_id);
-            const originalCurrency = request.original_currency_code
-              ? String(request.original_currency_code)
-              : parseOriginalAmount(request.note)?.code;
-            const originalAmount = request.original_amount ?? parseOriginalAmount(request.note)?.amount;
+            const parsed = parseOriginalAmount(request.note);
+            const originalCurrency = parsed?.code;
+            const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
               <div key={request.id} className="border border-border rounded-xl p-3">
@@ -885,10 +886,9 @@ const RequestMoney = () => {
           {outgoing.length === 0 && <p className="text-sm text-muted-foreground">No requests sent yet</p>}
           {outgoing.map((request) => {
             const payer = profileMap.get(request.payer_id);
-            const originalCurrency = request.original_currency_code
-              ? String(request.original_currency_code)
-              : parseOriginalAmount(request.note)?.code;
-            const originalAmount = request.original_amount ?? parseOriginalAmount(request.note)?.amount;
+            const parsed = parseOriginalAmount(request.note);
+            const originalCurrency = parsed?.code;
+            const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
               <div key={request.id} className="border border-border rounded-xl p-3">
