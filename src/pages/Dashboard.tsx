@@ -8,7 +8,7 @@ import CurrencySelector from "@/components/CurrencySelector";
 import { PI_TO_USD, useCurrency } from "@/contexts/CurrencyContext";
 import BrandLogo from "@/components/BrandLogo";
 import TransactionReceipt, { type ReceiptData } from "@/components/TransactionReceipt";
-import { loadAppSecuritySettings } from "@/lib/appSecurity";
+import { isPinSetupCompleted, loadAppSecuritySettings } from "@/lib/appSecurity";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -917,6 +917,20 @@ const Dashboard = () => {
       const profile = profileRes.data;
       setUserName(profile?.full_name || "");
       setUsername(profile?.username || null);
+      const normalizedFullName = String(profile?.full_name || "").trim();
+      const normalizedUsername = String(profile?.username || "").trim();
+      const hasProfile = Boolean(
+        normalizedFullName &&
+        normalizedUsername &&
+        !normalizedUsername.toLowerCase().startsWith("pi_"),
+      );
+      const securitySettings = loadAppSecuritySettings(userIdLocal);
+      const hasPin = Boolean(securitySettings?.pinHash) && isPinSetupCompleted(userIdLocal);
+      if (!hasProfile || !hasPin) {
+        setRefreshing(false);
+        navigate("/onboarding", { replace: true });
+        return;
+      }
       if (profile?.full_name) {
         setLoanApplicantName((current) => current || profile.full_name);
       }
