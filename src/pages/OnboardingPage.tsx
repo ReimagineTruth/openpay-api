@@ -34,13 +34,13 @@ const OnboardingPage = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, username, avatar_url, profile_image_url")
+        .select("full_name, username, avatar_url")
         .eq("id", user.id)
         .single();
 
       const loadedName = (profile?.full_name || "").trim();
       const loadedUsername = (profile?.username || "").trim();
-      setAvatarUrl((profile?.profile_image_url || profile?.avatar_url || "").trim());
+      setAvatarUrl((profile as any)?.profile_image_url || (profile?.avatar_url || ""));
       setFullName(loadedName);
       setUsername(loadedUsername.startsWith("pi_") ? "" : loadedUsername);
 

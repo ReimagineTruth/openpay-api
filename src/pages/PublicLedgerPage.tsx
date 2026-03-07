@@ -134,42 +134,11 @@ const PublicLedgerPage = () => {
   const loadPage = async (nextOffset = 0) => {
     setLoading(true);
     try {
-      // Get user's personal transactions by querying directly with their user ID
-      const { data: userData } = await supabase.auth.getUser();
-      const currentUserId = userData?.user?.id;
-      setUserId(currentUserId || null);
-      
-      let data, error;
-      if (currentUserId) {
-        // For authenticated users, get transactions where they are sender or receiver
-        ({ data, error } = await supabase.rpc("get_public_ledger", {
-          p_limit: PAGE_SIZE,
-          p_offset: nextOffset,
-        }));
-        
-        // Filter the results to show only user's personal transactions
-        if (data && !error) {
-          const allEntries = data as PublicLedgerEntry[];
-          // This is a client-side filter - in production, we'd want a dedicated RPC function
-          const userEntries = allEntries.filter(entry => {
-            // Check if user is involved in this transaction
-            const senderId = entry.payload?.sender_id;
-            const receiverId = entry.payload?.receiver_id;
-            const actorId = entry.payload?.actor_user_id;
-            const relatedId = entry.payload?.related_user_id;
-            
-            return senderId === currentUserId || receiverId === currentUserId || actorId === currentUserId || relatedId === currentUserId;
-          });
-          
-          data = userEntries;
-        }
-      } else {
-        // For non-authenticated users, use public ledger
-        ({ data, error } = await supabase.rpc("get_public_ledger", {
-          p_limit: PAGE_SIZE,
-          p_offset: nextOffset,
-        }));
-      }
+      // Always load the public ledger, regardless of authentication
+      const { data, error } = await supabase.rpc("get_public_ledger", {
+        p_limit: PAGE_SIZE,
+        p_offset: nextOffset,
+      });
 
       if (error) throw new Error(error.message || "Failed to load ledger.");
 
@@ -244,9 +213,7 @@ const PublicLedgerPage = () => {
             <p className="text-xs text-muted-foreground">
               {transactionId
                 ? `OpenLedger record for transaction ${transactionId.slice(0, 8)}...`
-                : userId
-                  ? "Your personal transaction ledger. All your transactions are shown."
-                  : "OpenLedger transaction history. User IDs are not shown."}
+                : "OpenLedger transaction history. User IDs are not shown."}
             </p>
           </div>
         </div>
