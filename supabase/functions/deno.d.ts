@@ -52,8 +52,11 @@ declare module "https://esm.sh/@supabase/supabase-js@2" {
   ) => SupabaseClient;
 }
 
-declare const Deno: {
-  env: {
-    get(key: string): string | undefined;
+declare global {
+  const Deno: {
+    env: {
+      get(key: string): string | undefined;
+    };
   };
-};
+}
+export {};
