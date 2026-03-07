@@ -1288,6 +1288,51 @@ export type Database = {
         }
         Relationships: []
       }
+      staking_positions: {
+        Row: {
+          amount: number
+          claimed_at: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          lock_days: number
+          reward_amount: number
+          reward_rate: number
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          claimed_at?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          lock_days: number
+          reward_amount: number
+          reward_rate: number
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          lock_days?: number
+          reward_amount?: number
+          reward_rate?: number
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_agents: {
         Row: {
           created_at: string
@@ -1819,6 +1864,71 @@ export type Database = {
         }
         Relationships: []
       }
+      user_topup_requests: {
+        Row: {
+          admin_note: string
+          amount: number
+          created_at: string
+          id: string
+          openpay_account_name: string
+          openpay_account_number: string
+          openpay_account_username: string
+          proof_url: string
+          provider: string
+          reference_code: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          transfer_transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string
+          amount: number
+          created_at?: string
+          id?: string
+          openpay_account_name?: string
+          openpay_account_number?: string
+          openpay_account_username?: string
+          proof_url?: string
+          provider?: string
+          reference_code?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          transfer_transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          openpay_account_name?: string
+          openpay_account_number?: string
+          openpay_account_username?: string
+          proof_url?: string
+          provider?: string
+          reference_code?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          transfer_transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_topup_requests_transfer_transaction_id_fkey"
+            columns: ["transfer_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       virtual_cards: {
         Row: {
           card_number: string
@@ -1945,6 +2055,42 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_list_swap_withdrawals: {
+        Args: { p_limit?: number; p_offset?: number; p_status?: string }
+        Returns: {
+          admin_note: string
+          amount: number
+          applicant_display_name: string
+          created_at: string
+          id: string
+          openpay_account_name: string
+          openpay_account_number: string
+          openpay_account_username: string
+          pi_wallet_address: string
+          reviewed_at: string
+          status: string
+          user_id: string
+        }[]
+      }
+      admin_list_topup_requests: {
+        Args: { p_limit?: number; p_offset?: number; p_status?: string }
+        Returns: {
+          admin_note: string
+          amount: number
+          applicant_display_name: string
+          created_at: string
+          id: string
+          openpay_account_name: string
+          openpay_account_number: string
+          openpay_account_username: string
+          proof_url: string
+          provider: string
+          reference_code: string
+          reviewed_at: string
+          status: string
+          user_id: string
+        }[]
+      }
       admin_refund_self_send: {
         Args: {
           p_admin_email?: string
@@ -1959,6 +2105,14 @@ export type Database = {
           p_admin_note?: string
           p_application_id: string
           p_decision: string
+        }
+        Returns: string
+      }
+      admin_review_topup_request: {
+        Args: {
+          p_admin_note?: string
+          p_decision: string
+          p_request_id: string
         }
         Returns: string
       }
@@ -1979,8 +2133,20 @@ export type Database = {
       }
       claim_mining_rewards: { Args: never; Returns: Json }
       claim_referral_rewards: { Args: never; Returns: Json }
-      claim_welcome_bonus: { Args: never; Returns: Json }
       claim_stake: { Args: { p_position_id: string }; Returns: Json }
+      claim_welcome_bonus: { Args: never; Returns: Json }
+      complete_account_onboarding: {
+        Args: {
+          p_full_name: string
+          p_profile_image_url?: string
+          p_security_pin?: string
+          p_username: string
+        }
+        Returns: {
+          message: string
+          success: boolean
+        }[]
+      }
       complete_merchant_checkout_with_transaction:
         | {
             Args: {
@@ -2040,10 +2206,6 @@ export type Database = {
           session_token: string
           total_amount: number
         }[]
-      }
-      create_stake: {
-        Args: { p_amount: number; p_lock_days: number }
-        Returns: Json
       }
       create_merchant_payment_link: {
         Args: {
@@ -2105,6 +2267,10 @@ export type Database = {
           status: string
           total_amount: number
         }[]
+      }
+      create_stake: {
+        Args: { p_amount: number; p_lock_days: number }
+        Returns: Json
       }
       delete_my_merchant_api_key: {
         Args: { p_key_id: string }
@@ -2399,6 +2565,14 @@ export type Database = {
           expires_at: string
         }[]
       }
+      master_topup_internal: {
+        Args: {
+          p_amount: number
+          p_target_account_number?: string
+          p_target_username?: string
+        }
+        Returns: string
+      }
       normalize_openpay_authorization_code: {
         Args: { p_code: string }
         Returns: string
@@ -2636,6 +2810,41 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      submit_topup_request: {
+        Args: {
+          p_amount: number
+          p_openpay_account_name: string
+          p_openpay_account_number: string
+          p_openpay_account_username: string
+          p_proof_url: string
+          p_provider: string
+          p_reference_code: string
+        }
+        Returns: {
+          admin_note: string
+          amount: number
+          created_at: string
+          id: string
+          openpay_account_name: string
+          openpay_account_number: string
+          openpay_account_username: string
+          proof_url: string
+          provider: string
+          reference_code: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          transfer_transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_topup_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       sync_mining_state: { Args: never; Returns: undefined }
       transfer_funds: {
         Args: {
@@ -2709,6 +2918,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      upload_profile_image: {
+        Args: { p_image_url: string }
+        Returns: undefined
       }
       upsert_my_merchant_profile: {
         Args: {
