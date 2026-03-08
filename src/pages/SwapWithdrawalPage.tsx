@@ -28,6 +28,7 @@ const SETTLEMENT_USERNAME = "@openpay";
 const PI_LOGO_URL = "https://i.ibb.co/jk8XtTPj/pi-network-pi-icons-pi-logo-design-illustration-trendy-and-modern-crypto-currency-pi-symbol-for-logo.png";
 const WITHDRAWAL_FEE_RATE = 0.02;
 const PIN_ACTION_KEY = "openpay_pin_action_swap_v1";
+const swapEnabled = String(import.meta.env.VITE_SWAP_ENABLED || "false").toLowerCase() === "true";
 
 const normalizeUsername = (value: string) => value.trim().replace(/^@+/, "").toLowerCase();
 const isSchemaCacheMissingError = (message: string | undefined, target: string) =>
@@ -201,6 +202,10 @@ const SwapWithdrawalPage = () => {
   }, [searchParams]);
 
   const submitWithdrawal = async () => {
+    if (!swapEnabled) {
+      toast.error("Swap withdrawal is coming soon");
+      return;
+    }
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       toast.error("Enter a valid amount");
       return;
@@ -270,6 +275,10 @@ const SwapWithdrawalPage = () => {
 
   const confirmAgreementAndSubmit = async () => {
     if (!agreementChecked) return;
+    if (!swapEnabled) {
+      toast.error("Swap withdrawal is coming soon");
+      return;
+    }
     setAgreementAccepted(true);
     setShowAgreementModal(false);
     setShowConfirmModal(true);
@@ -303,6 +312,13 @@ const SwapWithdrawalPage = () => {
         </div>
 
         <div className="paypal-surface rounded-3xl p-4 space-y-4">
+          {!swapEnabled && (
+            <div className="rounded-2xl border border-border/70 bg-secondary/30 p-4 text-sm text-muted-foreground">
+              <p className="text-base font-semibold text-foreground">Swap Withdrawal</p>
+              <p className="mt-2">This feature is coming soon.</p>
+              <p className="mt-1">You can view your recent requests below once available.</p>
+            </div>
+          )}
           <div className="rounded-2xl border border-border/70 bg-secondary/30 p-4 text-sm text-muted-foreground">
             <p className="font-semibold text-foreground">How this works</p>
             <p className="mt-2">1. Fill in your OpenPay identity and mainnet PI wallet address.</p>
@@ -386,6 +402,8 @@ const SwapWithdrawalPage = () => {
                 value={piWalletAddress}
                 onChange={(e) => setPiWalletAddress(e.target.value)}
                 placeholder="Pi wallet address"
+                readOnly={!swapEnabled}
+                aria-readonly={!swapEnabled ? "true" : undefined}
                 className="h-11 w-full rounded-xl border border-border px-3 text-sm text-foreground"
               />
               <span className="text-[11px] text-muted-foreground">Make sure this is your PI mainnet address.</span>
@@ -413,9 +431,9 @@ const SwapWithdrawalPage = () => {
           <Button
             className="mt-3 h-11 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white hover:bg-[#004dc5]"
             onClick={submitWithdrawal}
-            disabled={loading || !meetsMinimum}
+            disabled={!swapEnabled || loading || !meetsMinimum}
           >
-            {loading ? "Submitting..." : "Submit Withdrawal"}
+            {!swapEnabled ? "Coming Soon" : loading ? "Submitting..." : "Submit Withdrawal"}
           </Button>
           {submitted ? (
             <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
@@ -493,10 +511,10 @@ const SwapWithdrawalPage = () => {
           </label>
           <Button
             className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]"
-            disabled={!agreementChecked}
+            disabled={!swapEnabled || !agreementChecked}
             onClick={confirmAgreementAndSubmit}
           >
-            Accept & Continue
+            {!swapEnabled ? "Coming Soon" : "Accept & Continue"}
           </Button>
         </DialogContent>
       </Dialog>
@@ -533,9 +551,9 @@ const SwapWithdrawalPage = () => {
                 setShowConfirmModal(false);
                 handleProtectedAction(submitWithdrawalRequest);
               }}
-              disabled={loading}
+              disabled={!swapEnabled || loading}
             >
-              Confirm & Submit
+              {!swapEnabled ? "Coming Soon" : "Confirm & Submit"}
             </Button>
             <Button
               variant="outline"

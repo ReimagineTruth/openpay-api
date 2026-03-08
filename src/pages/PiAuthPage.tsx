@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setAppCookie } from "@/lib/userPreferences";
 import AuthFooter from "@/components/AuthFooter";
 import { Loader2, ExternalLink } from "lucide-react";
+import { isPiBrowserUserAgent } from "@/lib/appSecurity";
 
 const PiAuthPage = () => {
   const [piUser, setPiUser] = useState<{ uid: string; username: string } | null>(null);
@@ -15,6 +16,7 @@ const PiAuthPage = () => {
   const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && !!window.Pi);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const inPiBrowser = isPiBrowserUserAgent();
 
   const envSandbox = String(import.meta.env.VITE_PI_SANDBOX || "").trim().toLowerCase();
   const sandbox =
@@ -29,7 +31,9 @@ const PiAuthPage = () => {
 
   const initPi = () => {
     if (!window.Pi) {
-      toast.error("Pi SDK not loaded");
+      if (inPiBrowser) {
+        toast.error("Pi SDK not loaded");
+      }
       return false;
     }
     window.Pi.init({ version: "2.0", sandbox });
@@ -230,47 +234,59 @@ const PiAuthPage = () => {
           </div>
 
           <div className="rounded-2xl border border-border/70 bg-white dark:bg-[#0f172a] p-3">
-            <h2 className="text-base font-semibold text-gray-800 dark:text-white">Pi Browser</h2>
+            <h2 className="text-base font-semibold text-gray-800 dark:text-white">
+              {inPiBrowser ? "Pi Browser" : "Sign In"}
+            </h2>
             <p className="mt-1 text-sm text-gray-600 dark:text-white/80">
-              Connect your Pi account securely with Pi authentication.
+              {inPiBrowser
+                ? "Connect your Pi account securely with Pi authentication."
+                : "Sign in with email to use OpenPay in any browser. Pi authentication is available when using Pi Browser."}
             </p>
-            <p className="mt-1 text-xs text-gray-500 dark:text-white/60">
-              You're using Pi Browser! For security, all users must authenticate through Pi Browser. Email sign-in is only available for OpenPay App, Desktop, Tablet, or regular Browser for full-screen experience, notifications, POS, and Merchant Portal access.
-            </p>
+            {inPiBrowser ? (
+              <p className="mt-1 text-xs text-gray-500 dark:text-white/60">
+                You're using Pi Browser! For security, all users must authenticate through Pi Browser.
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-gray-500 dark:text-white/60">
+                You're using a regular browser. Use email sign-in here. To link or authenticate a Pi account, open this app in Pi Browser.
+              </p>
+            )}
             {!!searchParams.get("ref") && (
               <p className="mt-1 text-xs text-paypal-blue dark:text-blue-400">
                 Referral code detected: {(searchParams.get("ref") || "").trim().toLowerCase()}
               </p>
             )}
-            {!sdkReady && (
+            {inPiBrowser && !sdkReady && (
               <p className="mt-1 text-xs text-destructive dark:text-red-300">
                 Pi SDK is unavailable. Please open this app in Pi Browser.
               </p>
             )}
             <div className="mt-4 space-y-2">
-              <Button
-                onClick={handlePiAuth}
-                disabled={busyAuth || !sdkReady}
-                className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5] relative overflow-hidden"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  {busyAuth ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Authenticating...</span>
-                    </>
-                  ) : !sdkReady ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Loading Pi SDK...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Authenticate with Pi</span>
-                    </>
-                  )}
-                </div>
-              </Button>
+              {inPiBrowser && (
+                <Button
+                  onClick={handlePiAuth}
+                  disabled={busyAuth || !sdkReady}
+                  className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5] relative overflow-hidden"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    {busyAuth ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Authenticating...</span>
+                      </>
+                    ) : !sdkReady ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Loading Pi SDK...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Authenticate with Pi</span>
+                      </>
+                    )}
+                  </div>
+                </Button>
+              )}
               <div className="grid grid-cols-1 gap-2">
                 <Button
                   asChild
@@ -278,9 +294,7 @@ const PiAuthPage = () => {
                   variant="outline"
                   className="h-11 w-full rounded-2xl"
                 >
-                  <Link to="/sign-in?mode=signin">
-                    Sign In with Email
-                  </Link>
+                  <Link to="/sign-in?mode=signin">Sign In with Email</Link>
                 </Button>
                 <Button
                   asChild
