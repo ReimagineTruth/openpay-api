@@ -17,7 +17,7 @@ import {
   registerBiometricCredential,
   saveAppSecuritySettings,
 } from "@/lib/appSecurity";
-import { loadUserPreferences, upsertUserPreferences } from "@/lib/userPreferences";
+import { deleteAppCookie, loadUserPreferences, upsertUserPreferences } from "@/lib/userPreferences";
 import { APP_LANGUAGE_OPTIONS, applyStoredAppLanguage, getStoredAppLanguage } from "@/lib/appLanguage";
 import { AppThemeMode, getStoredAppTheme, persistAndApplyAppTheme } from "@/lib/appTheme";
 
@@ -39,6 +39,7 @@ const SettingsPage = () => {
   const [appLanguage, setAppLanguage] = useState(getStoredAppLanguage());
   const [qrPrintSettings, setQrPrintSettings] = useState<Record<string, unknown>>({});
   const [themeMode, setThemeMode] = useState<AppThemeMode>(getStoredAppTheme());
+  const [resettingOnboarding, setResettingOnboarding] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -271,6 +272,31 @@ const SettingsPage = () => {
     toast.success(`${nextTheme === "dark" ? "Dark" : "Light"} mode enabled`);
   };
 
+  const handleResetOnboarding = async () => {
+    if (!userId) return;
+
+    setResettingOnboarding(true);
+    try {
+      const onboardingKey = `openpay_onboarding_done_v1_${userId}`;
+      try {
+        localStorage.removeItem(onboardingKey);
+      } catch {
+        // ignore local storage failures
+      }
+      deleteAppCookie(onboardingKey);
+
+      await upsertUserPreferences(userId, { onboarding_completed: false, onboarding_step: 0 });
+
+      toast.success("Onboarding reset. Please complete setup again.");
+      navigate("/onboarding?reset=1", { replace: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to reset onboarding";
+      toast.error(message);
+    } finally {
+      setResettingOnboarding(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background px-4 pt-4">
       <div className="mb-5 flex items-center gap-3">
@@ -339,6 +365,21 @@ const SettingsPage = () => {
 
         <Button onClick={handleSave} disabled={saving} className="mt-5 h-12 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]">
           {saving ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
+
+      <div className="paypal-surface mt-4 rounded-3xl p-4">
+        <h2 className="text-lg font-bold text-foreground">Onboarding</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Reset onboarding so you can run account setup again.
+        </p>
+        <Button
+          variant="outline"
+          onClick={handleResetOnboarding}
+          disabled={resettingOnboarding || !userId}
+          className="mt-4 h-11 w-full rounded-2xl"
+        >
+          {resettingOnboarding ? "Resetting..." : "Reset onboarding"}
         </Button>
       </div>
 

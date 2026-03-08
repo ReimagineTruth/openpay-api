@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { hashSecret, loadAppSecuritySettings, markPinSetupCompleted, saveAppSecuritySettings } from "@/lib/appSecurity";
-import { loadUserPreferences, setAppCookie, upsertUserPreferences } from "@/lib/userPreferences";
+import { getAppCookie, loadUserPreferences, setAppCookie, upsertUserPreferences } from "@/lib/userPreferences";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -46,9 +47,11 @@ const OnboardingPage = () => {
 
       const localSettings = loadAppSecuritySettings(user.id);
       let prefPinHash: string | undefined;
+      let prefOnboardingCompleted = false;
       try {
         const prefs = await loadUserPreferences(user.id);
         prefPinHash = prefs.security_settings?.pinHash;
+        prefOnboardingCompleted = Boolean(prefs.onboarding_completed);
         if (prefPinHash && !localSettings.pinHash) {
           const merged = { ...prefs.security_settings, ...localSettings };
           saveAppSecuritySettings(user.id, merged);
@@ -57,11 +60,29 @@ const OnboardingPage = () => {
         // Ignore DB preferences errors; fall back to device-only settings.
       }
 
-      setPinAlreadySet(Boolean(localSettings?.pinHash || prefPinHash));
+      const pinIsSet = Boolean(localSettings?.pinHash || prefPinHash);
+      setPinAlreadySet(pinIsSet);
+
+      const allowRepeat = new URLSearchParams(location.search).get("reset") === "1";
+      const hasProfile = Boolean(
+        loadedName &&
+        loadedUsername &&
+        !loadedUsername.toLowerCase().startsWith("pi_"),
+      );
+      const onboardingKey = `openpay_onboarding_done_v1_${user.id}`;
+      const hasFinishedOnboarding =
+        prefOnboardingCompleted ||
+        (typeof window !== "undefined" && localStorage.getItem(onboardingKey) === "1") ||
+        getAppCookie(onboardingKey) === "1";
+
+      if (!allowRepeat && hasProfile && pinIsSet && hasFinishedOnboarding) {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
     };
 
     void load();
-  }, [navigate]);
+  }, [location.search, navigate]);
 
   const normalizedUsername = useMemo(() => {
     return username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");

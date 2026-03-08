@@ -925,11 +925,14 @@ const Dashboard = () => {
         !normalizedUsername.toLowerCase().startsWith("pi_"),
       );
       const securitySettings = loadAppSecuritySettings(userIdLocal);
-      if (!hasProfile) {
-        setRefreshing(false);
-        navigate("/onboarding", { replace: true });
-        return;
-      }
+
+      const agreementKey = `openpay_usage_agreement_v1_${userIdLocal}`;
+      const onboardingKey = `openpay_onboarding_done_v1_${userIdLocal}`;
+      const hideBalanceKey = `openpay_hide_balance_v1_${userIdLocal}`;
+      const hasCompletedOnboardingLocally =
+        (typeof window !== "undefined" && localStorage.getItem(onboardingKey) === "1") ||
+        getAppCookie(onboardingKey) === "1";
+
       if (profile?.full_name) {
         setLoanApplicantName((current) => current || profile.full_name);
       }
@@ -962,6 +965,17 @@ const Dashboard = () => {
       }
       if (normalizedAccount?.account_username) {
         setLoanContactNumber((current) => current || normalizedAccount.account_username);
+      }
+
+      const hasAccountProfileFallback = Boolean(
+        String(normalizedAccount?.account_name || "").trim() &&
+        String(normalizedAccount?.account_username || "").trim(),
+      );
+
+      if (!hasProfile && !hasAccountProfileFallback && !hasCompletedOnboardingLocally) {
+        setRefreshing(false);
+        navigate("/onboarding", { replace: true });
+        return;
       }
 
       const savingsTransferRows = savingsTransfersRes.data;
@@ -1019,9 +1033,6 @@ const Dashboard = () => {
       setMiningBalance(miningInfo.miningBalance);
       setActiveMiningSession(miningInfo.session);
 
-      const agreementKey = `openpay_usage_agreement_v1_${userIdLocal}`;
-      const onboardingKey = `openpay_onboarding_done_v1_${userIdLocal}`;
-      const hideBalanceKey = `openpay_hide_balance_v1_${userIdLocal}`;
       const refCookie = getAppCookie(`openpay_ref_code_${userIdLocal}`) || getAppCookie("openpay_last_ref");
       let prefs = {
         hide_balance: false,
@@ -1057,13 +1068,16 @@ const Dashboard = () => {
 
       const hasAcceptedAgreement =
         prefs.usage_agreement_accepted ||
-        (typeof window !== "undefined" && localStorage.getItem(agreementKey) === "1");
+        (typeof window !== "undefined" &&
+          (localStorage.getItem(agreementKey) === "1" || getAppCookie(agreementKey) === "1"));
       const hasFinishedOnboarding =
         prefs.onboarding_completed ||
-        (typeof window !== "undefined" && localStorage.getItem(onboardingKey) === "1");
+        (typeof window !== "undefined" &&
+          (localStorage.getItem(onboardingKey) === "1" || getAppCookie(onboardingKey) === "1"));
       const hideBalance =
         prefs.hide_balance ||
-        (typeof window !== "undefined" && localStorage.getItem(hideBalanceKey) === "1");
+        (typeof window !== "undefined" &&
+          (localStorage.getItem(hideBalanceKey) === "1" || getAppCookie(hideBalanceKey) === "1"));
 
       if (refCookie && !profile?.referral_code) {
         await upsertUserPreferences(userIdLocal, { reference_code: refCookie }).catch(() => undefined);

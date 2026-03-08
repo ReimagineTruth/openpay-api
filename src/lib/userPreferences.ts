@@ -80,6 +80,11 @@ export const setAppCookie = (name: string, value: string, maxAgeSeconds = 60 * 6
   document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAgeSeconds}; Path=/; SameSite=Lax`;
 };
 
+export const deleteAppCookie = (name: string) => {
+  if (typeof document === "undefined") return;
+  document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`;
+};
+
 export const getAppCookie = (name: string) => {
   if (typeof document === "undefined") return null;
   const prefix = `${encodeURIComponent(name)}=`;
