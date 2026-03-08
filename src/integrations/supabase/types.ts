@@ -2721,6 +2721,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      skip_account_onboarding: {
+        Args: never
+        Returns: {
+          message: string
+          success: boolean
+        }[]
+      }
       start_mining_session: {
         Args: {
           p_ad_verified?: boolean

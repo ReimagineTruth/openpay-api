@@ -235,7 +235,7 @@ const PiAuthPage = () => {
               Connect your Pi account securely with Pi authentication.
             </p>
             <p className="mt-1 text-xs text-gray-500 dark:text-white/60">
-              Note: OpenPay works in the Pi Browser.
+              You're using Pi Browser! For security, all users must authenticate through Pi Browser. Email sign-in is only available for OpenPay App, Desktop, Tablet, or regular Browser for full-screen experience, notifications, POS, and Merchant Portal access.
             </p>
             {!!searchParams.get("ref") && (
               <p className="mt-1 text-xs text-paypal-blue dark:text-blue-400">
