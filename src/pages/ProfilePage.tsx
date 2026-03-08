@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { upsertUserPreferences } from "@/lib/userPreferences";
+import { generateOpenPayAccountNumber } from "@/lib/openpayIdentity";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -110,12 +111,15 @@ const ProfilePage = () => {
       return;
     }
 
+    const trimmedName = fullName.trim();
+    const trimmedUsername = username.trim() || null;
+
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
       .update({
-        full_name: fullName.trim(),
-        username: username.trim() || null,
+        full_name: trimmedName,
+        username: trimmedUsername,
         avatar_url: avatarUrl.trim() || null,
       })
       .eq("id", userId);
@@ -127,9 +131,26 @@ const ProfilePage = () => {
     }
 
     upsertUserPreferences(userId, {
-      profile_full_name: fullName.trim(),
-      profile_username: username.trim() || null,
+      profile_full_name: trimmedName,
+      profile_username: trimmedUsername,
     }).catch(() => undefined);
+
+    if (trimmedUsername) {
+      try {
+        const accountNumber = generateOpenPayAccountNumber(userId);
+        await supabase.from("user_accounts").upsert(
+          {
+            user_id: userId,
+            account_number: accountNumber,
+            account_name: trimmedName,
+            account_username: trimmedUsername,
+          },
+          { onConflict: "user_id" },
+        );
+      } catch {
+        // ignore
+      }
+    }
     toast.success("Profile updated");
   };
 

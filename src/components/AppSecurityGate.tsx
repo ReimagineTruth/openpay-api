@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Check, Delete } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ const AppSecurityGate = () => {
   const [busy, setBusy] = useState(false);
   const [accountLabel, setAccountLabel] = useState("Secure Account");
   const [settings, setSettings] = useState(() => ({} as ReturnType<typeof loadAppSecuritySettings>));
+  const pinInputRef = useRef<HTMLInputElement | null>(null);
 
   const hasPin = Boolean(settings.pinHash);
   const hasPassword = Boolean(settings.passwordHash);
@@ -134,8 +136,24 @@ const AppSecurityGate = () => {
     setError("");
   };
 
+  const handlePinDigitPress = (digit: string) => {
+    if (busy) return;
+    if (!/^\d$/.test(digit)) return;
+    setPin((prev) => (prev + digit).replace(/\D/g, "").slice(0, 8));
+  };
+
+  const handlePinBackspace = () => {
+    if (busy) return;
+    setPin((prev) => prev.slice(0, -1));
+  };
+
   const handleUnlockWithPin = async () => {
     if (!settings.pinHash) return;
+    setError("");
+    if (pin.replace(/\D/g, "").length < 4) {
+      setError("PIN must be at least 4 digits.");
+      return;
+    }
     setBusy(true);
     const hashed = await hashSecret(pin);
     setBusy(false);
@@ -182,7 +200,7 @@ const AppSecurityGate = () => {
 
   return (
     <div
-      className="openpay-lock-scroll fixed inset-0 z-[100] overflow-y-auto bg-gradient-to-b from-paypal-blue to-[#072a7a] text-white dark:from-slate-950 dark:to-slate-900"
+      className="openpay-lock-scroll fixed inset-0 z-[10000] overflow-y-auto touch-manipulation bg-gradient-to-b from-paypal-blue to-[#072a7a] text-white dark:from-slate-950 dark:to-slate-900"
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
       <style>{`
@@ -210,19 +228,64 @@ const AppSecurityGate = () => {
                 inputMode="numeric"
                 placeholder="Enter PIN"
                 value={pin}
-                onChange={(event) => setPin(event.target.value)}
+                onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 8))}
+                autoFocus
+                maxLength={8}
+                autoComplete="off"
+                ref={pinInputRef}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void handleUnlockWithPin();
+                  }
+                }}
                 className="mt-4 h-12 rounded-2xl border-paypal-light-blue/70 bg-[#edf3ff] text-center text-lg dark:border-border dark:bg-secondary dark:text-foreground"
               />
               <div className="mt-3 flex justify-center gap-2">
-                {[0, 1, 2, 3].map((dot) => (
+                {[0, 1, 2, 3, 4, 5, 6, 7].map((dot) => (
                   <span
                     key={dot}
                     className={`h-2.5 w-2.5 rounded-full border ${pin.length > dot ? "border-paypal-blue bg-paypal-blue" : "border-paypal-light-blue bg-transparent"}`}
                   />
                 ))}
               </div>
+              <div className="mt-5 grid grid-cols-3 gap-3 text-paypal-dark dark:text-foreground">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => handlePinDigitPress(String(n))}
+                    className="flex h-12 items-center justify-center rounded-2xl border border-paypal-light-blue/60 bg-white text-xl font-semibold transition active:scale-95 dark:border-border dark:bg-secondary"
+                  >
+                    {n}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={handlePinBackspace}
+                  className="flex h-12 items-center justify-center rounded-2xl border border-paypal-light-blue/60 bg-white transition active:scale-95 dark:border-border dark:bg-secondary"
+                  aria-label="Backspace"
+                >
+                  <Delete className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePinDigitPress("0")}
+                  className="flex h-12 items-center justify-center rounded-2xl border border-paypal-light-blue/60 bg-white text-xl font-semibold transition active:scale-95 dark:border-border dark:bg-secondary"
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleUnlockWithPin()}
+                  disabled={busy || pin.replace(/\D/g, "").length < 4}
+                  className="flex h-12 items-center justify-center rounded-2xl bg-paypal-blue text-white transition active:scale-95 disabled:bg-paypal-blue/45"
+                  aria-label="Unlock"
+                >
+                  <Check className="h-6 w-6" />
+                </button>
+              </div>
               <Button
-                disabled={busy || !pin.trim()}
+                disabled={busy || pin.replace(/\D/g, "").length < 4}
                 onClick={handleUnlockWithPin}
                 className={`mt-4 ${primaryButtonClass}`}
               >

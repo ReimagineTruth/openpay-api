@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { getAppCookie, loadUserPreferences, setAppCookie, upsertUserPreferences } from "@/lib/userPreferences";
 import { isRemittanceUiEnabled } from "@/lib/remittanceAccess";
 import { playUiSound } from "@/lib/appSounds";
+import { isPlaceholderOpenPayAccount } from "@/lib/openpayIdentity";
 
 interface Transaction {
   id: string;
@@ -967,14 +968,26 @@ const Dashboard = () => {
         setLoanContactNumber((current) => current || normalizedAccount.account_username);
       }
 
+      const hasRealAccountIdentity = Boolean(
+        normalizedAccount &&
+        String(normalizedAccount.account_name || "").trim() &&
+        String(normalizedAccount.account_username || "").trim() &&
+        !isPlaceholderOpenPayAccount(normalizedAccount.account_name, normalizedAccount.account_username),
+      );
+
       const hasAccountProfileFallback = Boolean(
-        String(normalizedAccount?.account_name || "").trim() &&
-        String(normalizedAccount?.account_username || "").trim(),
+        hasRealAccountIdentity,
       );
 
       if (!hasProfile && !hasAccountProfileFallback && !hasCompletedOnboardingLocally) {
         setRefreshing(false);
         navigate("/onboarding", { replace: true });
+        return;
+      }
+
+      if (!hasProfile && !hasAccountProfileFallback && hasCompletedOnboardingLocally) {
+        setRefreshing(false);
+        navigate("/onboarding?reset=1", { replace: true });
         return;
       }
 

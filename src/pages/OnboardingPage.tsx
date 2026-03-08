@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { hashSecret, loadAppSecuritySettings, markPinSetupCompleted, saveAppSecuritySettings } from "@/lib/appSecurity";
 import { getAppCookie, loadUserPreferences, setAppCookie, upsertUserPreferences } from "@/lib/userPreferences";
+import { generateOpenPayAccountNumber } from "@/lib/openpayIdentity";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
@@ -125,9 +126,10 @@ const OnboardingPage = () => {
       data: { publicUrl },
     } = supabase.storage.from("avatars").getPublicUrl(path);
 
-    const { error: profileError } = await (supabase as any).rpc("upload_profile_image", {
-      p_image_url: publicUrl,
-    });
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", userId);
 
     setUploadingAvatar(false);
     if (profileError) {
@@ -167,16 +169,59 @@ const OnboardingPage = () => {
     try {
       // Keep onboarding behavior aligned with Settings: update profile + user_preferences.
       // Avoid relying on server-side onboarding RPCs that may insert invalid user_accounts rows.
-      const { error: profileError } = await supabase
+      const trimmedName = fullName.trim();
+      const trimmedUsername = normalizedUsername;
+
+      const { data: updatedRows, error: profileError } = await supabase
         .from("profiles")
         .update({
-          full_name: fullName.trim(),
-          username: normalizedUsername,
+          full_name: trimmedName,
+          username: trimmedUsername,
         })
-        .eq("id", userId);
+        .eq("id", userId)
+        .select("id");
 
       if (profileError) {
         throw new Error(profileError.message || "Failed to save profile");
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        const referralBase = trimmedUsername || `user_${userId.replace(/-/g, "").slice(0, 8)}`;
+        let created = false;
+        for (let attempt = 0; attempt < 6; attempt++) {
+          const referral_code = attempt === 0 ? referralBase : `${referralBase}${attempt}`;
+          const insertPayload = {
+            id: userId,
+            full_name: trimmedName,
+            username: trimmedUsername,
+            referral_code,
+          } as any;
+
+          const { error: insertError } = await supabase.from("profiles").insert(insertPayload);
+          if (!insertError) {
+            created = true;
+            break;
+          }
+
+          const msg = String(insertError.message || "");
+          if (msg.toLowerCase().includes("column") && msg.toLowerCase().includes("referral_code")) {
+            const { error: retryError } = await supabase.from("profiles").insert({
+              id: userId,
+              full_name: trimmedName,
+              username: trimmedUsername,
+            } as any);
+            if (!retryError) {
+              created = true;
+              break;
+            }
+          }
+        }
+
+        if (!created) {
+          throw new Error(
+            "Profile record was missing and could not be created. Apply the latest Supabase migrations then try again.",
+          );
+        }
       }
 
       let securitySettingsToPersist = loadAppSecuritySettings(userId);
@@ -190,8 +235,8 @@ const OnboardingPage = () => {
       markPinSetupCompleted(userId);
 
       upsertUserPreferences(userId, {
-        profile_full_name: fullName.trim(),
-        profile_username: normalizedUsername,
+        profile_full_name: trimmedName,
+        profile_username: trimmedUsername,
         onboarding_completed: true,
         onboarding_step: 5,
         security_settings: securitySettingsToPersist,
@@ -208,7 +253,20 @@ const OnboardingPage = () => {
 
       // Best-effort: ensure user_accounts exists for dashboard; don't block onboarding on this.
       try {
-        await (supabase as any).rpc("upsert_my_user_account");
+        const accountNumber = generateOpenPayAccountNumber(userId);
+        const { error: accountError } = await supabase.from("user_accounts").upsert(
+          {
+            user_id: userId,
+            account_number: accountNumber,
+            account_name: trimmedName,
+            account_username: trimmedUsername,
+          },
+          { onConflict: "user_id" },
+        );
+
+        if (accountError) {
+          await (supabase as any).rpc("upsert_my_user_account");
+        }
       } catch {
         // ignore rpc failures
       }

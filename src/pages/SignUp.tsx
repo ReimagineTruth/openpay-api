@@ -21,7 +21,7 @@ const SignUp = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -33,8 +33,14 @@ const SignUp = () => {
     if (error) {
       toast.error(error.message);
     } else {
+      if (!data.session) {
+        toast.success("Account created! Check your email to confirm, then log in.");
+        navigate("/signin", { replace: true });
+        return;
+      }
+
       toast.success("Account created!");
-      navigate("/dashboard");
+      navigate("/onboarding", { replace: true });
     }
   };
 
