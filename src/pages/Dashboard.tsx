@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
-import { Bell, Check, ChevronDown, ChevronUp, CircleDollarSign, Coins, Copy, CreditCard, Eye, EyeOff, ExternalLink, FileText, HandCoins, PiggyBank, QrCode, RefreshCw, Settings, Store, TrendingUp, Users, Pickaxe, LayoutGrid } from "lucide-react";
+import { Bell, Check, ChevronDown, ChevronUp, CircleDollarSign, Coins, Copy, CreditCard, Eye, EyeOff, ExternalLink, FileText, HandCoins, PiggyBank, QrCode, RefreshCw, Settings, Store, TrendingUp, Users, Pickaxe, LayoutGrid, ArrowLeftRight } from "lucide-react";
 import { format, differenceInSeconds } from "date-fns";
 import CurrencySelector from "@/components/CurrencySelector";
 import { PI_TO_USD, useCurrency } from "@/contexts/CurrencyContext";
@@ -44,7 +44,7 @@ interface UserAccount {
   account_username: string;
 }
 
-type DashboardSection = "wallet" | "savings" | "credit" | "loans" | "cards" | "buy" | "swap" | "analytics";
+type DashboardSection = "wallet" | "savings" | "credit" | "loans" | "cards" | "buy" | "swap" | "mining" | "analytics";
 type MerchantMode = "sandbox" | "live";
 type BuyOnrampProvider =
   | "Pi Payment"
@@ -297,6 +297,12 @@ const Dashboard = () => {
     }
     return true;
   });
+  const [swapAmount, setSwapAmount] = useState("");
+  const parsedSwapAmount = Number(swapAmount);
+  const safeSwapAmount = Number.isFinite(parsedSwapAmount) && parsedSwapAmount > 0 ? parsedSwapAmount : 0;
+  const swapMeetsMinimum = safeSwapAmount >= 10;
+  const swapFeeAmount = safeSwapAmount > 0 ? Number((safeSwapAmount * 0.02).toFixed(2)) : 0;
+  const swapPayoutPiAmount = safeSwapAmount > 0 ? (safeSwapAmount - swapFeeAmount) * OUSD_TO_PI : 0;
   const [showOpenAppBanner, setShowOpenAppBanner] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("dashboard_openapp_banner_visible");
@@ -1780,12 +1786,14 @@ const Dashboard = () => {
             : activeSection === "buy"
               ? "Buy OpenUSD"
               : activeSection === "swap"
-                ? "Mining"
+                ? "Swap"
+                : activeSection === "mining"
+                  ? "Mining"
                 : activeSection === "analytics"
                   ? "Analytics Dashboard"
                   : `${getGreeting()}, ${userName.split(" ")[0] || "there"}`}
         </h1>
-        {activeSection !== "cards" && activeSection !== "buy" && activeSection !== "swap" && activeSection !== "analytics" && username && (
+        {activeSection !== "cards" && activeSection !== "buy" && activeSection !== "swap" && activeSection !== "mining" && activeSection !== "analytics" && username && (
           <p className="text-base text-muted-foreground">@{username}</p>
         )}
       </div>
@@ -1800,7 +1808,8 @@ const Dashboard = () => {
               { key: "loans", label: "Loans" },
               { key: "cards", label: "Cards" },
               { key: "buy", label: "Buy" },
-              { key: "swap", label: "Mining" },
+              { key: "swap", label: "Swap" },
+              { key: "mining", label: "Mining" },
               { key: "analytics", label: "Analytics" },
             ] as Array<{ key: DashboardSection; label: string }>).map((item) => (
               <button
@@ -2460,6 +2469,69 @@ const Dashboard = () => {
         <div className="mx-4 mt-4 space-y-4">
           <div className="paypal-surface rounded-3xl p-4">
             <div className="mb-3 flex items-center justify-between">
+              <p className="text-xl font-semibold text-foreground">Swap Withdrawal</p>
+              <span className="rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                OUSD → PI payout
+              </span>
+            </div>
+            <div className="rounded-2xl bg-secondary/30 p-4">
+              <p className="text-sm text-muted-foreground">Amount (min 10 OUSD)</p>
+              <input
+                value={swapAmount}
+                onChange={(e) => setSwapAmount(normalizeAmountInput(e.target.value))}
+                type="text"
+                inputMode="decimal"
+                placeholder="Enter amount in OUSD"
+                className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+              />
+              <div className="mt-3 rounded-2xl border border-border/70 bg-secondary/30 p-3 text-sm text-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Amount</span>
+                  <span className="font-semibold">{safeSwapAmount.toFixed(2)} OUSD</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Fee (2%)</span>
+                  <span>-{swapFeeAmount.toFixed(2)} OUSD</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="font-semibold">You will receive</span>
+                  <span className="inline-flex items-center gap-2 font-semibold text-paypal-blue">
+                    {swapPayoutPiAmount.toFixed(4)} PI
+                  </span>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Rate: 1 PI = {PI_TO_OUSD.toFixed(2)} OUSD. Processing fee is 2%.
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/swap-withdrawal?amount=${safeSwapAmount.toFixed(2)}`)}
+                  className="h-11 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white hover:bg-[#004dc5]"
+                  disabled={!swapMeetsMinimum}
+                >
+                  Continue
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/swap-withdrawal")}
+                  className="h-11 w-full rounded-xl border border-paypal-blue/40 bg-white text-sm font-semibold text-paypal-blue"
+                >
+                  View Withdrawals
+                </button>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              You will confirm your OpenPay identity and PI mainnet wallet on the next screen.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {activeSection === "mining" && (
+        <div className="mx-4 mt-4 space-y-4">
+          <div className="paypal-surface rounded-3xl p-4">
+            <div className="mb-3 flex items-center justify-between">
               <p className="text-xl font-semibold text-foreground">Mining</p>
               <span className="rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">Earn OPEN USD</span>
             </div>
@@ -3079,6 +3151,32 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-paypal-blue/10">
+                    <ArrowLeftRight className="h-5 w-5 text-paypal-blue" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Swap Withdrawal</p>
+                    <p className="text-xs text-muted-foreground">Convert OUSD to PI</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection("swap")}
+                  className="rounded-xl bg-paypal-blue px-4 py-2 text-sm font-semibold text-white hover:bg-[#004dc5] transition"
+                >
+                  Start
+                </button>
+              </div>
+              <div className="mt-3 flex items-center justify-center rounded-xl bg-white/5 p-3 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Rate fixed: <span className="font-semibold text-paypal-blue">1 PI = {PI_TO_OUSD.toFixed(2)} OUSD</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="paypal-surface rounded-3xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-paypal-blue/10">
                     <Pickaxe className="h-5 w-5 text-paypal-blue" />
                   </div>
                   <div>
@@ -3344,7 +3442,7 @@ const Dashboard = () => {
             <button
               onClick={() => {
                 setShowBuyOptions(false);
-                setActiveSection("swap");
+                setActiveSection("mining");
               }}
               className="rounded-2xl border border-border/70 bg-secondary/50 p-3 text-center transition hover:bg-secondary"
             >
@@ -3366,6 +3464,19 @@ const Dashboard = () => {
               </div>
               <p className="text-sm font-semibold text-foreground">Staking</p>
               <p className="text-xs text-muted-foreground">Earn Yield</p>
+            </button>
+            <button
+              onClick={() => {
+                setShowBuyOptions(false);
+                setActiveSection("swap");
+              }}
+              className="rounded-2xl border border-border/70 bg-secondary/50 p-3 text-center transition hover:bg-secondary"
+            >
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-white">
+                <ArrowLeftRight className="h-5 w-5 text-paypal-blue" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Swap</p>
+              <p className="text-xs text-muted-foreground">OUSD to PI</p>
             </button>
           </div>
         </DialogContent>
