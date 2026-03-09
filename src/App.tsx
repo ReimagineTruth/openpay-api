@@ -23,6 +23,7 @@ import TopUpStripe from "./pages/TopUpStripe";
 import TopUpVenmo from "./pages/TopUpVenmo";
 import TopUpUSDT from "./pages/TopUpUSDT";
 import TopUpUSDC from "./pages/TopUpUSDC";
+import TopUpSolanaPay from "./pages/TopUpSolanaPay";
 import ReceivePage from "./pages/ReceivePage";
 import Contacts from "./pages/Contacts";
 import MenuPage from "./pages/MenuPage";
@@ -157,6 +158,7 @@ const AppRoutes = () => {
         <Route path="/topup-venmo" element={<TopUpVenmo />} />
         <Route path="/topup-usdt" element={<TopUpUSDT />} />
         <Route path="/topup-usdc" element={<TopUpUSDC />} />
+        <Route path="/topup-solana-pay" element={<TopUpSolanaPay />} />
         <Route path="/receive" element={<ReceivePage />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/menu" element={<MenuPage />} />

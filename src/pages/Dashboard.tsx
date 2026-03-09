@@ -51,6 +51,7 @@ type BuyOnrampProvider =
   | "Ewallet QR PH"
   | "USDT"
   | "USDC"
+  | "Solana Pay"
   | "PayPal"
   | "Apple Pay"
   | "Debit Card"
@@ -66,6 +67,7 @@ type BuyPaymentMethod =
   | "Ewallet"
   | "USDT"
   | "USDC"
+  | "Solana Pay"
   | "Debit Card"
   | "Credit Card"
   | "Apple Pay"
@@ -88,6 +90,7 @@ const VISA_ICON_URL = "https://i.ibb.co/G3FGwngR/Visa-Inc-logo-2021-present-svg.
 const MASTERCARD_ICON_URL = "https://i.ibb.co/9kkZmFDq/Mastercard-2019-logo-svg.png";
 const USDT_ICON_URL = "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png";
 const USDC_ICON_URL = "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png";
+const SOLANA_PAY_ICON_URL = "https://cryptologos.cc/logos/solana-sol-logo.png?v=040";
 const TRANSFI_ICON_URL = "https://logo.clearbit.com/transfi.com";
 const ONRAMP_MONEY_ICON_URL = "https://logo.clearbit.com/onramp.money";
 const BANXA_ICON_URL = "https://logo.clearbit.com/banxa.com";
@@ -1586,6 +1589,7 @@ const Dashboard = () => {
     { key: "Ewallet QR PH", subtitle: "Active" },
     { key: "USDT", subtitle: "Active" },
     { key: "USDC", subtitle: "Active" },
+    { key: "Solana Pay", subtitle: "Active" },
     { key: "PayPal", subtitle: "Active" },
     { key: "Apple Pay", subtitle: "Active" },
     { key: "Google Pay", subtitle: "Active" },
@@ -1602,6 +1606,7 @@ const Dashboard = () => {
     { key: "Ewallet" },
     { key: "USDT" },
     { key: "USDC" },
+    { key: "Solana Pay" },
     { key: "PayPal" },
     { key: "Apple Pay" },
     { key: "Google Pay" },
@@ -1615,6 +1620,7 @@ const Dashboard = () => {
     "Ewallet",
     "USDT",
     "USDC",
+    "Solana Pay",
     "PayPal",
     "Apple Pay",
     "Google Pay",
@@ -1664,6 +1670,7 @@ const Dashboard = () => {
       const methodRouteMap: Record<string, string> = {
         "USDT": "/topup-usdt",
         "USDC": "/topup-usdc",
+        "Solana Pay": "/topup-solana-pay",
         "PayPal": "/topup-paypal",
         "Debit Card": "/topup-debit",
         "Credit Card": "/topup-credit",
@@ -2408,6 +2415,9 @@ const Dashboard = () => {
                 )}
                 {buyPaymentMethod === "USDC" && (
                   <img src={USDC_ICON_URL} alt="USDC" className="h-5 w-auto object-contain" />
+                )}
+                {buyPaymentMethod === "Solana Pay" && (
+                  <img src={SOLANA_PAY_ICON_URL} alt="Solana Pay" className="h-5 w-auto object-contain" />
                 )}
                 {buyPaymentMethod === "Apple Pay" && (
                   <img src={APPLE_PAY_ICON_URL} alt="Apple Pay" className="h-5 w-auto object-contain" />
@@ -3554,6 +3564,8 @@ const Dashboard = () => {
                     ? `${targetOpenUsdAmount.toFixed(2)} USDT`
                     : row.key === "USDC"
                       ? `${targetOpenUsdAmount.toFixed(2)} USDC`
+                      : row.key === "Solana Pay"
+                        ? `${targetOpenUsdAmount.toFixed(2)} USDC`
                   : usdOnrampProviders.includes(row.key)
                     ? `${targetOpenUsdAmount.toFixed(2)} USD`
                     : `${(targetOpenUsdAmount * OUSD_TO_PI).toFixed(5)} PI`;
@@ -3572,6 +3584,8 @@ const Dashboard = () => {
                       setBuyPaymentMethod("USDT");
                     } else if (row.key === "USDC") {
                       setBuyPaymentMethod("USDC");
+                    } else if (row.key === "Solana Pay") {
+                      setBuyPaymentMethod("Solana Pay");
                     } else if (row.key === "Pi Payment") {
                       setBuyPaymentMethod("Pi Payment");
                     } else if (row.key === "PayPal") {
@@ -3616,6 +3630,9 @@ const Dashboard = () => {
                         )}
                         {row.key === "USDC" && (
                           <img src={USDC_ICON_URL} alt="USDC" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "Solana Pay" && (
+                          <img src={SOLANA_PAY_ICON_URL} alt="Solana Pay" className="h-6 w-auto object-contain" />
                         )}
                         {row.key === "Apple Pay" && (
                           <img src={APPLE_PAY_ICON_URL} alt="Apple Pay" className="h-6 w-auto object-contain" />
@@ -3713,6 +3730,8 @@ const Dashboard = () => {
                       setBuyOnrampProvider("USDT");
                     } else if (row.key === "USDC") {
                       setBuyOnrampProvider("USDC");
+                    } else if (row.key === "Solana Pay") {
+                      setBuyOnrampProvider("Solana Pay");
                     } else if (row.key === "Pi Payment") {
                       setBuyOnrampProvider("Pi Payment");
                     } else if (row.key === "PayPal") {
@@ -3753,6 +3772,9 @@ const Dashboard = () => {
                     )}
                     {row.key === "USDC" && (
                       <img src={USDC_ICON_URL} alt="USDC" className="h-5 w-auto object-contain" />
+                    )}
+                    {row.key === "Solana Pay" && (
+                      <img src={SOLANA_PAY_ICON_URL} alt="Solana Pay" className="h-5 w-auto object-contain" />
                     )}
                     {row.key === "Apple Pay" && (
                       <img src={APPLE_PAY_ICON_URL} alt="Apple Pay" className="h-5 w-auto object-contain" />

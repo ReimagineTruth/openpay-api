@@ -12,6 +12,8 @@ type TopUpAccountDetailsProps = {
   amount: number;
   className?: string;
   submitLabel?: string;
+  initialReferenceCode?: string;
+  lockReferenceCode?: boolean;
 };
 
 type TopUpHistoryRow = {
@@ -43,6 +45,8 @@ const TopUpAccountDetails = ({
   amount,
   className,
   submitLabel = "Submit Top Up Request",
+  initialReferenceCode,
+  lockReferenceCode = false,
 }: TopUpAccountDetailsProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,6 +92,12 @@ const TopUpAccountDetails = ({
       // no-op
     }
   }, []);
+
+  useEffect(() => {
+    const candidate = String(initialReferenceCode || "").trim();
+    if (!candidate) return;
+    setReferenceCode((current) => (current.trim() ? current : candidate));
+  }, [initialReferenceCode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -395,6 +405,8 @@ const TopUpAccountDetails = ({
           value={referenceCode}
           onChange={(event) => setReferenceCode(event.target.value)}
           placeholder="Enter reference number"
+          readOnly={lockReferenceCode}
+          aria-readonly={lockReferenceCode ? "true" : undefined}
           className="h-11 w-full rounded-xl border border-border px-3 text-sm text-foreground"
         />
       </label>
