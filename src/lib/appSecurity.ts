@@ -88,7 +88,7 @@ export const hashSecret = async (value: string): Promise<string> => {
 export const isPiBrowserUserAgent = () => {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
-  return /pibrowser|pi browser|minepi/i.test(ua);
+  return /pibrowser|pi browser|minepi|pi\s*network|pinetwork/i.test(ua);
 };
 
 export const getBiometricSupportStatus = async (): Promise<BiometricSupportStatus> => {

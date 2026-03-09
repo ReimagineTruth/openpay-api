@@ -16,7 +16,7 @@ const PiAuthPage = () => {
   const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && !!window.Pi);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const inPiBrowser = isPiBrowserUserAgent();
+  const inPiBrowser = isPiBrowserUserAgent() || sdkReady;
 
   const envSandbox = String(import.meta.env.VITE_PI_SANDBOX || "").trim().toLowerCase();
   const sandbox =
@@ -31,9 +31,7 @@ const PiAuthPage = () => {
 
   const initPi = () => {
     if (!window.Pi) {
-      if (inPiBrowser) {
-        toast.error("Pi SDK not loaded");
-      }
+      toast.error("Pi authentication requires Pi Browser. Open this page in Pi Browser.");
       return false;
     }
     window.Pi.init({ version: "2.0", sandbox });
@@ -217,6 +215,19 @@ const PiAuthPage = () => {
     }
   };
 
+  const handlePiAuthClick = async () => {
+    if (!window.Pi) {
+      try {
+        await navigator.clipboard?.writeText(window.location.href);
+        toast.message("Pi authentication requires Pi Browser. Link copied.");
+      } catch {
+        toast.error("Pi authentication requires Pi Browser. Please open this page in Pi Browser.");
+      }
+      return;
+    }
+    await handlePiAuth();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-paypal-blue to-[#072a7a] px-6 py-10">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md lg:max-w-lg xl:max-w-xl flex-col justify-center">
@@ -262,31 +273,29 @@ const PiAuthPage = () => {
               </p>
             )}
             <div className="mt-4 space-y-2">
-              {inPiBrowser && (
-                <Button
-                  onClick={handlePiAuth}
-                  disabled={busyAuth || !sdkReady}
-                  className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5] relative overflow-hidden"
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {busyAuth ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Authenticating...</span>
-                      </>
-                    ) : !sdkReady ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Loading Pi SDK...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Authenticate with Pi</span>
-                      </>
-                    )}
-                  </div>
-                </Button>
-              )}
+              <Button
+                onClick={handlePiAuthClick}
+                disabled={busyAuth || (inPiBrowser && !sdkReady)}
+                className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5] relative overflow-hidden"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  {busyAuth ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Authenticating...</span>
+                    </>
+                  ) : inPiBrowser && !sdkReady ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading Pi SDK...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Authenticate with Pi</span>
+                    </>
+                  )}
+                </div>
+              </Button>
               <div className="grid grid-cols-1 gap-2">
                 <Button
                   asChild
