@@ -45,6 +45,7 @@ const AppSecurityGate = () => {
   const [accountLabel, setAccountLabel] = useState("Secure Account");
   const [settings, setSettings] = useState(() => ({} as ReturnType<typeof loadAppSecuritySettings>));
   const pinInputRef = useRef<HTMLInputElement | null>(null);
+  const lastPointerActionAtRef = useRef<number>(0);
 
   const hasPin = Boolean(settings.pinHash);
   const hasPassword = Boolean(settings.passwordHash);
@@ -143,6 +144,12 @@ const AppSecurityGate = () => {
       // ignore focus failures
     }
   };
+
+  const markPointerAction = () => {
+    lastPointerActionAtRef.current = Date.now();
+  };
+
+  const shouldIgnoreClick = () => Date.now() - lastPointerActionAtRef.current < 600;
 
   const handlePinDigitPress = (digit: string) => {
     if (busy) return;
@@ -261,9 +268,14 @@ const AppSecurityGate = () => {
                   <button
                     key={n}
                     type="button"
-                    onClick={() => handlePinDigitPress(String(n))}
+                    onClick={() => {
+                      if (shouldIgnoreClick()) return;
+                      handlePinDigitPress(String(n));
+                      focusPinInput();
+                    }}
                     onPointerDown={(event) => {
                       event.preventDefault();
+                      markPointerAction();
                       handlePinDigitPress(String(n));
                       focusPinInput();
                     }}
@@ -274,9 +286,14 @@ const AppSecurityGate = () => {
                 ))}
                 <button
                   type="button"
-                  onClick={handlePinBackspace}
+                  onClick={() => {
+                    if (shouldIgnoreClick()) return;
+                    handlePinBackspace();
+                    focusPinInput();
+                  }}
                   onPointerDown={(event) => {
                     event.preventDefault();
+                    markPointerAction();
                     handlePinBackspace();
                     focusPinInput();
                   }}
@@ -287,9 +304,14 @@ const AppSecurityGate = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handlePinDigitPress("0")}
+                  onClick={() => {
+                    if (shouldIgnoreClick()) return;
+                    handlePinDigitPress("0");
+                    focusPinInput();
+                  }}
                   onPointerDown={(event) => {
                     event.preventDefault();
+                    markPointerAction();
                     handlePinDigitPress("0");
                     focusPinInput();
                   }}
@@ -299,9 +321,14 @@ const AppSecurityGate = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => void handleUnlockWithPin()}
+                  onClick={() => {
+                    if (shouldIgnoreClick()) return;
+                    void handleUnlockWithPin();
+                    focusPinInput();
+                  }}
                   onPointerDown={(event) => {
                     event.preventDefault();
+                    markPointerAction();
                     void handleUnlockWithPin();
                     focusPinInput();
                   }}
@@ -314,9 +341,14 @@ const AppSecurityGate = () => {
               </div>
               <Button
                 disabled={busy || pin.replace(/\D/g, "").length < 4}
-                onClick={handleUnlockWithPin}
+                onClick={() => {
+                  if (shouldIgnoreClick()) return;
+                  void handleUnlockWithPin();
+                  focusPinInput();
+                }}
                 onPointerDown={(event) => {
                   event.preventDefault();
+                  markPointerAction();
                   void handleUnlockWithPin();
                   focusPinInput();
                 }}
@@ -339,9 +371,13 @@ const AppSecurityGate = () => {
               />
               <Button
                 disabled={busy || !password.trim()}
-                onClick={handleUnlockWithPassword}
+                onClick={() => {
+                  if (shouldIgnoreClick()) return;
+                  void handleUnlockWithPassword();
+                }}
                 onPointerDown={(event) => {
                   event.preventDefault();
+                  markPointerAction();
                   void handleUnlockWithPassword();
                 }}
                 className={`mt-2 ${primaryButtonClass}`}
@@ -354,9 +390,13 @@ const AppSecurityGate = () => {
           {hasBiometric && (
             <Button
               disabled={busy}
-              onClick={handleUnlockWithBiometric}
+              onClick={() => {
+                if (shouldIgnoreClick()) return;
+                void handleUnlockWithBiometric();
+              }}
               onPointerDown={(event) => {
                 event.preventDefault();
+                markPointerAction();
                 void handleUnlockWithBiometric();
               }}
               className={`mt-4 ${darkButtonClass}`}
@@ -368,9 +408,13 @@ const AppSecurityGate = () => {
           {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <Button
-            onClick={handleLogout}
+            onClick={() => {
+              if (shouldIgnoreClick()) return;
+              void handleLogout();
+            }}
             onPointerDown={(event) => {
               event.preventDefault();
+              markPointerAction();
               void handleLogout();
             }}
             className={`mt-4 ${softButtonClass}`}
