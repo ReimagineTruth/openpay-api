@@ -177,7 +177,7 @@ const MerchantOnboardingPage = () => {
   const [transferDestination, setTransferDestination] = useState<"wallet" | "savings">("wallet");
   const [transferring, setTransferring] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ type: "api_key" | "checkout"; id: string; label: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: "api_key" | "checkout" | "product"; id: string; label: string } | null>(null);
 
   const modeProducts = useMemo(() => products.filter((p) => p.currency.toUpperCase() === checkoutCurrency.toUpperCase() && p.is_active), [products, checkoutCurrency]);
   const sessionsById = useMemo(() => {
@@ -465,17 +465,25 @@ const MerchantOnboardingPage = () => {
       return;
     }
 
+    const normalizedCode = productCode.trim().toUpperCase();
+    const existed = products.some((p) => String(p.product_code || "").trim().toUpperCase() === normalizedCode);
+
     setCreatingProduct(true);
-    const { error } = await db.from("merchant_products").insert({
-      merchant_user_id: userId,
-      product_code: productCode.trim().toUpperCase(),
-      product_name: productName.trim(),
-      product_description: productDescription.trim(),
-      unit_amount: amount,
-      currency: productCurrency.trim().toUpperCase() || "USD",
-      is_active: true,
-      metadata: {},
-    });
+    const { error } = await db
+      .from("merchant_products")
+      .upsert(
+        {
+          merchant_user_id: userId,
+          product_code: normalizedCode,
+          product_name: productName.trim(),
+          product_description: productDescription.trim(),
+          unit_amount: amount,
+          currency: productCurrency.trim().toUpperCase() || "USD",
+          is_active: true,
+          metadata: {},
+        },
+        { onConflict: "merchant_user_id,product_code" },
+      );
     setCreatingProduct(false);
 
     if (error) {
@@ -489,7 +497,7 @@ const MerchantOnboardingPage = () => {
     setProductPrice("");
 
     await loadPortal(userId);
-    toast.success("Product added");
+    toast.success(existed ? "Product updated" : "Product added");
   };
 
   const toggleProductActive = async (product: MerchantProduct) => {
@@ -663,8 +671,16 @@ const MerchantOnboardingPage = () => {
     if (!deleteTarget) return;
     if (deleteTarget.type === "api_key") {
       await deleteKey(deleteTarget.id);
-    } else {
+    } else if (deleteTarget.type === "checkout") {
       await deleteCheckoutLink(deleteTarget.id);
+    } else if (deleteTarget.type === "product") {
+      const { error } = await db.from("merchant_products").delete().eq("id", deleteTarget.id);
+      if (error) {
+        toast.error(error.message || "Failed to delete product");
+        return;
+      }
+      if (userId) await loadPortal(userId, mode);
+      toast.success("Product deleted");
     }
     setDeleteModalOpen(false);
     setDeleteTarget(null);
@@ -773,7 +789,38 @@ const MerchantOnboardingPage = () => {
               <Button onClick={createProduct} disabled={creatingProduct} className="h-11 rounded-lg md:col-span-2"><Plus className="mr-2 h-4 w-4" />{creatingProduct ? "Adding..." : "Add product"}</Button>
             </div>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-5 space-y-2">{products.map((p) => <div key={p.id} className="rounded-xl border border-border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="font-semibold text-foreground">{p.product_name}</p><p className="text-xs text-muted-foreground">{p.product_code} | {getPiCodeLabel((p.currency || "").toUpperCase())} {Number(p.unit_amount).toFixed(2)}</p></div><Button variant="outline" className="h-8 rounded-lg" onClick={() => toggleProductActive(p)}>{p.is_active ? "Set inactive" : "Set active"}</Button></div>{!!p.product_description && <p className="mt-1 text-sm text-muted-foreground">{p.product_description}</p>}</div>)}{!products.length && <p className="text-sm text-muted-foreground">No products yet.</p>}</div>
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-2">
+            {products.map((p) => (
+              <div key={p.id} className="rounded-xl border border-border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-foreground">{p.product_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.product_code} | {getPiCodeLabel((p.currency || "").toUpperCase())} {Number(p.unit_amount).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" className="h-8 rounded-lg" onClick={() => toggleProductActive(p)}>
+                      {p.is_active ? "Set inactive" : "Set active"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-8 rounded-lg"
+                      onClick={() => {
+                        setDeleteTarget({ type: "product", id: p.id, label: p.product_name || p.product_code });
+                        setDeleteModalOpen(true);
+                      }}
+                    >
+                      <Trash2 className="mr-1 h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+                {!!p.product_description && <p className="mt-1 text-sm text-muted-foreground">{p.product_description}</p>}
+              </div>
+            ))}
+            {!products.length && <p className="text-sm text-muted-foreground">No products yet.</p>}
+          </div>
         </div>
       );
     }
@@ -1393,7 +1440,9 @@ const MerchantOnboardingPage = () => {
             <AlertDialogDescription>
               {deleteTarget?.type === "api_key"
                 ? `Delete API key "${deleteTarget?.label || ""}"? This action cannot be undone.`
-                : "Delete this checkout link? Paid links cannot be deleted."}
+                : deleteTarget?.type === "product"
+                  ? `Delete product "${deleteTarget?.label || ""}"? Existing payments will keep working, but future checkouts cannot use this product.`
+                  : "Delete this checkout link? Paid links cannot be deleted."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

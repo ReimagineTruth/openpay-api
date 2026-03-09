@@ -171,7 +171,7 @@ const MerchantProductCreatePage = () => {
       .map((tag) => tag.trim())
       .filter(Boolean);
     const imageUrls = productImages.map((image) => image.dataUrl).filter(Boolean);
-    const { error } = await supabase.from("merchant_products").insert({
+    const { error } = await supabase.from("merchant_products").upsert({
       merchant_user_id: user.id,
       product_code: productCode,
       product_name: productName.trim(),
@@ -197,7 +197,7 @@ const MerchantProductCreatePage = () => {
       repeat_unit: paymentType === "subscription" ? repeatUnit : null,
       tax_code: taxCode,
       published_at: publish ? new Date().toISOString() : null,
-    });
+    }, { onConflict: "merchant_user_id,product_code" });
     setSaving(false);
 
     if (error) {

@@ -157,6 +157,24 @@ const AdminMrwainAuth = () => {
               required
               className="h-12 rounded-2xl border-white/70 bg-white"
             />
+            {mode === "signin" && (
+              <div className="-mt-2 flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="font-semibold text-paypal-blue hover:underline"
+                >
+                  Forgot password?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-mpin")}
+                  className="font-semibold text-paypal-blue hover:underline"
+                >
+                  Forgot MPIN?
+                </button>
+              </div>
+            )}
             <Button type="submit" disabled={loading} className="h-12 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]">
               {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
             </Button>

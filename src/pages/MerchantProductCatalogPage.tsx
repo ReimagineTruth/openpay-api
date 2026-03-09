@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Bell, Code, Copy, ExternalLink, FileText, Link2, Menu, MessageCircle, Plus, QrCode, Share2, ShoppingCart, Store } from "lucide-react";
+import { Bell, Code, Copy, ExternalLink, FileText, Link2, Menu, MessageCircle, Plus, QrCode, Share2, ShoppingCart, Store, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 
@@ -8,6 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import SplashScreen from "@/components/SplashScreen";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type MerchantProductRow = {
   id: string;
@@ -37,6 +47,8 @@ const MerchantProductCatalogPage = () => {
   const [activeProduct, setActiveProduct] = useState<MerchantProductRow | null>(null);
   const [showCreateLinkModal, setShowCreateLinkModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [deleteProductOpen, setDeleteProductOpen] = useState(false);
+  const [deleteProductTarget, setDeleteProductTarget] = useState<MerchantProductRow | null>(null);
   const [mode, setMode] = useState<"sandbox" | "live">("sandbox");
   const [secretKey, setSecretKey] = useState("");
   const [creatingLink, setCreatingLink] = useState(false);
@@ -126,6 +138,25 @@ const MerchantProductCatalogPage = () => {
     } catch {
       toast.error("Copy failed");
     }
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (!deleteProductTarget) return;
+    const { error } = await supabase.from("merchant_products").delete().eq("id", deleteProductTarget.id);
+    if (error) {
+      toast.error(error.message || "Failed to delete product");
+      return;
+    }
+    setProducts((current) => current.filter((p) => String(p.id) !== String(deleteProductTarget.id)));
+    setStatsByProduct((current) => {
+      const next = { ...current };
+      delete next[String(deleteProductTarget.id)];
+      return next;
+    });
+    if (activeProduct?.id === deleteProductTarget.id) setActiveProduct(null);
+    toast.success("Product deleted");
+    setDeleteProductOpen(false);
+    setDeleteProductTarget(null);
   };
 
   const createProductPaymentLink = async (product: MerchantProductRow) => {
@@ -289,16 +320,27 @@ const MerchantProductCatalogPage = () => {
                   >
                     <Code className="h-4 w-4" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => openCreateModal(product, "qr")}
-                    className="rounded p-1.5 text-muted-foreground hover:bg-secondary"
-                    aria-label="QR code"
-                  >
-                    <QrCode className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+                   <button
+                     type="button"
+                     onClick={() => openCreateModal(product, "qr")}
+                     className="rounded p-1.5 text-muted-foreground hover:bg-secondary"
+                     aria-label="QR code"
+                   >
+                     <QrCode className="h-4 w-4" />
+                   </button>
+                   <button
+                     type="button"
+                     onClick={() => {
+                       setDeleteProductTarget(product);
+                       setDeleteProductOpen(true);
+                     }}
+                     className="rounded p-1.5 text-muted-foreground hover:bg-secondary"
+                     aria-label="Delete product"
+                   >
+                     <Trash2 className="h-4 w-4" />
+                   </button>
+                 </div>
+               </div>
 
               <p className="mt-3 text-2xl font-semibold text-foreground">{product.product_name}</p>
               <p className="mt-1 text-sm text-muted-foreground">{product.product_code}</p>
@@ -444,6 +486,27 @@ const MerchantProductCatalogPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteProductOpen}
+        onOpenChange={(open) => {
+          setDeleteProductOpen(open);
+          if (!open) setDeleteProductTarget(null);
+        }}
+      >
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Delete "{deleteProductTarget?.product_name || deleteProductTarget?.product_code || "this product"}"? Existing payments will keep working, but future checkouts cannot use this product.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProduct}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

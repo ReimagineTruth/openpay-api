@@ -6,6 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import AdminMrwainAuth from "./pages/AdminMrwainAuth";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ForgotMpinPage from "./pages/ForgotMpinPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import Dashboard from "./pages/Dashboard";
 import SendMoney from "./pages/SendMoney";
 import QrScannerPage from "./pages/QrScannerPage";
@@ -127,9 +130,12 @@ const AppRoutes = () => {
         <Route path="/auth" element={<PiAuthPage />} />
         <Route path="/setup-profile" element={<SetupProfilePage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/pi-ads" element={<PiAdsPage />} />
-        <Route path="/sign-in" element={<AdminMrwainAuth />} />
-        <Route path="/admin-mrwain" element={<LegacyAdminMrwainRedirect />} />
+         <Route path="/pi-ads" element={<PiAdsPage />} />
+         <Route path="/sign-in" element={<AdminMrwainAuth />} />
+         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+         <Route path="/forgot-mpin" element={<ForgotMpinPage />} />
+         <Route path="/reset-password" element={<ResetPasswordPage />} />
+         <Route path="/admin-mrwain" element={<LegacyAdminMrwainRedirect />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-swap-withrawals" element={<AdminSwapWithdrawalsPage />} />
         <Route path="/admin-loan-applications" element={<AdminLoanApplicationsPage />} />
