@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/ThemeToggle";
 import BrandLogo from "@/components/BrandLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { setAppCookie } from "@/lib/userPreferences";
@@ -245,6 +246,9 @@ const PiAuthPage = () => {
           </div>
 
           <div className="rounded-2xl border border-border/70 bg-white dark:bg-[#0f172a] p-3">
+            <div className="mb-2 flex items-center justify-end">
+              <ThemeToggle />
+            </div>
             <h2 className="text-base font-semibold text-gray-800 dark:text-white">
               {inPiBrowser ? "Pi Browser" : "Sign In"}
             </h2>

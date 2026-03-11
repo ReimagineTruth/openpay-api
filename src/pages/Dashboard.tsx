@@ -538,6 +538,12 @@ const Dashboard = () => {
 
   const loadSavingsAndLoan = useCallback(async () => {
     try {
+      // Attempt to accrue daily interest first (best-effort)
+      try {
+        await (supabase as any).rpc("accrue_my_savings_interest");
+      } catch {
+        // ignore if RPC not available yet
+      }
       const [{ data: savingsData }, { data: loanData }, { data: creditScoreData }, { data: applicationData }, { data: paymentHistoryData }] = await Promise.all([
         (supabase as any).rpc("get_my_savings_dashboard"),
         (supabase as any).rpc("get_my_latest_loan"),

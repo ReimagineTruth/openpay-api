@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import BrandLogo from "@/components/BrandLogo";
 import AuthFooter from "@/components/AuthFooter";
 import { ExternalLink } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const AdminMrwainAuth = () => {
   const navigate = useNavigate();
@@ -94,6 +95,9 @@ const AdminMrwainAuth = () => {
         </div>
 
         <div className="paypal-surface w-full rounded-3xl p-7 shadow-2xl shadow-black/15">
+          <div className="mb-2 flex items-center justify-end">
+            <ThemeToggle />
+          </div>
           {/* OpenPay Socials */}
           <Button 
             asChild 

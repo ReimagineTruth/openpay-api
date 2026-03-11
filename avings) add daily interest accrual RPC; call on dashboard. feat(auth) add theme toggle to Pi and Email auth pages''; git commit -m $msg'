@@ -1,0 +1,8 @@
+* 23955ed (HEAD -> main) fix(affiliate): propagate ?ref to email signup; preserve ref on Pi auth link; organize top-up grid across providers
+* ec5c325 (origin/main, origin/HEAD) feat: top-up grid; solana flag; usdt/usdc icons
+* b56f4a1 Set default Solana Pay merchant wallet
+* 120deb5 Add Solana Pay top up method
+* ca98768 Fix mining activation after Pi ads
+* b6b158c Fix MPIN keypad double input
+* b686344 Restore Pi auth entry on /auth
+* 216d179 Fix onboarding, MPIN keypad, signup codes, SQL trigger hardening
