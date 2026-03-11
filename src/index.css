@@ -119,15 +119,45 @@
 
 @layer utilities {
   .paypal-surface {
-    @apply bg-card/95 backdrop-blur-sm border border-white/60 shadow-sm;
+    @apply bg-card/95 backdrop-blur-md border border-white/20 shadow-sm transition-all duration-300;
+  }
+
+  .dark .paypal-surface {
+    @apply border-white/5 bg-card/80;
+  }
+
+  .ios-active {
+    @apply active:scale-95 transition-transform duration-200 ease-out;
+  }
+
+  .ios-glass {
+    @apply bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/30 dark:border-white/10;
+  }
+
+  .animate-in-up {
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-in-fade {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   .paypal-pill {
-    @apply rounded-full px-5 py-3 font-semibold;
+    @apply rounded-full px-5 py-3 font-semibold transition-all duration-200 active:scale-95;
   }
 
   .paypal-heading {
-    @apply text-2xl font-bold tracking-tight text-paypal-dark;
+    @apply text-2xl font-bold tracking-tight text-paypal-dark dark:text-foreground;
   }
 }
 

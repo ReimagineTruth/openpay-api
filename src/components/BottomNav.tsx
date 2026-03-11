@@ -15,19 +15,21 @@ const BottomNav = ({ active }: BottomNavProps) => {
   ];
 
   return (
-    <div className="fixed bottom-3 left-0 right-0 z-30 px-4">
-      <div className="mx-auto max-w-md paypal-surface rounded-2xl">
-        <div className="flex items-center justify-around py-2">
+    <div className="fixed bottom-6 left-0 right-0 z-30 px-4">
+      <div className="mx-auto max-w-md bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl border border-white/60 overflow-hidden">
+        <div className="flex items-center justify-around px-2 py-3.5">
         {items.map(({ key, label, icon: Icon, path }) => (
           <button
             key={key}
             onClick={() => navigate(path)}
-            className={`flex min-w-20 flex-col items-center gap-1 rounded-xl px-4 py-2 transition ${
-              active === key ? "bg-secondary text-paypal-blue" : "text-muted-foreground hover:bg-secondary/50"
+            className={`flex min-w-[85px] flex-col items-center gap-1.5 rounded-2xl py-2.5 transition-all duration-300 active:scale-95 ${
+              active === key 
+                ? "bg-secondary/80 text-paypal-blue shadow-inner" 
+                : "text-muted-foreground hover:bg-secondary/40"
             }`}
           >
-            <Icon className="w-6 h-6" />
-            <span className={`text-xs ${active === key ? "font-bold" : "font-medium"}`}>{label}</span>
+            <Icon className={`w-6 h-6 transition-transform ${active === key ? "scale-110" : ""}`} />
+            <span className={`text-[11px] tracking-tight ${active === key ? "font-extrabold" : "font-semibold"}`}>{label}</span>
           </button>
         ))}
         </div>

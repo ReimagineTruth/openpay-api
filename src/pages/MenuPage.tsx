@@ -171,7 +171,8 @@ const MenuPage = () => {
     {
       title: "Secure banking",
       layout: "grid-card",
-      color: "bg-green-50",
+      color: "bg-green-50 dark:bg-green-950/30",
+      textColor: "text-green-900 dark:text-green-100",
       items: [
         { icon: Wallet, label: "Wallet", action: () => navigate("/dashboard") },
         { icon: TrendingUp, label: "Analytics", action: () => navigate("/dashboard?section=analytics") },
@@ -185,7 +186,8 @@ const MenuPage = () => {
     {
       title: "Merchant services",
       layout: "grid-card",
-      color: "bg-blue-50",
+      color: "bg-blue-50 dark:bg-blue-950/30",
+      textColor: "text-blue-900 dark:text-blue-100",
       items: [
         { icon: Store, label: "Merchant Portal", action: () => navigate("/merchant-onboarding") },
         { icon: Store, label: "Product Catalog", action: () => navigate("/merchant-products") },
@@ -211,7 +213,8 @@ const MenuPage = () => {
     {
       title: "Earning & Rewards",
       layout: "grid-card",
-      color: "bg-orange-50",
+      color: "bg-orange-50 dark:bg-orange-950/30",
+      textColor: "text-orange-900 dark:text-orange-100",
       items: [
         { icon: Users, label: "Affiliate", action: () => navigate("/affiliate") },
         { icon: Clapperboard, label: "Pi Ad Network", action: () => navigate("/pi-ads") },
@@ -228,7 +231,8 @@ const MenuPage = () => {
     {
       title: "Activity & Records",
       layout: "grid-card",
-      color: "bg-gray-50",
+      color: "bg-gray-50 dark:bg-gray-900/50",
+      textColor: "text-gray-900 dark:text-gray-100",
       items: [
         { icon: Activity, label: "Activity", action: () => navigate("/activity") },
         { icon: BookOpen, label: "OpenLedger", action: () => navigate("/ledger") },
@@ -244,7 +248,8 @@ const MenuPage = () => {
     {
       title: "Utility & Apps",
       layout: "grid-card",
-      color: "bg-purple-50",
+      color: "bg-purple-50 dark:bg-purple-950/30",
+      textColor: "text-purple-900 dark:text-purple-100",
       items: [
         { icon: Smartphone, label: "OpenApp Utilities", action: () => navigate("/openapp") },
         { icon: Monitor, label: "Pi Browser", action: () => navigate("/openpay-desktop") },
@@ -257,7 +262,8 @@ const MenuPage = () => {
     {
       title: "Legal & Docs",
       layout: "grid-card",
-      color: "bg-slate-50",
+      color: "bg-slate-50 dark:bg-slate-900/50",
+      textColor: "text-slate-900 dark:text-slate-100",
       items: [
         { icon: BookOpen, label: "Documentation", action: () => navigate("/openpay-documentation") },
         { icon: FileText, label: "OUSD Whitepaper", action: () => navigate("/whitepaper") },
@@ -274,7 +280,8 @@ const MenuPage = () => {
     {
       title: "API & Developer",
       layout: "grid-card",
-      color: "bg-indigo-50",
+      color: "bg-indigo-50 dark:bg-indigo-950/30",
+      textColor: "text-indigo-900 dark:text-indigo-100",
       items: [
         { icon: BookOpen, label: "API Docs", action: () => navigate("/openpay-api-docs") },
         { icon: BookOpen, label: "POS Docs", action: () => navigate("/openpay-pos-docs") },
@@ -285,7 +292,8 @@ const MenuPage = () => {
       ? [{
           title: "Admin Control",
           layout: "grid-card",
-          color: "bg-red-50",
+          color: "bg-red-50 dark:bg-red-950/30",
+          textColor: "text-red-900 dark:text-red-100",
           items: [
             { icon: ShieldCheck, label: "Dashboard", action: () => navigate("/admin-dashboard") },
             { icon: ShieldCheck, label: "Withdrawals", action: () => navigate("/admin-swap-withrawals") },
@@ -305,7 +313,7 @@ const MenuPage = () => {
         <h1 className="text-3xl font-bold text-foreground mb-8">Services</h1>
         
         {sections.map((section) => (
-          <div key={section.title} className="mb-8">
+          <div key={section.title} className="mb-8 animate-in-up">
             {section.layout === "grid-top" ? (
               <div className="flex justify-between items-start gap-2 mb-4 px-1">
                 {section.items.map(({ icon: Icon, label, action, disabled }) => (
@@ -313,38 +321,38 @@ const MenuPage = () => {
                     key={label}
                     onClick={action}
                     disabled={disabled}
-                    className={`flex flex-col items-center gap-2 flex-1 transition ${
-                      disabled ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
+                    className={`flex flex-col items-center gap-2 flex-1 transition ios-active ${
+                      disabled ? "opacity-40 cursor-not-allowed" : "hover:scale-105"
                     }`}
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/30">
-                      <Icon className="h-6 w-6 text-foreground" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20 shadow-sm border border-blue-100/50 dark:border-blue-900/30">
+                      <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <span className="text-[11px] font-semibold text-center leading-tight text-muted-foreground">{label}</span>
+                    <span className="text-[11px] font-bold text-center leading-tight text-muted-foreground dark:text-foreground/70">{label}</span>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="paypal-surface overflow-hidden rounded-[2.5rem] border border-border/40 shadow-sm">
+              <div className="ios-glass overflow-hidden rounded-[2.5rem] border border-border/40 dark:border-white/5 shadow-xl shadow-black/5">
                 <div className={`px-6 py-4 ${section.color || "bg-secondary/10"}`}>
-                  <h2 className="text-lg font-bold text-foreground">{section.title}</h2>
+                  <h2 className={`text-lg font-black tracking-tight ${section.textColor || "text-foreground"}`}>{section.title}</h2>
                 </div>
-                <div className="p-4 grid grid-cols-4 gap-y-6 gap-x-2">
+                <div className="p-4 grid grid-cols-4 gap-y-8 gap-x-2">
                   {section.items.map(({ icon: Icon, label, action, disabled, subtitle }) => (
                     <button
                       key={label}
                       onClick={action}
                       disabled={disabled}
-                      className={`flex flex-col items-center gap-2 transition ${
-                        disabled ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
+                      className={`flex flex-col items-center gap-2 transition ios-active ${
+                        disabled ? "opacity-40 cursor-not-allowed" : "hover:scale-105"
                       }`}
                     >
-                      <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-secondary/20 border border-border/10">
-                        <Icon className="h-7 w-7 text-foreground/80" />
+                      <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-blue-50 dark:bg-blue-900/20 border border-blue-100/50 dark:border-blue-900/30 shadow-sm">
+                        <Icon className="h-7 w-7 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className="text-[11px] font-bold text-center leading-tight text-foreground/90">{label}</span>
-                        {subtitle && <span className="text-[9px] text-muted-foreground text-center leading-tight">{subtitle}</span>}
+                      <div className="flex flex-col items-center gap-0.5 px-1">
+                        <span className="text-[10px] font-bold text-center leading-tight text-foreground/90 dark:text-foreground line-clamp-2">{label}</span>
+                        {subtitle && <span className="text-[8px] text-muted-foreground dark:text-white/40 text-center leading-tight line-clamp-1">{subtitle}</span>}
                       </div>
                     </button>
                   ))}

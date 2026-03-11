@@ -8,7 +8,7 @@ const PageTransition = ({ children }: PropsWithChildren) => {
   }, []);
   return (
     <div
-      className={`transition-opacity duration-300 ease-out ${
+      className={`transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         ready ? "opacity-100" : "opacity-0"
       }`}
     >

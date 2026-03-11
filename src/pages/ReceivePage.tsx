@@ -367,27 +367,29 @@ const ReceivePage = () => {
           }
         }
       `}</style>
-      <div className="mb-5 flex items-center gap-3">
-        <button onClick={() => navigate("/dashboard")}><ArrowLeft className="h-6 w-6 text-foreground" /></button>
-        <h1 className="text-xl font-bold text-paypal-dark">Receive</h1>
+      <div className="mb-6 flex items-center gap-4 animate-in-up">
+        <button onClick={() => navigate("/dashboard")} className="ios-active rounded-full p-2 hover:bg-secondary/50 transition-colors">
+          <ArrowLeft className="h-6 w-6 text-foreground" />
+        </button>
+        <h1 className="text-2xl font-black tracking-tight text-foreground">Receive</h1>
       </div>
 
-      <div className="paypal-surface rounded-3xl p-5">
-        <div className="mb-5 flex items-center gap-3">
+      <div className="ios-glass overflow-hidden rounded-[2.5rem] p-6 shadow-2xl shadow-black/5 animate-in-up">
+        <div className="mb-6 flex items-center gap-4">
           {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="Profile avatar" className="h-14 w-14 rounded-full border border-border object-cover" />
+            <img src={profile.avatar_url} alt="Profile avatar" className="h-16 w-16 rounded-full border-2 border-white/20 object-cover shadow-sm" />
           ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-paypal-blue text-lg font-bold text-white">{initials}</div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20 text-xl font-black text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30">{initials}</div>
           )}
           <div>
-            <p className="font-semibold text-foreground">{profile?.full_name || "OpenPay User"}</p>
-            {profile?.username && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
+            <p className="text-lg font-black text-foreground leading-tight">{profile?.full_name || "OpenPay User"}</p>
+            {profile?.username && <p className="text-sm font-bold text-muted-foreground/70">@{profile.username}</p>}
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <p className="mb-1 text-sm text-muted-foreground">Custom Amount (optional)</p>
+        <div className="space-y-4">
+          <div className="rounded-3xl bg-black/5 dark:bg-white/5 p-4 border border-white/10 backdrop-blur-sm">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Custom Amount (optional)</p>
             <Input
               type="number"
               min="0.01"
@@ -395,75 +397,78 @@ const ReceivePage = () => {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 25.00"
-              className="h-12 rounded-2xl bg-white"
+              className="h-12 rounded-2xl border-none bg-white dark:bg-white/5 text-base font-bold shadow-sm focus-visible:ring-1 focus-visible:ring-blue-500/30"
             />
           </div>
 
-          <div>
-            <p className="mb-1 text-sm text-muted-foreground">Currency</p>
+          <div className="rounded-3xl bg-black/5 dark:bg-white/5 p-4 border border-white/10 backdrop-blur-sm">
+            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Currency</p>
             <div className="relative">
               {(currencyCode === "PI" || currencyCode === "OUSD") && (
                 <img
                   src={currencyCode === "PI" ? PURE_PI_ICON_URL : OPENPAY_ICON_URL}
                   alt={currencyCode === "PI" ? "Pure Pi" : "Open USD"}
-                  className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full object-cover"
+                  className="pointer-events-none absolute left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full object-cover shadow-sm"
                 />
               )}
               <select
                 value={currencyCode}
                 onChange={(e) => setCurrencyCode(e.target.value)}
-                className={`h-12 w-full rounded-2xl border border-input bg-white text-sm text-foreground ${currencyCode === "PI" || currencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
+                className={`h-12 w-full rounded-2xl border-none bg-white dark:bg-white/5 text-base font-bold text-foreground shadow-sm focus:ring-1 focus:ring-blue-500/30 appearance-none ${currencyCode === "PI" || currencyCode === "OUSD" ? "pl-11 pr-4" : "px-4"}`}
               >
                 {currencies.map((c) => (
-                  <option key={c.code} value={c.code}>
+                  <option key={c.code} value={c.code} className="dark:bg-slate-900">
                     {`${c.code === "PI" ? "PI " : c.code === "OUSD" ? "" : `${c.flag} `}${getPiCodeLabel(c.code)} - ${c.name}`}
                   </option>
                 ))}
               </select>
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-border bg-white p-4">
+        <div className="mt-8 rounded-[2rem] border border-white/10 bg-white p-6 shadow-inner shadow-black/5 animate-in-fade">
           <div className="flex justify-center">
             {receiveQrValue ? (
               <QRCodeSVG
                 value={receiveQrValue}
-                size={210}
+                size={220}
                 level="H"
                 includeMargin
                 imageSettings={{
                   src: "/openpay-o.svg",
-                  height: 34,
-                  width: 34,
+                  height: 38,
+                  width: 38,
                   excavate: true,
                 }}
               />
             ) : null}
           </div>
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            Sender can scan this QR in Express Send to auto-fill your details.
+          <p className="mt-4 text-center text-[11px] font-bold text-muted-foreground/60 uppercase tracking-tight">
+            Scan to pay in Express Send
           </p>
         </div>
 
-        <div className="mt-4 space-y-3">
-          <div className="rounded-2xl border border-border bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payment request link</p>
-            <p className="mt-1 break-all text-sm text-foreground">{shortDisplayLink || "Loading link..."}</p>
-            <div className="mt-3 flex gap-2">
+        <div className="mt-6 space-y-4">
+          <div className="rounded-3xl border border-white/10 bg-black/5 dark:bg-white/5 p-5 animate-in-up">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Payment request link</p>
+            <p className="mt-2 break-all text-sm font-bold text-foreground leading-snug">{shortDisplayLink || "Loading link..."}</p>
+            <div className="mt-4 flex gap-3">
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 flex-1 rounded-2xl"
+                className="ios-active h-12 flex-1 rounded-2xl border-white/10 bg-white/50 dark:bg-white/5 font-bold shadow-sm"
                 onClick={() => handleCopy(webPayLink, "Payment request link")}
                 disabled={!webPayLink}
               >
                 <Copy className="mr-2 h-4 w-4" />
-                Copy Link
+                Copy
               </Button>
               <Button
                 type="button"
-                className="h-10 flex-1 rounded-2xl"
+                className="ios-active h-12 flex-1 rounded-2xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-500/20"
                 onClick={() => handleShare(webPayLink)}
                 disabled={!webPayLink}
               >
@@ -471,19 +476,16 @@ const ReceivePage = () => {
                 Share
               </Button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Share this link in social media or messages to request payment.
-            </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">OpenPay QR link</p>
-            <p className="mt-1 break-all text-sm text-foreground">{receiveQrValue || "Loading link..."}</p>
-            <div className="mt-3">
+          <div className="rounded-3xl border border-white/10 bg-black/5 dark:bg-white/5 p-5 animate-in-up" style={{ animationDelay: "100ms" }}>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">OpenPay QR link</p>
+            <p className="mt-2 break-all text-xs font-bold text-muted-foreground/80 leading-snug">{receiveQrValue || "Loading link..."}</p>
+            <div className="mt-4">
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 w-full rounded-2xl"
+                className="ios-active h-12 w-full rounded-2xl border-white/10 bg-white/50 dark:bg-white/5 font-bold shadow-sm"
                 onClick={() => handleCopy(receiveQrValue, "QR link")}
                 disabled={!receiveQrValue}
               >
@@ -491,78 +493,76 @@ const ReceivePage = () => {
                 Copy QR Link
               </Button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Use this when the sender is opening the OpenPay app directly.
-            </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-3 print:hidden">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Printable Store QR</p>
-            <div className="mt-3 grid gap-2">
-              <Input
-                value={storeQrName}
-                onChange={(e) => setStoreQrName(e.target.value)}
-                placeholder="Store name"
-                className="h-11 rounded-xl bg-white"
-              />
-              <Input
-                value={storeMerchantUsername}
-                onChange={(e) => setStoreMerchantUsername(e.target.value)}
-                placeholder="Merchant username (for manual payment)"
-                className="h-11 rounded-xl bg-white"
-              />
-              <Input
-                value={storeQrTagline}
-                onChange={(e) => setStoreQrTagline(e.target.value)}
-                placeholder="Tagline"
-                className="h-11 rounded-xl bg-white"
-              />
-              <label className="text-xs text-muted-foreground">
-                Accent Color
-                <input
-                  type="color"
-                  value={storeQrAccent}
-                  onChange={(e) => setStoreQrAccent(e.target.value)}
-                  className="mt-1 h-10 w-full rounded-xl border border-border bg-white p-1"
+          <div className="rounded-3xl border border-white/10 bg-black/5 dark:bg-white/5 p-5 print:hidden animate-in-up" style={{ animationDelay: "200ms" }}>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Printable Store QR</p>
+            <div className="mt-4 grid gap-3">
+              <div className="space-y-1">
+                <p className="px-1 text-[10px] font-bold text-muted-foreground/50 uppercase">Store name</p>
+                <Input
+                  value={storeQrName}
+                  onChange={(e) => setStoreQrName(e.target.value)}
+                  placeholder="Store name"
+                  className="h-11 rounded-xl border-none bg-white dark:bg-white/5 font-bold shadow-sm"
                 />
-              </label>
-              <label className="text-xs text-muted-foreground">
-                Card Background
-                <input
-                  type="color"
-                  value={storeQrBackground}
-                  onChange={(e) => setStoreQrBackground(e.target.value)}
-                  className="mt-1 h-10 w-full rounded-xl border border-border bg-white p-1"
+              </div>
+              <div className="space-y-1">
+                <p className="px-1 text-[10px] font-bold text-muted-foreground/50 uppercase">Merchant username</p>
+                <Input
+                  value={storeMerchantUsername}
+                  onChange={(e) => setStoreMerchantUsername(e.target.value)}
+                  placeholder="Merchant username"
+                  className="h-11 rounded-xl border-none bg-white dark:bg-white/5 font-bold shadow-sm"
                 />
-              </label>
-              <label className="text-xs text-muted-foreground">
-                Design Template
-                <select
-                  value={storeQrDesign}
-                  onChange={(e) => setStoreQrDesign(e.target.value as "clean" | "gradient" | "badge")}
-                  className="mt-1 h-10 w-full rounded-xl border border-border bg-white px-3 text-sm text-foreground"
-                >
-                  <option value="clean">Clean</option>
-                  <option value="gradient">Gradient</option>
-                  <option value="badge">Badge Header</option>
-                </select>
-              </label>
-              <label className="text-xs text-muted-foreground">
-                Print Size
-                <select
-                  value={printSize}
-                  onChange={(e) => setPrintSize(e.target.value as "small" | "medium" | "large")}
-                  className="mt-1 h-10 w-full rounded-xl border border-border bg-white px-3 text-sm text-foreground"
-                >
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large</option>
-                </select>
-              </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <p className="px-1 text-[10px] font-bold text-muted-foreground/50 uppercase">Accent</p>
+                  <input
+                    type="color"
+                    value={storeQrAccent}
+                    onChange={(e) => setStoreQrAccent(e.target.value)}
+                    className="h-11 w-full rounded-xl border-none bg-white dark:bg-white/5 p-1 shadow-sm cursor-pointer"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="px-1 text-[10px] font-bold text-muted-foreground/50 uppercase">Background</p>
+                  <input
+                    type="color"
+                    value={storeQrBackground}
+                    onChange={(e) => setStoreQrBackground(e.target.value)}
+                    className="h-11 w-full rounded-xl border-none bg-white dark:bg-white/5 p-1 shadow-sm cursor-pointer"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <p className="px-1 text-[10px] font-bold text-muted-foreground/50 uppercase">Template</p>
+                  <select
+                    value={storeQrDesign}
+                    onChange={(e) => setStoreQrDesign(e.target.value as "clean" | "gradient" | "badge")}
+                    className="h-11 w-full rounded-xl border-none bg-white dark:bg-white/5 px-3 text-sm font-bold shadow-sm"
+                  >
+                    <option value="clean">Clean</option>
+                    <option value="gradient">Gradient</option>
+                    <option value="badge">Badge</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <p className="px-1 text-[10px] font-bold text-muted-foreground/50 uppercase">Size</p>
+                  <select
+                    value={printSize}
+                    onChange={(e) => setPrintSize(e.target.value as "small" | "medium" | "large")}
+                    className="h-11 w-full rounded-xl border-none bg-white dark:bg-white/5 px-3 text-sm font-bold shadow-sm"
+                  >
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Customize then print this as your store counter QR.
-            </p>
           </div>
 
           <div id="print-store-qr-wrapper">
@@ -622,41 +622,38 @@ const ReceivePage = () => {
             </div>
           </div>
 
-          <div className="flex gap-2 print:hidden">
+          <div className="flex gap-3 print:hidden animate-in-up" style={{ animationDelay: "300ms" }}>
             <Button
               type="button"
               variant="outline"
-              className="h-11 flex-1 rounded-2xl"
+              className="ios-active h-12 flex-1 rounded-2xl border-white/10 bg-white dark:bg-white/5 font-bold shadow-sm"
               onClick={handleDownloadPrintableQr}
             >
-              Download Printable QR
+              Download QR
             </Button>
             <Button
               type="button"
               variant="outline"
-              className="h-11 flex-1 rounded-2xl"
+              className="ios-active h-12 flex-1 rounded-2xl border-white/10 bg-white dark:bg-white/5 font-bold shadow-sm"
               onClick={handlePrintStoreQr}
             >
-              Print Store QR
+              Print QR
             </Button>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-3 print:hidden">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Download link fallback</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              If Pi Browser blocks download, generate a link and open/copy it in another browser.
-            </p>
-            <div className="mt-2 flex gap-2">
-              <Button type="button" variant="outline" className="h-10 flex-1 rounded-xl" onClick={handleGenerateDownloadLink}>
-                Generate Link
+          <div className="rounded-3xl border border-white/10 bg-black/5 dark:bg-white/5 p-5 print:hidden animate-in-up" style={{ animationDelay: "400ms" }}>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Download link fallback</p>
+            <div className="mt-4 flex gap-3">
+              <Button type="button" variant="outline" className="ios-active h-11 flex-1 rounded-xl border-white/10 bg-white/50 dark:bg-white/5 font-bold" onClick={handleGenerateDownloadLink}>
+                Generate
               </Button>
-              <Button type="button" variant="outline" className="h-10 flex-1 rounded-xl" onClick={handleOpenDownloadLink} disabled={!downloadLink}>
-                Open Link
+              <Button type="button" variant="outline" className="ios-active h-11 flex-1 rounded-xl border-white/10 bg-white/50 dark:bg-white/5 font-bold" onClick={handleOpenDownloadLink} disabled={!downloadLink}>
+                Open
               </Button>
             </div>
-            <div className="mt-2 flex gap-2">
-              <Input value={downloadLink ? "data:image/png;base64,...(generated)" : ""} readOnly className="h-10 rounded-xl bg-white/70" />
-              <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={handleCopyDownloadLink} disabled={!downloadLink}>
+            <div className="mt-3 flex gap-2">
+              <Input value={downloadLink ? "data:image/png;base64,...(generated)" : ""} readOnly className="h-11 rounded-xl border-none bg-white/70 dark:bg-white/5 font-medium" />
+              <Button type="button" variant="outline" className="ios-active h-11 rounded-xl border-white/10 bg-white dark:bg-white/5 font-bold" onClick={handleCopyDownloadLink} disabled={!downloadLink}>
                 Copy
               </Button>
             </div>
@@ -680,7 +677,7 @@ const ReceivePage = () => {
             ) : null}
           </div>
 
-          <Button className="h-12 w-full rounded-2xl" onClick={() => navigate("/send")}>
+          <Button className="ios-active h-14 w-full rounded-2xl bg-blue-600 text-white font-black text-lg shadow-xl shadow-blue-500/20 animate-in-up" style={{ animationDelay: "500ms" }} onClick={() => navigate("/send")}>
             Open Express Send
           </Button>
         </div>

@@ -1708,7 +1708,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background pb-56">
+    <div className="min-h-screen overflow-x-hidden bg-background pb-64">
       <div className="flex items-center justify-between px-4 pt-5">
         <div className="flex items-center gap-2">
           <CurrencySelector />
@@ -1850,17 +1850,17 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
-        <div className="mt-4 rounded-2xl bg-secondary/30 p-3 border border-secondary/50">
+        <div className="mt-4 rounded-2xl bg-secondary/30 dark:bg-secondary/10 p-3 border border-secondary/50 dark:border-white/5">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">
-              Display currency: <span className="font-bold text-paypal-blue">{currencyTag}</span>
+            <p className="text-sm text-muted-foreground dark:text-foreground/70">
+              Display currency: <span className="font-bold text-paypal-blue dark:text-blue-400">{currencyTag}</span>
             </p>
             <div className="flex flex-wrap gap-x-4 gap-y-1">
-              <p className="text-xs text-muted-foreground">
-                Rate: <span className="font-semibold text-paypal-blue">1 PI = {PI_TO_OUSD.toFixed(2)} OUSD</span>
+              <p className="text-xs text-muted-foreground dark:text-foreground/60">
+                Rate: <span className="font-semibold text-paypal-blue dark:text-blue-400">1 PI = {PI_TO_OUSD.toFixed(2)} OUSD</span>
               </p>
-              <p className="text-xs text-muted-foreground">
-                Rate: <span className="font-semibold text-paypal-blue">1 USD = 1 OUSD</span>
+              <p className="text-xs text-muted-foreground dark:text-foreground/60">
+                Rate: <span className="font-semibold text-paypal-blue dark:text-blue-400">1 USD = 1 OUSD</span>
               </p>
             </div>
           </div>
@@ -1868,44 +1868,57 @@ const Dashboard = () => {
       </div>
 
       {activeSection === "savings" && (
-        <div className="mx-4 mt-4 space-y-4">
-          <div className="rounded-3xl border border-white/30 bg-gradient-to-br from-paypal-blue to-[#0073e6] p-6 shadow-xl shadow-[#004bba]/25">
-          <div className="flex items-center justify-between text-white">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-                <PiggyBank className="h-5 w-5" />
+        <div className="mx-4 mt-4 animate-in-up">
+          <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+            {/* Background highlights for glass look */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+
+            <div className="relative mb-6 flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <div className="rounded-full px-4 py-1.5 text-xs font-bold bg-white text-paypal-blue shadow-lg shadow-black/5">
+                  Savings wallet
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold">{balanceHidden ? "****" : formatCompactCurrency(savings?.savings_balance ?? 0)}</p>
-                <p className="text-base text-white/85">Savings balance</p>
+              <button
+                type="button"
+                onClick={() => setAmountFormat((prev) => (prev === "compact" ? "comma" : "compact"))}
+                className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue hover:bg-paypal-blue/20 transition-colors backdrop-blur-sm"
+              >
+                {amountFormat === "compact" ? "Compact" : "Comma"}
+              </button>
+            </div>
+
+            <div className="relative flex flex-col items-center justify-center text-center py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                  <PiggyBank className="h-6 w-6 text-paypal-blue" />
+                </div>
+                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                  {balanceHidden ? "****" : formatCompactCurrency(savings?.savings_balance ?? 0)}
+                </h2>
+              </div>
+              <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                Savings balance
+              </p>
+            </div>
+
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Wallet balance</p>
+                <p className="text-base font-bold text-foreground">{balanceHidden ? "****" : formatCompactCurrency(savings?.wallet_balance ?? balance)}</p>
+              </div>
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Estimated APY</p>
+                <p className="text-base font-bold text-foreground">{(savings?.apy ?? 0).toFixed(2)}%</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setAmountFormat((prev) => (prev === "compact" ? "comma" : "compact"))}
-              className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white hover:bg-white/25"
-            >
-              {amountFormat === "compact" ? "Compact" : "Comma"}
-            </button>
-          </div>
-            <div className="mt-4 rounded-2xl bg-white p-4 text-paypal-dark">
-              <p className="text-sm text-muted-foreground">Wallet balance</p>
-              <p className="mt-1 text-base font-semibold">{balanceHidden ? "****" : formatCompactCurrency(savings?.wallet_balance ?? balance)}</p>
-            </div>
-            <div className="mt-4 rounded-2xl bg-white p-4 text-paypal-dark">
-              <p className="text-sm text-muted-foreground">Savings balance</p>
-              <p className="mt-1 text-base font-semibold">{balanceHidden ? "****" : formatCompactCurrency(savings?.savings_balance ?? 0)}</p>
-            </div>
-            <div className="mt-4 rounded-2xl bg-white p-4 text-paypal-dark">
-              <p className="text-sm text-muted-foreground">Estimated APY</p>
-              <p className="mt-1 text-base font-semibold">{(savings?.apy ?? 0).toFixed(2)}%</p>
-            </div>
-            <div className="mt-4 flex justify-end">
+
+            <div className="relative mt-10 flex justify-center">
               <button
                 type="button"
                 onClick={toggleBalanceHidden}
-                aria-label={balanceHidden ? "Show balance" : "Hide balance"}
-                className="paypal-surface flex h-9 items-center gap-2 rounded-full px-3 text-base font-semibold text-foreground"
+                className="ios-active flex items-center gap-2 rounded-full bg-black/5 dark:bg-white/5 px-6 py-2.5 text-sm font-bold text-foreground hover:bg-black/10 transition-colors backdrop-blur-sm border border-white/5"
               >
                 {balanceHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 {balanceHidden ? "Show balance" : "Hide balance"}
@@ -1913,7 +1926,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="paypal-surface rounded-3xl p-4">
+          <div className="mt-4 paypal-surface rounded-3xl p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-border/70 p-3">
                 <p className="mb-2 text-sm font-semibold">Move wallet to savings</p>
@@ -1977,84 +1990,82 @@ const Dashboard = () => {
       )}
 
       {activeSection === "credit" && (
-        <div className="mx-4 mt-4 space-y-4">
-          <div className="paypal-surface rounded-3xl p-4">
-            <div className="rounded-2xl bg-gradient-to-br from-paypal-blue to-[#2f67dc] p-4 text-white shadow-xl shadow-[#004bba]/25">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xl font-semibold">Credit Overview</p>
+        <div className="mx-4 mt-4 animate-in-up">
+          <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+            {/* Background highlights for glass look */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+
+            <div className="relative mb-6 flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <div className="rounded-full px-4 py-1.5 text-xs font-bold bg-white text-paypal-blue shadow-lg shadow-black/5">
+                  Credit profile
+                </div>
               </div>
-              <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">
+              <span className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue backdrop-blur-sm">
                 {currencyTag}
               </span>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-white/10 p-4">
-              <p className="text-sm text-white/80">Credit score</p>
-              <p className="mt-2 text-5xl font-bold">{creditScoreDisplay}</p>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
-                <div
-                  className="h-full rounded-full bg-emerald-500"
-                  style={{ width: `${creditProgressPercent}%` }}
-                />
+            <div className="relative flex flex-col items-center justify-center text-center py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                  <TrendingUp className="h-6 w-6 text-paypal-blue" />
+                </div>
+                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                  {creditScoreDisplay}
+                </h2>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Credit starts at 0 for new accounts and grows from OpenPay activity.
+              <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                Credit score
               </p>
             </div>
 
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              <div className="rounded-xl bg-white/15 p-3">
-                <p className="text-xs text-white/75">Status</p>
-                <p className="mt-1 text-sm font-semibold text-white">{creditScoreDisplay >= 120 ? "Loan-ready profile" : "Building profile"}</p>
+            <div className="relative mt-6 px-4">
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/5 border border-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000"
+                  style={{ width: `${creditProgressPercent}%` }}
+                />
               </div>
-              <div className="rounded-xl bg-white/15 p-3">
-                <p className="text-xs text-white/75">Range</p>
-                <p className="mt-1 text-sm font-semibold text-white">0 - 900</p>
+              <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                {creditScoreDisplay >= 120 ? "Loan-ready profile" : "Building profile"}
+              </p>
+            </div>
+
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Status</p>
+                <p className="text-base font-bold text-foreground">{creditScoreDisplay >= 120 ? "Ready" : "Building"}</p>
               </div>
-              <div className="rounded-xl bg-white/15 p-3">
-                <p className="text-xs text-white/75">Loan unlock</p>
-                <p className="mt-1 text-sm font-semibold text-white">{creditScoreDisplay} / 120</p>
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Range</p>
+                <p className="text-base font-bold text-foreground">0 - 900</p>
+              </div>
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Unlock</p>
+                <p className="text-base font-bold text-foreground">{creditScoreDisplay} / 120</p>
               </div>
             </div>
 
-            <div className="mt-3 rounded-2xl bg-white/15 p-4 text-sm text-white/90">
-              Credit uses send, receive, buy, checkout, invoice, and request activity.
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="relative mt-10 flex justify-center gap-3">
               <button
                 type="button"
                 onClick={() => navigate("/send")}
-                className="h-11 rounded-full bg-white text-paypal-blue text-sm font-semibold"
+                className="ios-active flex flex-1 items-center justify-center gap-2 rounded-full bg-paypal-blue text-white py-3 text-sm font-bold shadow-lg shadow-paypal-blue/20 hover:bg-paypal-blue/90 transition-all"
               >
-                Pay
+                Build credit
               </button>
-              <button
-                type="button"
-                onClick={() => navigate("/receive")}
-                className="h-11 rounded-full bg-white/10 text-sm font-semibold text-white"
-              >
-                Receive
-              </button>
-              <button
-                type="button"
-                onClick={openBuyOptions}
-                className="h-11 rounded-full bg-white/10 text-sm font-semibold text-white"
-              >
-                Buy
-              </button>
-            </div>
             </div>
           </div>
 
-          <div className="paypal-surface rounded-3xl p-4">
+          <div className="mt-4 paypal-surface rounded-3xl p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-base font-bold text-foreground">Credit score activity</h3>
               <span className="text-xs font-semibold text-muted-foreground">From recent activity</span>
             </div>
             <div className="divide-y divide-border/70 rounded-2xl border border-border/70">
-              {creditActivityRows.map((row) => (
+              {creditActivityRows.map((row) => (row.count > 0 && (
                 <div key={row.key} className="flex items-center justify-between px-3 py-2.5">
                   <div>
                     <p className="text-sm font-medium text-foreground">{row.label}</p>
@@ -2062,438 +2073,367 @@ const Dashboard = () => {
                   </div>
                   <p className="text-sm font-semibold text-paypal-blue">+{row.count * row.points} pts</p>
                 </div>
-              ))}
+              )))}
             </div>
           </div>
         </div>
       )}
 
       {activeSection === "loans" && (
-        <div className="mx-4 mt-4 paypal-surface rounded-3xl p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <HandCoins className="h-5 w-5 text-paypal-blue" />
-            <h2 className="text-lg font-bold text-paypal-dark">Loans</h2>
-          </div>
-          {loanView === "overview" ? (
-            <div className="rounded-2xl border border-border/70 p-4">
-              <div className="rounded-2xl bg-gradient-to-br from-paypal-blue to-[#3b79ef] p-5 text-white">
-                <p className="text-sm text-white/85">Available to borrow</p>
-                <p className="mt-1 text-3xl font-bold">{balanceHidden ? "****" : formatCompactCurrency(availableToBorrow)}</p>
-                <p className="mt-1 text-sm text-white/85">Based on your wallet & savings balance</p>
-              </div>
+        <div className="mx-4 mt-4 animate-in-up">
+          <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+            {/* Background highlights for glass look */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
 
-              <div className="mt-4 space-y-3">
+            <div className="relative mb-6 flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <div className="rounded-full px-4 py-1.5 text-xs font-bold bg-white text-paypal-blue shadow-lg shadow-black/5">
+                  Loan center
+                </div>
+              </div>
+              <span className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue backdrop-blur-sm">
+                {currencyTag}
+              </span>
+            </div>
+
+            <div className="relative flex flex-col items-center justify-center text-center py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                  <HandCoins className="h-6 w-6 text-paypal-blue" />
+                </div>
+                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                  {balanceHidden ? "****" : formatCompactCurrency(availableToBorrow)}
+                </h2>
+              </div>
+              <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                Available to borrow
+              </p>
+            </div>
+
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Interest rate</p>
+                <p className="text-base font-bold text-emerald-600">{previewApr.toFixed(1)}% APR</p>
+              </div>
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Term</p>
+                <p className="text-base font-bold text-foreground">{previewTermDays} days</p>
+              </div>
+            </div>
+
+            <div className="relative mt-10 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setLoanView(loanView === "overview" ? "form" : "overview")}
+                className="ios-active flex flex-1 items-center justify-center gap-2 rounded-full bg-paypal-blue text-white py-3 text-sm font-bold shadow-lg shadow-paypal-blue/20 hover:bg-paypal-blue/90 transition-all"
+              >
+                {loanView === "overview" ? "Apply now" : "Back to preview"}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 paypal-surface rounded-3xl p-4">
+            {loanView === "overview" ? (
+              <div className="space-y-4">
                 <div className="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3">
                   <span className="text-base text-muted-foreground">Loan amount</span>
                   <span className="text-xl font-semibold text-foreground">{formatCompactCurrency(previewLoanAmount)}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3">
-                  <span className="text-base text-muted-foreground">Interest rate</span>
-                  <span className="text-xl font-semibold text-emerald-600">{previewApr.toFixed(1)}% APR</span>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3">
-                  <span className="text-base text-muted-foreground">Term</span>
-                  <span className="text-xl font-semibold text-foreground">{previewTermDays} days</span>
                 </div>
                 <div className="flex items-center justify-between rounded-xl border border-paypal-blue/35 bg-paypal-blue/5 px-4 py-3">
                   <span className="text-lg font-semibold text-foreground">Total repayment</span>
                   <span className="text-xl font-semibold text-paypal-blue">{formatCompactCurrency(previewRepayment)}</span>
                 </div>
+                <input
+                  value={formatAmountInput(loanAmount)}
+                  onChange={(e) => setLoanAmount(normalizeAmountInput(e.target.value))}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={`Enter loan amount (${currencyLabel})`}
+                  className="h-12 w-full rounded-xl border border-border px-3 text-sm text-foreground"
+                />
               </div>
-
-              <input
-                value={formatAmountInput(loanAmount)}
-                onChange={(e) => setLoanAmount(normalizeAmountInput(e.target.value))}
-                type="text"
-                inputMode="decimal"
-                placeholder={`Enter loan amount (${currencyLabel})`}
-                className="mt-4 h-12 w-full rounded-xl border border-border px-3 text-sm text-foreground"
-              />
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-sm font-semibold text-paypal-blue">
-                <span className="h-2 w-2 rounded-full bg-paypal-blue" />
-                Coming Soon
-              </div>
-              <button
-                type="button"
-                onClick={() => setLoanView("form")}
-                className="mt-4 h-12 w-full rounded-xl bg-[#7a9de8] text-lg font-semibold text-white transition hover:bg-[#6b90e0]"
-              >
-                Apply for Loan
-              </button>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-border/70 p-3">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-foreground">Loan onboarding form</p>
-                <button type="button" onClick={() => setLoanView("overview")} className="text-xs font-semibold text-paypal-blue">
-                  Back to preview
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs text-muted-foreground">Provide accurate details. This application is reviewed by OpenPay admin before approval.</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1 text-xs text-muted-foreground">
+                    <span>Loan amount ({currencyLabel})</span>
+                    <input
+                      value={formatAmountInput(loanAmount)}
+                      onChange={(e) => setLoanAmount(normalizeAmountInput(e.target.value))}
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="e.g. 500"
+                      className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground"
+                    />
+                  </label>
+                  <label className="space-y-1 text-xs text-muted-foreground">
+                    <span>Term months (1 - 60)</span>
+                    <input value={loanTermMonths} onChange={(e) => setLoanTermMonths(e.target.value)} type="number" min="1" max="60" placeholder="e.g. 6" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
+                  </label>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1 text-xs text-muted-foreground">
+                    <span>Full legal name</span>
+                    <input value={loanApplicantName} onChange={(e) => setLoanApplicantName(e.target.value)} placeholder="Enter full name" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
+                  </label>
+                  <label className="space-y-1 text-xs text-muted-foreground">
+                    <span>Contact number</span>
+                    <input value={loanContactNumber} onChange={(e) => setLoanContactNumber(e.target.value)} placeholder="Phone or active contact number" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
+                  </label>
+                </div>
+                <button
+                  disabled={requestingLoan || loanApplication?.status === "pending"}
+                  onClick={handleRequestLoan}
+                  className="h-12 w-full rounded-xl bg-paypal-blue text-lg font-semibold text-white transition hover:bg-[#004dc5]"
+                >
+                  {requestingLoan ? "Submitting..." : "Submit Loan Application"}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">Provide accurate details. This application is reviewed by OpenPay admin before approval.</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="space-y-1 text-xs text-muted-foreground">
-                  <span>Loan amount ({currencyLabel})</span>
-                  <input
-                    value={formatAmountInput(loanAmount)}
-                    onChange={(e) => setLoanAmount(normalizeAmountInput(e.target.value))}
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="e.g. 500"
-                    className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground"
-                  />
-                </label>
-                <label className="space-y-1 text-xs text-muted-foreground">
-                  <span>Term months (1 - 60)</span>
-                  <input value={loanTermMonths} onChange={(e) => setLoanTermMonths(e.target.value)} type="number" min="1" max="60" placeholder="e.g. 6" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
-                </label>
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="space-y-1 text-xs text-muted-foreground">
-                  <span>Full legal name</span>
-                  <input value={loanApplicantName} onChange={(e) => setLoanApplicantName(e.target.value)} placeholder="Enter full name" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
-                </label>
-                <label className="space-y-1 text-xs text-muted-foreground">
-                  <span>Contact number</span>
-                  <input value={loanContactNumber} onChange={(e) => setLoanContactNumber(e.target.value)} placeholder="Phone or active contact number" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
-                </label>
-                <label className="space-y-1 text-xs text-muted-foreground sm:col-span-2">
-                  <span>Address line</span>
-                  <input value={loanAddressLine} onChange={(e) => setLoanAddressLine(e.target.value)} placeholder="Street / building / district" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
-                </label>
-                <label className="space-y-1 text-xs text-muted-foreground">
-                  <span>City</span>
-                  <input value={loanCity} onChange={(e) => setLoanCity(e.target.value)} placeholder="Enter city" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
-                </label>
-                <label className="space-y-1 text-xs text-muted-foreground">
-                  <span>Country</span>
-                  <input value={loanCountry} onChange={(e) => setLoanCountry(e.target.value)} placeholder="Enter country" className="h-10 w-full rounded-xl border border-border px-3 text-sm text-foreground" />
-                </label>
-              </div>
-              <div className="mt-3 rounded-xl border border-border/70 bg-secondary/30 p-3 text-xs text-muted-foreground">
-                <p className="font-semibold text-foreground">Bound OpenPay account</p>
-                <p className="mt-1">Account number: {userAccount?.account_number || "-"}</p>
-                <p>Username: {userAccount?.account_username ? `@${userAccount.account_username}` : "-"}</p>
-              </div>
-              <label className="mt-3 flex items-start gap-2 text-xs text-foreground">
-                <input type="checkbox" className="mt-0.5" checked={loanAgreementAccepted} onChange={(e) => setLoanAgreementAccepted(e.target.checked)} />
-                <span>I agree to OpenPay loan terms and confirm my application details are real and accurate.</span>
-              </label>
-              <button
-                disabled={requestingLoan || loanApplication?.status === "pending"}
-                onClick={handleRequestLoan}
-                className="mt-3 h-10 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white disabled:opacity-60"
-              >
-                {requestingLoan ? "Submitting..." : "Submit Loan Application"}
-              </button>
-            </div>
-          )}
-          <div className="mt-3 rounded-2xl border border-border/70 p-3">
-            <p className="mb-2 text-sm font-semibold">Pay monthly installment</p>
-            <input
-              value={formatAmountInput(loanPaymentAmount)}
-              onChange={(e) => setLoanPaymentAmount(normalizeAmountInput(e.target.value))}
-              type="text"
-              inputMode="decimal"
-              placeholder={`Default: ${loan ? formatCompactCurrency(loan.monthly_payment_amount) : `monthly due (${currencyLabel})`}`}
-              className="h-10 w-full rounded-xl border border-border px-3"
-            />
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setLoanPaymentMethod("wallet")}
-                className={`h-10 rounded-xl border text-sm font-semibold ${loanPaymentMethod === "wallet" ? "border-paypal-blue bg-paypal-blue text-white" : "border-border bg-white text-foreground"}`}
-              >
-                Pi Payment
-              </button>
-              <button
-                type="button"
-                onClick={() => setLoanPaymentMethod("pi")}
-                className={`h-10 rounded-xl border text-sm font-semibold ${loanPaymentMethod === "pi" ? "border-paypal-blue bg-paypal-blue text-white" : "border-border bg-white text-foreground"}`}
-              >
-                Pi Payment
-              </button>
-            </div>
-            {loanPaymentMethod === "pi" && (
+            )}
+
+            <div className="mt-3 rounded-2xl border border-border/70 p-3">
+              <p className="mb-2 text-sm font-semibold">Pay monthly installment</p>
               <input
-                value={loanPaymentReference}
-                onChange={(e) => setLoanPaymentReference(e.target.value)}
-                placeholder="Pi payment reference (required)"
-                className="mt-2 h-10 w-full rounded-xl border border-border px-3"
+                value={formatAmountInput(loanPaymentAmount)}
+                onChange={(e) => setLoanPaymentAmount(normalizeAmountInput(e.target.value))}
+                type="text"
+                inputMode="decimal"
+                placeholder={`Default: ${loan ? formatCompactCurrency(loan.monthly_payment_amount) : `monthly due (${currencyLabel})`}`}
+                className="h-10 w-full rounded-xl border border-border px-3"
               />
-            )}
-            <button disabled={payingLoan || !loan || loan.status !== "active"} onClick={() => handleProtectedAction(handlePayLoan, "handlePayLoan")} className="mt-2 h-10 w-full rounded-xl border border-paypal-blue/40 bg-white text-sm font-semibold text-paypal-blue">
-              {payingLoan ? "Paying..." : "Pay Loan"}
-            </button>
-          </div>
-          <div className="mt-3 rounded-2xl border border-border/70 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-semibold">Loan payment history</p>
-              <p className="text-xs text-muted-foreground">{loanPaymentHistory.length} records</p>
-            </div>
-            {loanPaymentHistory.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No loan payments yet.</p>
-            ) : (
-              <div className="divide-y divide-border/70 rounded-xl border border-border/70">
-                {loanPaymentHistory.map((entry) => (
-                  <div key={entry.id} className="px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{formatCompactCurrency(entry.amount)}</p>
-                      <p className="text-xs uppercase text-muted-foreground">{entry.payment_method}</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Principal {formatCompactCurrency(entry.principal_component)} | Fee {formatCompactCurrency(entry.fee_component)}
-                    </p>
-                    {entry.payment_reference && <p className="text-xs text-muted-foreground">Ref: {toPreviewText(entry.payment_reference, 44)}</p>}
-                    <p className="text-xs text-muted-foreground">{entry.created_at ? format(new Date(entry.created_at), "MMM d, yyyy h:mm a") : "-"}</p>
-                  </div>
-                ))}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLoanPaymentMethod("wallet")}
+                  className={`h-10 rounded-xl border text-sm font-semibold ${loanPaymentMethod === "wallet" ? "border-paypal-blue bg-paypal-blue text-white" : "border-border bg-white text-foreground"}`}
+                >
+                  Pi Payment
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoanPaymentMethod("pi")}
+                  className={`h-10 rounded-xl border text-sm font-semibold ${loanPaymentMethod === "pi" ? "border-paypal-blue bg-paypal-blue text-white" : "border-border bg-white text-foreground"}`}
+                >
+                  Pi Payment
+                </button>
               </div>
-            )}
+              {loanPaymentMethod === "pi" && (
+                <input
+                  value={loanPaymentReference}
+                  onChange={(e) => setLoanPaymentReference(e.target.value)}
+                  placeholder="Pi payment reference (required)"
+                  className="mt-2 h-10 w-full rounded-xl border border-border px-3"
+                />
+              )}
+              <button disabled={payingLoan || !loan || loan.status !== "active"} onClick={() => handleProtectedAction(handlePayLoan, "handlePayLoan")} className="mt-2 h-10 w-full rounded-xl border border-paypal-blue/40 bg-white text-sm font-semibold text-paypal-blue">
+                {payingLoan ? "Paying..." : "Pay Loan"}
+              </button>
+            </div>
+            <div className="mt-3 rounded-2xl border border-border/70 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-semibold">Loan payment history</p>
+                <p className="text-xs text-muted-foreground">{loanPaymentHistory.length} records</p>
+              </div>
+              {loanPaymentHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No loan payments yet.</p>
+              ) : (
+                <div className="divide-y divide-border/70 rounded-xl border border-border/70">
+                  {loanPaymentHistory.map((entry) => (
+                    <div key={entry.id} className="px-3 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{formatCompactCurrency(entry.amount)}</p>
+                        <p className="text-xs uppercase text-muted-foreground">{entry.payment_method}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Principal {formatCompactCurrency(entry.principal_component)} | Fee {formatCompactCurrency(entry.fee_component)}
+                      </p>
+                      {entry.payment_reference && <p className="text-xs text-muted-foreground">Ref: {toPreviewText(entry.payment_reference, 44)}</p>}
+                      <p className="text-xs text-muted-foreground">{entry.created_at ? format(new Date(entry.created_at), "MMM d, yyyy h:mm a") : "-"}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {activeSection === "cards" && (
-        <div className="mx-4 mt-4 space-y-4">
-        <div className="paypal-surface rounded-3xl p-4">
-          <div className="rounded-2xl bg-gradient-to-br from-paypal-blue to-[#2f67dc] p-4 text-white shadow-xl shadow-[#004bba]/25">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xl font-semibold">OpenPay Cards</p>
+        <div className="mx-4 mt-4 animate-in-up">
+          <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+            {/* Background highlights for glass look */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+
+            <div className="relative mb-6 flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <div className="rounded-full px-4 py-1.5 text-xs font-bold bg-white text-paypal-blue shadow-lg shadow-black/5">
+                  Virtual card
+                </div>
+              </div>
+              <span className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue backdrop-blur-sm">
+                {cardCurrencyLabel}
+              </span>
             </div>
-            <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">
-              {cardCurrencyLabel}
-            </span>
+
+            <div className="relative flex flex-col items-center justify-center text-center py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                  <CreditCard className="h-6 w-6 text-paypal-blue" />
+                </div>
+                <h2 className="text-3xl font-black tracking-[0.15em] text-foreground">
+                  {hideCardPreviewDetails ? "**** **** **** ****" : virtualCardNumber}
+                </h2>
+              </div>
+              <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                {hideCardPreviewDetails ? "Card details hidden" : `Linked to wallet - ${virtualCardActive ? "Active" : "Inactive"}`}
+              </p>
+            </div>
+
+            <div className="relative mt-10 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setHideCardPreviewDetails((prev) => !prev)}
+                className="ios-active flex flex-1 items-center justify-center gap-2 rounded-full bg-black/5 dark:bg-white/5 py-3 text-sm font-bold text-foreground border border-white/10 backdrop-blur-sm transition-all"
+              >
+                {hideCardPreviewDetails ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                {hideCardPreviewDetails ? "View" : "Hide"}
+              </button>
+              <button
+                onClick={() => navigate("/virtual-card")}
+                className="ios-active flex flex-1 items-center justify-center gap-2 rounded-full bg-paypal-blue text-white py-3 text-sm font-bold shadow-lg shadow-paypal-blue/20 hover:bg-paypal-blue/90 transition-all"
+              >
+                Manage card
+              </button>
+            </div>
           </div>
 
-          <div className="mt-4 rounded-2xl bg-white/10 p-4">
-            <p className="text-sm text-white/80">Virtual Card</p>
-            <p className="mt-2 text-2xl font-semibold tracking-[0.12em]">
-              {hideCardPreviewDetails ? "**** **** **** ****" : virtualCardNumber}
-            </p>
-            <p className="mt-2 text-sm text-white/80">
-              {hideCardPreviewDetails ? "Card details hidden" : `Linked to wallet - ${virtualCardActive ? "Active" : "Inactive"}`}
-            </p>
-          </div>
-
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => navigate("/send")}
-              className="h-11 rounded-full bg-white text-paypal-blue text-sm font-semibold"
-            >
-              Pay
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/receive")}
-              className="h-11 rounded-full bg-white/10 text-sm font-semibold text-white"
-            >
-              Receive
-            </button>
-            <button
-              type="button"
-              onClick={openBuyOptions}
-              className="h-11 rounded-full bg-white/10 text-sm font-semibold text-white"
-            >
-              Buy
-            </button>
-          </div>
-
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setHideCardPreviewDetails((prev) => !prev)}
-              className="h-10 w-full rounded-xl border border-white/40 px-4 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              {hideCardPreviewDetails ? "View Details" : "Hide Details"}
-            </button>
-            <button
-              onClick={() => navigate("/virtual-card")}
-              className="h-10 w-full rounded-xl bg-white text-sm font-semibold text-paypal-blue transition hover:bg-white/90"
-            >
-              Open Virtual Card
-            </button>
-          </div>
-          </div>
-        </div>
-        <div className="paypal-surface rounded-3xl p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-base font-bold text-foreground">Card activity history</h3>
-            <button
-              type="button"
-              onClick={() => navigate("/activity")}
-              className="text-xs font-semibold text-paypal-blue"
-            >
-              See all
-            </button>
-          </div>
-          <div className="divide-y divide-border/70 rounded-2xl border border-border/70">
-            {transactions
-              .filter((tx) => {
+          <div className="mt-4 paypal-surface rounded-3xl p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-bold text-foreground">Card activity history</h3>
+              <button
+                type="button"
+                onClick={() => navigate("/activity")}
+                className="text-xs font-semibold text-paypal-blue"
+              >
+                See all
+              </button>
+            </div>
+            <div className="divide-y divide-border/70 rounded-2xl border border-border/70">
+              {transactions
+                .filter((tx) => {
+                  const note = String(tx.note || "").toLowerCase();
+                  return note.includes("merchant checkout") || note.includes("virtual card") || note.includes("card ****");
+                })
+                .slice(0, 6)
+                .map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">{toPreviewText(tx.note || "Card payment", 44)}</p>
+                      <p className="text-xs text-muted-foreground">{format(new Date(tx.created_at), "MMM d, yyyy h:mm a")}</p>
+                    </div>
+                    <p className={`ml-3 text-sm font-semibold ${tx.is_sent && !tx.is_topup ? "text-red-500" : "text-paypal-success"}`}>
+                      {balanceHidden ? "****" : `${tx.is_sent && !tx.is_topup ? "-" : "+"}${formatCompactCurrency(tx.amount)}`}
+                    </p>
+                  </div>
+                ))}
+              {transactions.filter((tx) => {
                 const note = String(tx.note || "").toLowerCase();
                 return note.includes("merchant checkout") || note.includes("virtual card") || note.includes("card ****");
-              })
-              .slice(0, 6)
-              .map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{toPreviewText(tx.note || "Card payment", 44)}</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(tx.created_at), "MMM d, yyyy h:mm a")}</p>
-                  </div>
-                  <p className={`ml-3 text-sm font-semibold ${tx.is_sent && !tx.is_topup ? "text-red-500" : "text-paypal-success"}`}>
-                    {balanceHidden ? "****" : `${tx.is_sent && !tx.is_topup ? "-" : "+"}${formatCompactCurrency(tx.amount)}`}
-                  </p>
-                </div>
-              ))}
-            {transactions.filter((tx) => {
-              const note = String(tx.note || "").toLowerCase();
-              return note.includes("merchant checkout") || note.includes("virtual card") || note.includes("card ****");
-            }).length === 0 && <p className="px-3 py-8 text-center text-sm text-muted-foreground">No card activity yet.</p>}
+              }).length === 0 && <p className="px-3 py-8 text-center text-sm text-muted-foreground">No card activity yet.</p>}
+            </div>
           </div>
-        </div>
         </div>
       )}
 
       {activeSection === "buy" && (
-        <div className="mx-4 mt-4 space-y-4">
-          <div className="paypal-surface rounded-3xl p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-xl font-semibold text-foreground">Onramper</p>
-              <span className="rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">Buy OpenUSD</span>
-            </div>
+        <div className="mx-4 mt-4 animate-in-up">
+          <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+            {/* Background highlights for glass look */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
 
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-secondary/50 p-4">
-                <p className="text-sm text-muted-foreground">
-                  You spend ({buySpendUnit} amount)
-                </p>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <input
-                    value={formatAmountInput(buySpendAmount)}
-                    onChange={(e) => setBuySpendAmount(normalizeAmountInput(e.target.value))}
-                    type="text"
-                    inputMode="decimal"
-                    placeholder={isEwalletBuyFlow ? "Custom amount in PHP (min 57)" : "Custom amount (min 1)"}
-                    className="h-10 w-full bg-transparent text-4xl font-semibold text-foreground outline-none"
-                  />
-                  <span className="inline-flex h-11 items-center rounded-xl bg-white px-3 text-sm font-semibold text-foreground">
-                    {buySpendUnit}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs font-medium text-foreground">
-                  {buySpendRateText}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-secondary/50 p-4">
-                <p className="text-sm text-muted-foreground">You get (OPEN USD amount)</p>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <p className="text-4xl font-semibold text-foreground">{buyOpenUsdDisplay}</p>
-                  <span className="inline-flex h-11 items-center rounded-xl bg-white px-3 text-sm font-semibold text-foreground">OPEN USD</span>
-                </div>
-                <p className="mt-2 text-xs font-medium text-foreground">{buyOpenUsdRateText}</p>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-3 text-sm text-muted-foreground">
-                  <p>
-                    1 OUSD ~ {isEwalletBuyFlow
-                      ? `${E_WALLET_PHP_PER_OUSD.toFixed(4)} PHP`
-                      : isUsdtBuyFlow
-                        ? "1.0000 USDT"
-                        : isUsdcBuyFlow
-                          ? "1.0000 USDC"
-                          : isUsdFiatBuyFlow
-                        ? "1.0000 USD"
-                        : `${selectedRate.toFixed(4)} PI`}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowOnrampPicker(true)}
-                    className="inline-flex items-center gap-1 font-semibold text-foreground"
-                  >
-                    By {buyOnrampProvider}
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
+            <div className="relative mb-6 flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <div className="rounded-full px-4 py-1.5 text-xs font-bold bg-white text-paypal-blue shadow-lg shadow-black/5">
+                  Buy OpenUSD
                 </div>
               </div>
-            </div>
-
-            <p className="mt-4 text-base text-foreground">Pay using</p>
-            <button
-              type="button"
-              onClick={() => setShowPaymentMethodPicker(true)}
-              className="mt-2 flex h-14 w-full items-center justify-between rounded-2xl border border-border/70 bg-white px-4"
-            >
-              <span className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
-                {buyPaymentMethod === "Pi Payment" && (
-                  <img src={PI_PAYMENT_ICON_URL} alt="Pi Payment" className="h-10 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Ewallet" && (
-                  <img src={JQRPH_ICON_URL} alt="JQRPh" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "PayPal" && (
-                  <img src={PAYPAL_ICON_URL} alt="PayPal" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "USDT" && (
-                  <img src={USDT_ICON_URL} alt="USDT" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "USDC" && (
-                  <img src={USDC_ICON_URL} alt="USDC" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Solana Pay" && (
-                  <img src={SOLANA_PAY_ICON_URL} alt="Solana Pay" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Apple Pay" && (
-                  <img src={APPLE_PAY_ICON_URL} alt="Apple Pay" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Google Pay" && (
-                  <img src={GOOGLE_PAY_ICON_URL} alt="Google Pay" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Debit Card" && (
-                  <img src={VISA_ICON_URL} alt="Visa" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Credit Card" && (
-                  <img src={MASTERCARD_ICON_URL} alt="Mastercard" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Stripe" && (
-                  <img src={STRIPE_ICON_URL} alt="Stripe" className="h-5 w-auto object-contain" />
-                )}
-                {buyPaymentMethod === "Venmo" && (
-                  <img src={VENMO_ICON_URL} alt="Venmo" className="h-5 w-auto object-contain" />
-                )}
-                {getBuyPaymentMethodLabel(buyPaymentMethod)}
+              <span className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue backdrop-blur-sm">
+                Onramper
               </span>
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
-            </button>
-            <button
-              type="button"
-              onClick={handleBuyOpenUsd}
-              disabled={!buyOpenUsdMeetsMinimum}
-              className="mt-3 h-11 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white hover:bg-[#004dc5] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {buyPaymentMethod === "Ewallet"
-                ? "Buy OpenUSD with Ewallet QR PH"
-                : buyPaymentMethod === "USDT"
-                  ? "Buy OpenUSD with USDT"
-                  : buyPaymentMethod === "USDC"
-                    ? "Buy OpenUSD with USDC"
-                : buyPaymentMethod === "PayPal"
-                  ? "Buy OpenUSD with PayPal"
-                  : "Buy OpenUSD with Pi Payment"}
-            </button>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Minimum buy: 1 OPEN USD. {isEwalletBuyFlow
-                ? `Ewallet QR PH uses PH price: 1 OPEN USD = ${E_WALLET_PHP_PER_OUSD.toFixed(2)} PHP.`
-                : isUsdtBuyFlow
-                  ? "USDT buy uses fixed rate: 1 USDT = 1 OPEN USD."
-                  : isUsdcBuyFlow
-                    ? "USDC buy uses fixed rate: 1 USDC = 1 OPEN USD."
-                : buyPaymentMethod === "PayPal"
-                  ? "PayPal uses USD amount and credits OPEN USD balance."
-                  : "Purchase flow uses OpenPay OPEN USD to PI balance."}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Stable mode enabled: 1 PI = {PI_TO_OUSD.toFixed(2)} OPEN USD.
-            </p>
+            </div>
+
+            <div className="relative flex flex-col items-center justify-center text-center py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                  <Coins className="h-6 w-6 text-paypal-blue" />
+                </div>
+                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                  {buyOpenUsdDisplay}
+                </h2>
+              </div>
+              <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                You get (OPEN USD)
+              </p>
+            </div>
+
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">You spend</p>
+                <p className="text-base font-bold text-foreground">{buySpendAmount || "0"} {buySpendUnit}</p>
+              </div>
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Provider</p>
+                <p className="text-base font-bold text-foreground">{buyOnrampProvider}</p>
+              </div>
+            </div>
+
+            <div className="relative mt-10 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={handleBuyOpenUsd}
+                disabled={!buyOpenUsdMeetsMinimum}
+                className="ios-active flex flex-1 items-center justify-center gap-2 rounded-full bg-paypal-blue text-white py-3 text-sm font-bold shadow-lg shadow-paypal-blue/20 hover:bg-paypal-blue/90 transition-all disabled:opacity-60"
+              >
+                Confirm purchase
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 paypal-surface rounded-3xl p-4 space-y-4">
+            <div className="rounded-2xl bg-secondary/50 p-4">
+              <p className="text-sm text-muted-foreground">You spend ({buySpendUnit})</p>
+              <input
+                value={formatAmountInput(buySpendAmount)}
+                onChange={(e) => setBuySpendAmount(normalizeAmountInput(e.target.value))}
+                type="text"
+                inputMode="decimal"
+                placeholder={isEwalletBuyFlow ? "Min 57 PHP" : "Min 1"}
+                className="mt-1 h-10 w-full bg-transparent text-3xl font-bold text-foreground outline-none"
+              />
+              <p className="mt-1 text-xs font-medium text-muted-foreground">{buySpendRateText}</p>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">Payment method</p>
+                <button onClick={() => setShowPaymentMethodPicker(true)} className="text-xs font-bold text-paypal-blue">Change</button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPaymentMethodPicker(true)}
+                className="flex w-full items-center justify-between rounded-xl bg-secondary/30 p-3"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-bold text-foreground">
+                  {buyPaymentMethod === "Pi Payment" && <img src={PI_PAYMENT_ICON_URL} alt="" className="h-6 w-auto" />}
+                  {getBuyPaymentMethodLabel(buyPaymentMethod)}
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2562,283 +2502,201 @@ const Dashboard = () => {
       )}
 
       {activeSection === "mining" && (
-        <div className="mx-4 mt-4 space-y-4">
-          <div className="paypal-surface rounded-3xl p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-xl font-semibold text-foreground">Mining</p>
-              <span className="rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">Earn OPEN USD</span>
+        <div className="mx-4 mt-4 animate-in-up">
+          <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+            {/* Background highlights for glass look */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+
+            <div className="relative mb-6 flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <div className="rounded-full px-4 py-1.5 text-xs font-bold bg-white text-paypal-blue shadow-lg shadow-black/5">
+                  Mining hub
+                </div>
+              </div>
+              <span className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue backdrop-blur-sm">
+                Active
+              </span>
             </div>
 
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-gradient-to-br from-paypal-blue/20 to-[#0073e6]/20 p-4">
-                <p className="text-sm text-muted-foreground">Current Mining Balance</p>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <p className="text-4xl font-semibold text-foreground">{miningBalance.toFixed(2)}</p>
-                  <span className="inline-flex h-11 items-center rounded-xl bg-white px-3 text-sm font-semibold text-foreground">OPEN USD</span>
+            <div className="relative flex flex-col items-center justify-center text-center py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                  <Pickaxe className={`h-6 w-6 text-paypal-blue ${activeMiningSession ? "animate-bounce-slow" : ""}`} />
                 </div>
-                <p className="mt-2 text-xs font-medium text-foreground">Earned through mining</p>
+                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                  {miningBalance.toFixed(2)}
+                </h2>
               </div>
+              <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                Mining balance (OUSD)
+              </p>
+            </div>
 
-              <div className="rounded-2xl bg-secondary/50 p-4">
-                <p className="text-sm text-muted-foreground">Mining Status</p>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`h-3 w-3 rounded-full ${activeMiningSession ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
-                    <span className="text-lg font-semibold text-foreground">
-                      {activeMiningSession ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                  {miningTimeLeft > 0 && (
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {Math.floor(miningTimeLeft / 3600)}h {Math.floor((miningTimeLeft % 3600) / 60)}m
-                    </span>
-                  )}
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {activeMiningSession 
-                    ? "Mining session is active. Keep earning!" 
-                    : "Start a new mining session to earn OPEN USD"}
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Time left</p>
+                <p className="text-base font-bold text-foreground">
+                  {miningTimeLeft > 0 ? `${Math.floor(miningTimeLeft / 3600)}h ${Math.floor((miningTimeLeft % 3600) / 60)}m` : "0h 0m"}
                 </p>
               </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">Mining Rate</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
-                    <Pickaxe className="h-5 w-5 text-paypal-blue" />
-                    0.10 OPEN USD / day
-                  </span>
-                </div>
+              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Daily rate</p>
+                <p className="text-base font-bold text-foreground">0.10 OUSD</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => navigate("/mining")}
-              className="mt-3 h-11 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white hover:bg-[#004dc5] transition-colors"
-            >
-              {activeMiningSession ? "Manage Mining" : "Start Mining"}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/mining")}
-              className="mt-2 h-11 w-full rounded-xl border border-paypal-blue/40 bg-white text-sm font-semibold text-paypal-blue"
-            >
-              View Mining History
-            </button>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Mining runs 24 hours. Earn 0.10 OPEN USD daily.
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Powered by OpenPay Network.
-            </p>
+
+            <div className="relative mt-10 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/mining")}
+                className="ios-active flex flex-1 items-center justify-center gap-2 rounded-full bg-paypal-blue text-white py-3 text-sm font-bold shadow-lg shadow-paypal-blue/20 hover:bg-paypal-blue/90 transition-all"
+              >
+                {activeMiningSession ? "Mining session" : "Start session"}
+              </button>
+            </div>
           </div>
 
-          <div className="paypal-surface rounded-3xl p-4">
+          <div className="mt-4 paypal-surface rounded-3xl p-4">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-xl font-semibold text-foreground">Staking</p>
-              <span className="rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">Earn Yield</span>
+              <p className="text-base font-bold text-foreground">Staking rewards</p>
+              <button onClick={() => navigate("/staking")} className="text-xs font-bold text-paypal-blue">Open hub</button>
             </div>
-
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-gradient-to-br from-paypal-blue/10 to-[#00a3ff]/10 p-4">
-                <p className="text-sm text-muted-foreground">Lock funds to earn rewards</p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Choose a lock duration and claim rewards after the lock ends.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-foreground">7 days · 2%</span>
-                  <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-foreground">30 days · 5%</span>
-                  <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-foreground">90 days · 10%</span>
-                  <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-foreground">365 days · 20%</span>
-                </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-secondary/30 p-3">
+                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">7 Days</p>
+                <p className="text-sm font-bold text-foreground">2% APY</p>
               </div>
-
-              <div className="rounded-2xl bg-secondary/50 p-4">
-                <p className="text-sm text-muted-foreground">How it works</p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Staked funds are locked. Rewards are claimable only after the lock period.
-                </p>
+              <div className="rounded-2xl bg-secondary/30 p-3">
+                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">30 Days</p>
+                <p className="text-sm font-bold text-foreground">5% APY</p>
               </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => navigate("/staking")}
-              className="mt-3 h-11 w-full rounded-xl bg-paypal-blue text-sm font-semibold text-white hover:bg-[#004dc5] transition-colors"
-            >
-              Start Staking
-            </button>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Stake OpenUSD and earn yield based on lock duration.
-            </p>
           </div>
         </div>
       )}
 
       {activeSection === "analytics" && (
-        <div className="mx-4 mt-4 space-y-6">
-          {/* Header Section */}
-          <div className="paypal-surface rounded-3xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">Analytics</h2>
-                <p className="text-sm text-muted-foreground mt-1">Track your wallet performance and activity</p>
+        <div className="mx-4 mt-4 animate-in-up space-y-4">
+          <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+            {/* Background highlights for glass look */}
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+
+            <div className="relative mb-6 flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <div className="rounded-full px-4 py-1.5 text-xs font-bold bg-white text-paypal-blue shadow-lg shadow-black/5">
+                  Personal Analytics
+                </div>
               </div>
-              <button 
-                onClick={() => void loadPersonalAnalytics()} 
-                className="rounded-xl bg-paypal-blue px-4 py-2 text-sm font-semibold text-white hover:bg-[#004dc5] transition"
+              <button
+                type="button"
+                onClick={() => void loadPersonalAnalytics()}
+                disabled={personalAnalyticsLoading}
+                className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue hover:bg-paypal-blue/20 transition-colors backdrop-blur-sm"
               >
-                Refresh
+                {personalAnalyticsLoading ? <RefreshCw className="h-3 w-3 animate-spin" /> : "Refresh"}
               </button>
             </div>
+
+            {personalAnalyticsLoading ? (
+              <div className="relative flex flex-col items-center justify-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin text-paypal-blue" />
+                <p className="mt-4 text-sm font-bold uppercase tracking-widest text-muted-foreground/60">Loading analytics...</p>
+              </div>
+            ) : personalAnalytics ? (
+              <div className="relative">
+                <div className="flex flex-col items-center justify-center text-center py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                      <TrendingUp className="h-6 w-6 text-paypal-blue" />
+                    </div>
+                    <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                      {formatCompactCurrency(personalAnalytics.summary.net_balance)}
+                    </h2>
+                  </div>
+                  <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                    Net Balance
+                  </p>
+                </div>
+
+                <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Total Sent</p>
+                    <p className="text-lg font-bold text-red-500">{formatCompactCurrency(personalAnalytics.summary.total_sent)}</p>
+                  </div>
+                  <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Total Received</p>
+                    <p className="text-lg font-bold text-green-500">{formatCompactCurrency(personalAnalytics.summary.total_received)}</p>
+                  </div>
+                  <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Transactions</p>
+                    <p className="text-lg font-bold text-foreground">{personalAnalytics.summary.transaction_count}</p>
+                  </div>
+                  <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Top-ups</p>
+                    <p className="text-lg font-bold text-foreground">{personalAnalytics.summary.topup_count}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative flex flex-col items-center justify-center py-12 text-center">
+                <TrendingUp className="h-12 w-12 text-muted-foreground/20" />
+                <p className="mt-4 text-sm font-bold uppercase tracking-widest text-muted-foreground/60">No data available</p>
+              </div>
+            )}
           </div>
 
-          {personalAnalyticsLoading ? (
-            <div className="paypal-surface rounded-3xl p-12">
-              <div className="flex flex-col items-center justify-center">
-                <RefreshCw className="h-8 w-8 animate-spin text-paypal-blue" />
-                <p className="mt-2 text-sm text-muted-foreground">Loading analytics...</p>
-              </div>
-            </div>
-          ) : personalAnalytics ? (
+          {personalAnalytics && !personalAnalyticsLoading && (
             <>
-              {/* Key Metrics Grid */}
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="paypal-surface rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                      <span className="text-red-600 font-bold text-sm">S</span>
-                    </div>
-                    <span className="text-xs text-red-600 font-medium">+12.5%</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{formatCompactCurrency(personalAnalytics.summary.total_sent)}</p>
-                  <p className="text-sm text-muted-foreground">Total Sent</p>
-                </div>
-                
-                <div className="paypal-surface rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <span className="text-green-600 font-bold text-sm">R</span>
-                    </div>
-                    <span className="text-xs text-green-600 font-medium">+8.2%</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{formatCompactCurrency(personalAnalytics.summary.total_received)}</p>
-                  <p className="text-sm text-muted-foreground">Total Received</p>
-                </div>
-                
-                <div className="paypal-surface rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-blue-600 font-bold text-sm">N</span>
-                    </div>
-                    <span className="text-xs text-blue-600 font-medium">+5.1%</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{formatCompactCurrency(personalAnalytics.summary.net_balance)}</p>
-                  <p className="text-sm text-muted-foreground">Net Balance</p>
-                </div>
-                
-                <div className="paypal-surface rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                      <span className="text-purple-600 font-bold text-sm">#</span>
-                    </div>
-                    <span className="text-xs text-purple-600 font-medium">+15.3%</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{personalAnalytics.summary.transaction_count}</p>
-                  <p className="text-sm text-muted-foreground">Transactions</p>
-                </div>
-              </div>
-
-              {/* Charts Section */}
-              <div className="grid gap-6 lg:grid-cols-2">
-                {/* Activity Chart */}
-                <div className="paypal-surface rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Activity Overview</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Payment Requests</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">{personalAnalytics.summary.payment_requests_sent + personalAnalytics.summary.payment_requests_received}</span>
-                        <span className="text-xs text-green-600">+23%</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }} />
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Top-ups</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">{personalAnalytics.summary.topup_count}</span>
-                        <span className="text-xs text-blue-600">+12%</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '45%' }} />
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Transactions</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">{personalAnalytics.summary.transaction_count}</span>
-                        <span className="text-xs text-purple-600">+18%</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: '90%' }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Performance Metrics */}
-                <div className="paypal-surface rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Performance Metrics</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center pb-3 border-b border-border/50">
+              {/* Detailed Metrics */}
+              <div className="paypal-surface rounded-[2rem] p-6">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Detailed Metrics</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
                       <span className="text-sm text-muted-foreground">Avg Transaction</span>
-                      <span className="text-sm font-semibold">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_transaction_value)}</span>
+                      <span className="text-sm font-bold">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_transaction_value)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-border/50">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
                       <span className="text-sm text-muted-foreground">Avg Top-up</span>
-                      <span className="text-sm font-semibold">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_topup_amount)}</span>
+                      <span className="text-sm font-bold">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_topup_amount)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-border/50">
-                      <span className="text-sm text-muted-foreground">Most Used Currency</span>
-                      <span className="text-sm font-semibold">{personalAnalytics.detailed_metrics.most_used_currency}</span>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
+                      <span className="text-sm text-muted-foreground">Primary Currency</span>
+                      <span className="text-sm font-bold">{personalAnalytics.detailed_metrics.most_used_currency}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
                       <span className="text-sm text-muted-foreground">Total Activities</span>
-                      <span className="text-sm font-semibold">{personalAnalytics.detailed_metrics.total_activities}</span>
+                      <span className="text-sm font-bold">{personalAnalytics.detailed_metrics.total_activities}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Recent Activity Table */}
-              <div className="paypal-surface rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
+              <div className="paypal-surface rounded-[2rem] p-6">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Recent Activity</h3>
                 {personalAnalytics.recent_transactions.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground">No recent activity found</p>
-                  </div>
+                  <p className="text-center py-8 text-sm text-muted-foreground">No recent activity</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border/50">
-                          <th className="text-left text-sm font-medium text-muted-foreground pb-3">Type</th>
-                          <th className="text-left text-sm font-medium text-muted-foreground pb-3">Date</th>
-                          <th className="text-right text-sm font-medium text-muted-foreground pb-3">Amount</th>
+                          <th className="text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-3">Type</th>
+                          <th className="text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-3">Date</th>
+                          <th className="text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-3">Amount</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {personalAnalytics.recent_transactions.slice(0, 8).map((activity: any) => (
-                          <tr key={activity.id || activity.created_at || activity.date} className="border-b border-border/30">
-                            <td className="py-3">
-                              <div className="flex items-center gap-2">
-                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      <tbody className="divide-y divide-border/30">
+                        {personalAnalytics.recent_transactions.slice(0, 10).map((activity: any) => (
+                          <tr key={activity.id || activity.created_at || activity.date}>
+                            <td className="py-4">
+                              <div className="flex items-center gap-3">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-black ${
                                   activity.type === 'transaction' ? 'bg-blue-100 text-blue-600' :
                                   activity.type === 'payment_request' ? 'bg-purple-100 text-purple-600' :
                                   activity.type === 'invoice' ? 'bg-orange-100 text-orange-600' :
@@ -2848,23 +2706,23 @@ const Dashboard = () => {
                                   {activity.type === 'transaction' ? 'T' : 
                                    activity.type === 'payment_request' ? 'R' : 
                                    activity.type === 'invoice' ? 'I' :
-                                   activity.type === 'topup' ? '+' : '\u2022'}
+                                   activity.type === 'topup' ? '+' : '•'}
                                 </div>
-                                <span className="text-sm font-medium capitalize">{activity?.type?.replace('_', ' ') || 'Activity'}</span>
-                                {activity.type === 'transaction' && (
-                                  <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground uppercase">
-                                    {getPiCodeLabel(currency.code)}
-                                  </span>
-                                )}
+                                <div>
+                                  <p className="text-sm font-bold capitalize">{activity?.type?.replace('_', ' ') || 'Activity'}</p>
+                                  {activity.type === 'transaction' && (
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase">{getPiCodeLabel(currency.code)}</p>
+                                  )}
+                                </div>
                               </div>
                             </td>
-                            <td className="py-3">
-                              <span className="text-sm text-muted-foreground">
+                            <td className="py-4">
+                              <span className="text-xs font-bold text-muted-foreground">
                                 {new Date(activity.created_at || activity.date).toLocaleDateString()}
                               </span>
                             </td>
-                            <td className="py-3 text-right">
-                              <span className="text-sm font-semibold">
+                            <td className="py-4 text-right">
+                              <span className="text-sm font-black">
                                 {(() => {
                                   if (activity.type === 'transaction') {
                                     const isOut = activity.sender_id === userId && !(activity.sender_id === activity.receiver_id && activity.receiver_id === userId);
@@ -2878,7 +2736,6 @@ const Dashboard = () => {
                                   return activity.amount ? formatCompactCurrency(activity.amount) : '-';
                                 })()}
                               </span>
-
                             </td>
                           </tr>
                         ))}
@@ -2888,125 +2745,129 @@ const Dashboard = () => {
                 )}
               </div>
             </>
-          ) : (
-            <div className="paypal-surface rounded-3xl p-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                <TrendingUp className="h-12 w-12 text-muted-foreground/50" />
-                <p className="mt-4 text-lg font-semibold text-foreground">No analytics data available</p>
-                <p className="mt-2 text-sm text-muted-foreground">Start using OpenPay to see your analytics here</p>
-              </div>
-            </div>
           )}
         </div>
       )}
 
       {activeSection === "wallet" && (
-      <>
-      <div className="mx-4 mt-4 rounded-3xl border border-white/30 bg-gradient-to-br from-paypal-blue to-[#0073e6] p-6 shadow-xl shadow-[#004bba]/25">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-full bg-white/15 p-1">
-          <button
-            type="button"
-            onClick={() => setWalletView("personal")}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              walletView === "personal" ? "bg-white text-paypal-blue" : "text-white/90 hover:bg-white/10"
-            }`}
-          >
-            Personal wallet
-          </button>
-          <button
-            type="button"
-            onClick={() => setWalletView("merchant")}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              walletView === "merchant" ? "bg-white text-paypal-blue" : "text-white/90 hover:bg-white/10"
-            }`}
-          >
-            Merchant wallet
-          </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAmountFormat((prev) => (prev === "compact" ? "comma" : "compact"))}
-            className="ml-auto rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white hover:bg-white/25"
-          >
-            {amountFormat === "compact" ? "Compact" : "Comma"}
-          </button>
-        </div>
-
-        {walletView === "merchant" && (
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-full bg-white/15 p-1">
+        <>
+      <div className="mx-4 mt-4 animate-in-up">
+        <div className="ios-glass relative overflow-hidden rounded-[2.5rem] p-8 shadow-2xl shadow-paypal-blue/20">
+          {/* Background highlights for glass look */}
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-paypal-blue/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+          
+          <div className="relative mb-6 flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
               <button
                 type="button"
-                onClick={() => setMerchantMode("sandbox")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  merchantMode === "sandbox" ? "bg-white text-paypal-blue" : "text-white/90 hover:bg-white/10"
+                onClick={() => setWalletView("personal")}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ios-active ${
+                  walletView === "personal" 
+                    ? "bg-white text-paypal-blue shadow-lg shadow-black/5" 
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Sandbox
+                Personal wallet
               </button>
               <button
                 type="button"
-                onClick={() => setMerchantMode("live")}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  merchantMode === "live" ? "bg-white text-paypal-blue" : "text-white/90 hover:bg-white/10"
+                onClick={() => setWalletView("merchant")}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ios-active ${
+                  walletView === "merchant" 
+                    ? "bg-white text-paypal-blue shadow-lg shadow-black/5" 
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Live
+                Merchant wallet
               </button>
             </div>
             <button
               type="button"
-              onClick={() => setShowMerchantFeatures(true)}
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white transition hover:bg-white/25"
+              onClick={() => setAmountFormat((prev) => (prev === "compact" ? "comma" : "compact"))}
+              className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue hover:bg-paypal-blue/20 transition-colors backdrop-blur-sm"
             >
-              <Store className="h-3.5 w-3.5" />
-              Merchant features
+              {amountFormat === "compact" ? "Compact" : "Comma"}
             </button>
           </div>
-        )}
 
-        <div className="flex items-center gap-3 text-white">
-          <BrandLogo className="h-8 w-8" />
-          <div>
-            <p className="text-3xl font-bold">{balanceHidden ? "****" : formatCompactCurrency(walletCardAmount)}</p>
-            <p className="text-sm text-white/85">
+          {walletView === "merchant" && (
+            <div className="relative mb-6 flex flex-wrap items-center gap-2">
+              <div className="inline-flex rounded-full bg-black/5 dark:bg-white/5 p-1 backdrop-blur-sm border border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setMerchantMode("sandbox")}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ios-active ${
+                    merchantMode === "sandbox" ? "bg-white text-paypal-blue shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Sandbox
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMerchantMode("live")}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-300 ios-active ${
+                    merchantMode === "live" ? "bg-white text-paypal-blue shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Live
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMerchantFeatures(true)}
+                className="ios-active inline-flex items-center gap-2 rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue transition hover:bg-paypal-blue/20 backdrop-blur-sm"
+              >
+                <Store className="h-4 w-4" />
+                Merchant features
+              </button>
+            </div>
+          )}
+
+          <div className="relative flex flex-col items-center justify-center text-center py-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                <BrandLogo className="h-8 w-8 text-paypal-blue" />
+              </div>
+              <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                {balanceHidden ? "****" : formatCompactCurrency(walletCardAmount)}
+              </h2>
+            </div>
+            <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
               {walletView === "personal"
                 ? `Balance - ${currency.code === "PI" ? "PI" : piCurrencyLabel}`
                 : `Merchant available (${merchantMode})`}
             </p>
           </div>
-        </div>
 
-        {walletView === "merchant" && (
-          <div className="mt-4 grid gap-2 text-white/90 sm:grid-cols-3">
-            <div className="rounded-xl bg-white/10 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-white/80">Incoming</p>
-              <p className="text-sm font-semibold">{balanceHidden ? "****" : formatCompactCurrency(Number(selectedMerchantBalance?.gross_volume ?? 0))}</p>
+          {walletView === "merchant" && (
+            <div className="relative mt-8 grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "Incoming", value: selectedMerchantBalance?.gross_volume },
+                { label: "Refunded", value: selectedMerchantBalance?.refunded_total },
+                { label: "Transferred out", value: selectedMerchantBalance?.transferred_total },
+              ].map((stat, i) => (
+                <div key={i} className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">{stat.label}</p>
+                  <p className="text-base font-bold text-foreground">{balanceHidden ? "****" : formatCompactCurrency(Number(stat.value ?? 0))}</p>
+                </div>
+              ))}
             </div>
-            <div className="rounded-xl bg-white/10 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-white/80">Refunded</p>
-              <p className="text-sm font-semibold">{balanceHidden ? "****" : formatCompactCurrency(Number(selectedMerchantBalance?.refunded_total ?? 0))}</p>
-            </div>
-            <div className="rounded-xl bg-white/10 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-white/80">Transferred out</p>
-              <p className="text-sm font-semibold">{balanceHidden ? "****" : formatCompactCurrency(Number(selectedMerchantBalance?.transferred_total ?? 0))}</p>
-            </div>
+          )}
+
+          <div className="relative mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={toggleBalanceHidden}
+              className="ios-active flex items-center gap-2 rounded-full bg-black/5 dark:bg-white/5 px-6 py-2.5 text-sm font-bold text-foreground hover:bg-black/10 transition-colors backdrop-blur-sm border border-white/5"
+            >
+              {balanceHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              {balanceHidden ? "Show balance" : "Hide balance"}
+            </button>
           </div>
-        )}
-
-        <div className="mt-4 flex justify-end">
-          <button
-            type="button"
-            onClick={toggleBalanceHidden}
-            aria-label={balanceHidden ? "Show balance" : "Hide balance"}
-            className="paypal-surface flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold text-foreground"
-          >
-            {balanceHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-            {balanceHidden ? "Show balance" : "Hide balance"}
-          </button>
         </div>
       </div>
+
       {walletView === "merchant" && (
         <div className="mx-4 mt-4 paypal-surface rounded-3xl p-4">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -3146,80 +3007,28 @@ const Dashboard = () => {
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {/* Personal Analytics */}
-            <button
-              onClick={() => setActiveSection("analytics")}
-              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
-            >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-              </div>
-              <p className="text-xs font-bold text-foreground">Analytics</p>
-              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Wallet activity</p>
-            </button>
-
-            {/* Swap Withdrawal */}
-            <button
-              onClick={() => setActiveSection("swap")}
-              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
-            >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50">
-                <ArrowLeftRight className="h-6 w-6 text-indigo-600" />
-              </div>
-              <p className="text-xs font-bold text-foreground">Swap</p>
-              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">OUSD to PI</p>
-            </button>
-
-            {/* Mining */}
-            <button
-              onClick={() => navigate("/mining")}
-              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
-            >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50">
-                <Pickaxe className={`h-6 w-6 text-orange-600 ${miningActive ? "animate-bounce-slow" : ""}`} />
-              </div>
-              <p className="text-xs font-bold text-foreground">Mining</p>
-              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
-                {miningActive ? "Session active" : "Earn rewards"}
-              </p>
-            </button>
-
-            {/* Staking */}
-            <button
-              onClick={() => navigate("/staking")}
-              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
-            >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50">
-                <Coins className="h-6 w-6 text-green-600" />
-              </div>
-              <p className="text-xs font-bold text-foreground">Staking</p>
-              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Earn yield</p>
-            </button>
-
-            {/* Affiliate */}
-            <button
-              onClick={() => navigate("/affiliate")}
-              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
-            >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50">
-                <HandCoins className="h-6 w-6 text-purple-600" />
-              </div>
-              <p className="text-xs font-bold text-foreground">Affiliate</p>
-              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Refer & Earn</p>
-            </button>
-
-            {/* Contacts */}
-            <button
-              onClick={() => navigate("/contacts")}
-              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
-            >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-50">
-                <Users className="h-6 w-6 text-pink-600" />
-              </div>
-              <p className="text-xs font-bold text-foreground">Contacts</p>
-              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Manage network</p>
-            </button>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 mt-2">
+            {[
+              { id: "analytics", label: "Analytics", sub: "Wallet activity", icon: TrendingUp, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => setActiveSection("analytics") },
+              { id: "swap", label: "Swap", sub: "OUSD to PI", icon: ArrowLeftRight, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => setActiveSection("swap") },
+              { id: "mining", label: "Mining", sub: miningActive ? "Session active" : "Earn rewards", icon: Pickaxe, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/mining"), animate: miningActive },
+              { id: "staking", label: "Staking", sub: "Earn yield", icon: Coins, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/staking") },
+              { id: "affiliate", label: "Affiliate", sub: "Refer & Earn", icon: HandCoins, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/affiliate") },
+              { id: "contacts", label: "Contacts", sub: "Manage network", icon: Users, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/contacts") },
+            ].map((item, idx) => (
+              <button
+                key={item.id}
+                onClick={item.action}
+                style={{ animationDelay: `${idx * 50}ms` }}
+                className="ios-glass ios-active flex flex-col items-center justify-center rounded-[2rem] p-5 text-center shadow-lg shadow-black/5 animate-in-up"
+              >
+                <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-2xl ${item.color} shadow-inner`}>
+                  <item.icon className={`h-6 w-6 ${item.iconColor} ${item.animate ? "animate-bounce-slow" : ""}`} />
+                </div>
+                <p className="text-[11px] font-black tracking-tight text-foreground uppercase">{item.label}</p>
+                <p className="mt-1 text-[9px] font-bold text-muted-foreground/70 line-clamp-1">{item.sub}</p>
+              </button>
+            ))}
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -3307,21 +3116,21 @@ const Dashboard = () => {
         )}
       </div>
 
-      </>
+        </>
       )}
 
-      <div className="fixed bottom-24 left-0 right-0 z-40 overflow-x-hidden px-4 pb-1">
-        <div className="flex gap-3">
+      <div className="fixed bottom-32 left-0 right-0 z-40 px-4">
+        <div className="mx-auto flex max-w-md items-center gap-3">
           <button
             onClick={() => navigate("/contacts")}
-            className="flex h-[54px] w-[54px] items-center justify-center rounded-full border border-paypal-blue/25 bg-white text-paypal-blue"
+            className="flex h-[56px] w-[56px] flex-shrink-0 items-center justify-center rounded-full border-2 border-paypal-blue bg-white text-paypal-blue shadow-lg shadow-black/10 transition-transform active:scale-95"
             aria-label="Open contacts"
           >
             <Users className="h-6 w-6" />
           </button>
-          <button onClick={() => navigate("/send")} className="min-w-0 flex-1 rounded-full bg-paypal-blue py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#0057d8]/30">Pay</button>
-          <button onClick={() => setShowReceiveOptions(true)} className="min-w-0 flex-1 rounded-full border border-paypal-blue/25 bg-white py-3.5 text-center text-sm font-semibold text-paypal-blue">Receive</button>
-          <button onClick={openBuyOptions} className="min-w-0 flex-1 rounded-full border border-paypal-blue/25 bg-white py-3.5 text-center text-sm font-semibold text-paypal-blue">Buy</button>
+          <button onClick={() => navigate("/send")} className="min-w-0 flex-1 rounded-full bg-paypal-blue py-4 text-center text-base font-bold text-white shadow-xl shadow-paypal-blue/40 transition-transform active:scale-95">Pay</button>
+          <button onClick={() => setShowReceiveOptions(true)} className="min-w-0 flex-1 rounded-full border-2 border-paypal-blue bg-white py-4 text-center text-base font-bold text-paypal-blue shadow-lg shadow-black/10 transition-transform active:scale-95">Receive</button>
+          <button onClick={openBuyOptions} className="min-w-0 flex-1 rounded-full border-2 border-paypal-blue bg-white py-4 text-center text-base font-bold text-paypal-blue shadow-lg shadow-black/10 transition-transform active:scale-95">Buy</button>
         </div>
       </div>
 

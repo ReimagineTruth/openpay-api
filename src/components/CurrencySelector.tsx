@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PI_TO_USD, useCurrency } from "@/contexts/CurrencyContext";
 import { ChevronDown, Search } from "lucide-react";
+import BrandLogo from "./BrandLogo";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,6 @@ const emojiFlagStyle = {
   fontFamily: "\"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", sans-serif",
 };
 const PURE_PI_ICON_URL = "https://i.ibb.co/BV8PHjB4/Pi-200x200.png";
-const OPENPAY_ICON_URL = "/openpay-o.svg";
 const TOP_PRIORITY_CODES = ["OUSD", "PI", "USD", "EUR"];
 
 const CurrencySelector = () => {
@@ -76,11 +76,7 @@ const CurrencySelector = () => {
               className="h-[18px] w-[18px] rounded-full object-cover"
             />
           ) : currency.code === "OUSD" ? (
-            <img
-              src={OPENPAY_ICON_URL}
-              alt="Open USD"
-              className="h-[18px] w-[18px] rounded-full object-cover"
-            />
+            <BrandLogo className="h-[18px] w-[18px] text-paypal-blue" />
           ) : (
             <span className="text-lg leading-none" style={emojiFlagStyle}>{currency.flag}</span>
           )}
@@ -119,11 +115,9 @@ const CurrencySelector = () => {
                     : "hover:bg-muted text-foreground"
                 }`}
               >
-                <img
-                  src={OPENPAY_ICON_URL}
-                  alt="OpenPay"
-                  className="h-7 w-7 rounded-full object-cover"
-                />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-paypal-blue/10">
+                  <BrandLogo className="h-5 w-5 text-paypal-blue" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm">OPEN USD</p>
                   <p className="text-xs text-muted-foreground truncate">OpenPay USD Stablecoin (1 USD value)</p>

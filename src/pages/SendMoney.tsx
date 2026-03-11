@@ -1339,24 +1339,25 @@ const SendMoney = () => {
         {!searchQuery && recentRecipients.length > 0 && (
           <>
             <h2 className="mb-3 font-bold text-white">Recent</h2>
-            <div className="overflow-hidden rounded-2xl mb-5 border border-white/60 bg-card">
+            <div className="ios-glass overflow-hidden rounded-[2.5rem] mb-6 shadow-xl shadow-black/10 animate-in-up">
               {recentRecipients.map((user, i) => (
                 <div
                   key={`${user.id}-${user.last_sent_at}`}
                   onClick={() => handleSelectUser(user)}
-                  className="flex w-full items-center gap-3 border-b border-border/70 px-3 py-3 text-left last:border-b-0 hover:bg-secondary/50 transition cursor-pointer"
+                  style={{ animationDelay: `${i * 50}ms` }}
+                  className="ios-active flex w-full items-center gap-4 border-b border-white/5 px-5 py-4 text-left last:border-b-0 hover:bg-white/5 transition cursor-pointer animate-in-fade"
                 >
                   {renderAvatar(user, i)}
                   <div className="text-left flex-1">
-                    <p className="font-semibold text-foreground">{user.full_name}</p>
-                    {user.username && <p className="text-base text-muted-foreground">@{user.username}</p>}
-                    <p className="text-sm text-muted-foreground">Recent transaction</p>
+                    <p className="font-bold text-foreground">{user.full_name}</p>
+                    {user.username && <p className="text-sm font-medium text-muted-foreground/70">@{user.username}</p>}
+                    <p className="text-[10px] font-bold text-blue-500/80 uppercase tracking-tight mt-0.5">Recent transaction</p>
                   </div>
                   {isMultiSend && (
-                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      selectedUsers.some(u => u.id === user.id) ? "bg-paypal-blue border-paypal-blue text-white" : "border-muted-foreground/30"
+                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                      selectedUsers.some(u => u.id === user.id) ? "bg-paypal-blue border-paypal-blue text-white scale-110 shadow-lg shadow-paypal-blue/20" : "border-muted-foreground/20"
                     }`}>
-                      {selectedUsers.some(u => u.id === user.id) && <Check className="h-4 w-4" />}
+                      {selectedUsers.some(u => u.id === user.id) && <Check className="h-3.5 w-3.5" />}
                     </div>
                   )}
                   <button
@@ -1365,10 +1366,10 @@ const SendMoney = () => {
                       e.stopPropagation();
                       void toggleBookmark(user);
                     }}
-                    className="rounded-full p-2 hover:bg-secondary/50 transition-colors"
+                    className="ios-active rounded-full p-2.5 hover:bg-white/10 transition-colors"
                     aria-label={contactIds.includes(user.id) ? "Remove bookmark" : "Save bookmark"}
                   >
-                    {contactIds.includes(user.id) ? <BookmarkCheck className="h-5 w-5 text-paypal-blue" /> : <Bookmark className="h-5 w-5 text-muted-foreground" />}
+                    {contactIds.includes(user.id) ? <BookmarkCheck className="h-5 w-5 text-paypal-blue" /> : <Bookmark className="h-5 w-5 text-muted-foreground/40" />}
                   </button>
                 </div>
               ))}
@@ -1377,24 +1378,27 @@ const SendMoney = () => {
         )}
 
         <h2 className="mb-4 font-bold text-white">{searchQuery ? "Search results" : "Your contacts"}</h2>
-        <div className="overflow-hidden rounded-2xl border border-white/60 bg-card">
+        <div className="ios-glass overflow-hidden rounded-[2.5rem] shadow-xl shadow-black/10 animate-in-up">
           {isAccountNumberSearch && (
             <>
               {accountLookupLoading && (
-                <p className="border-b border-border/70 px-3 py-3 text-base text-muted-foreground">Searching account number...</p>
+                <div className="flex items-center gap-3 border-b border-white/5 px-5 py-5 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Searching account number...</span>
+                </div>
               )}
               {!accountLookupLoading && accountLookupResult && (
                 <div
                   onClick={() => handleSelectUser(accountLookupResult)}
-                  className="flex w-full items-center gap-3 border-b border-border/70 px-3 py-3 text-left hover:bg-secondary/50 transition cursor-pointer"
+                  className="ios-active flex w-full items-center gap-4 border-b border-white/5 px-5 py-4 text-left hover:bg-white/5 transition cursor-pointer animate-in-fade"
                 >
                   {renderAvatar(accountLookupResult, 0)}
                   <div className="text-left flex-1">
-                    <p className="font-semibold text-foreground">{accountLookupResult.full_name}</p>
-                    {accountLookupResult.username && <p className="text-base text-muted-foreground">@{accountLookupResult.username}</p>}
-                    <p className="text-sm text-muted-foreground">Matched by account number</p>
+                    <p className="font-bold text-foreground">{accountLookupResult.full_name}</p>
+                    {accountLookupResult.username && <p className="text-sm font-medium text-muted-foreground/70">@{accountLookupResult.username}</p>}
+                    <p className="text-[10px] font-bold text-blue-500/80 uppercase tracking-tight mt-0.5">Matched by account number</p>
                   </div>
-                  <Info className="w-5 h-5 text-muted-foreground" />
+                  <Info className="w-5 h-5 text-muted-foreground/30" />
                 </div>
               )}
             </>
@@ -1403,18 +1407,19 @@ const SendMoney = () => {
             <div
               key={user.id}
               onClick={() => handleSelectUser(user)}
-              className="flex w-full items-center gap-3 border-b border-border/70 px-3 py-3 text-left last:border-b-0 hover:bg-secondary/50 transition cursor-pointer"
+              style={{ animationDelay: `${i * 30}ms` }}
+              className="ios-active flex w-full items-center gap-4 border-b border-white/5 px-5 py-4 text-left last:border-b-0 hover:bg-white/5 transition cursor-pointer animate-in-fade"
             >
               {renderAvatar(user, i)}
               <div className="text-left flex-1">
-                    <p className="font-semibold text-foreground">{user.full_name}</p>
-                    {user.username && <p className="text-base text-muted-foreground">@{user.username}</p>}
+                    <p className="font-bold text-foreground">{user.full_name}</p>
+                    {user.username && <p className="text-sm font-medium text-muted-foreground/70">@{user.username}</p>}
                   </div>
                   {isMultiSend && (
-                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      selectedUsers.some(u => u.id === user.id) ? "bg-paypal-blue border-paypal-blue text-white" : "border-muted-foreground/30"
+                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                      selectedUsers.some(u => u.id === user.id) ? "bg-paypal-blue border-paypal-blue text-white scale-110 shadow-lg shadow-paypal-blue/20" : "border-muted-foreground/20"
                     }`}>
-                      {selectedUsers.some(u => u.id === user.id) && <Check className="h-4 w-4" />}
+                      {selectedUsers.some(u => u.id === user.id) && <Check className="h-3.5 w-3.5" />}
                     </div>
                   )}
                   <button
@@ -1423,12 +1428,12 @@ const SendMoney = () => {
                   e.stopPropagation();
                   void toggleBookmark(user);
                 }}
-                className="rounded-full p-2 hover:bg-secondary/50 transition-colors"
+                className="ios-active rounded-full p-2.5 hover:bg-white/10 transition-colors"
                 aria-label={contactIds.includes(user.id) ? "Remove bookmark" : "Save bookmark"}
               >
-                {contactIds.includes(user.id) ? <BookmarkCheck className="h-5 w-5 text-paypal-blue" /> : <Bookmark className="h-5 w-5 text-muted-foreground" />}
+                {contactIds.includes(user.id) ? <BookmarkCheck className="h-5 w-5 text-paypal-blue" /> : <Bookmark className="h-5 w-5 text-muted-foreground/40" />}
               </button>
-              <Info className="w-5 h-5 text-muted-foreground" />
+              <Info className="w-5 h-5 text-muted-foreground/30" />
             </div>
           ))}
           {filteredWithoutAccountMatch.length === 0 && !accountLookupResult && !accountLookupLoading && (
