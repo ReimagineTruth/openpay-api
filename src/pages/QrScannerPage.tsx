@@ -677,9 +677,13 @@ const QrScannerPage = () => {
             Html5QrcodeSupportedFormats.DATA_MATRIX,
             Html5QrcodeSupportedFormats.PDF_417,
           ],
-          qrbox: {
-            width: 250,
-            height: 250,
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+            const qrboxSize = Math.floor(minEdgeSize * 0.85);
+            return {
+              width: qrboxSize,
+              height: qrboxSize,
+            };
           },
         };
 
@@ -835,6 +839,11 @@ const QrScannerPage = () => {
           #openpay-full-scanner__dashboard_section_csr {
             display: none !important;
           }
+          @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+          }
         `}</style>
         <div className="relative z-10 h-[100dvh] overflow-hidden px-5 pt-4 pb-5">
           <div className="mx-auto flex h-full w-full max-w-xl flex-col pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -908,24 +917,29 @@ const QrScannerPage = () => {
           {scanMode === "camera" && (
             <>
               <div className="mt-3">
-                <div className="relative h-[40dvh] min-h-[240px] overflow-hidden rounded-3xl border border-white/40 bg-black/30">
+                <div className="relative h-[55dvh] min-h-[300px] overflow-hidden rounded-3xl border border-white/40 bg-black/30 shadow-2xl shadow-black/50">
                   <div id="openpay-full-scanner" className="absolute inset-0" />
                   <div
                     className={`pointer-events-none absolute inset-0 ${
-                      scanning ? "bg-black/10" : "bg-black/30"
+                      scanning ? "bg-black/5" : "bg-black/30"
                     } transition`}
                   />
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
-                    <div className="relative h-[200px] w-[200px] border border-white/70 bg-black/10">
-                      <div className="absolute left-0 top-0 h-8 w-8 border-l-[6px] border-t-[6px] border-white" />
-                      <div className="absolute right-0 top-0 h-8 w-8 border-r-[6px] border-t-[6px] border-white" />
-                      <div className="absolute bottom-0 left-0 h-8 w-8 border-b-[6px] border-l-[6px] border-white" />
-                      <div className="absolute bottom-0 right-0 h-8 w-8 border-b-[6px] border-r-[6px] border-white" />
+                    <div className="relative h-[280px] w-[280px] sm:h-[320px] sm:w-[320px] border border-white/30 bg-black/5">
+                      <div className="absolute -left-1 -top-1 h-12 w-12 border-l-[6px] border-t-[6px] border-white drop-shadow-md" />
+                      <div className="absolute -right-1 -top-1 h-12 w-12 border-r-[6px] border-t-[6px] border-white drop-shadow-md" />
+                      <div className="absolute -bottom-1 -left-1 h-12 w-12 border-b-[6px] border-l-[6px] border-white drop-shadow-md" />
+                      <div className="absolute -bottom-1 -right-1 h-12 w-12 border-b-[6px] border-r-[6px] border-white drop-shadow-md" />
+                      
+                      {/* Scanning animation line */}
+                      {scanning && (
+                        <div className="absolute left-0 top-0 h-1 w-full bg-white/50 blur-[1px] animate-[scan_3s_infinite]" />
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-center text-base font-semibold">Position the QR code within the frame to pay</p>
+              <p className="mt-3 text-center text-base font-semibold text-white/90 drop-shadow-sm">Position the QR code within the frame to pay</p>
             </>
           )}
           {scanError && <p className="mt-3 text-center text-sm text-red-300">{scanError}</p>}

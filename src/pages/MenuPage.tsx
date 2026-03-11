@@ -159,26 +159,33 @@ const MenuPage = () => {
   const sections = [
     {
       title: "Transactions",
+      layout: "grid-top",
       items: [
         { icon: Send, label: "Express Send", action: () => navigate("/send") },
-        { icon: ArrowLeftRight, label: "Transfer balance", action: () => navigate("/topup") },
-        { icon: ArrowLeftRight, label: "Swap Withdrawal", action: () => navigate("/swap-withdrawal") },
-        { icon: CircleDollarSign, label: "Request payment", action: () => navigate("/request-payment") },
-        { icon: FileText, label: "Send invoice", action: () => navigate("/send-invoice") },
+        { icon: ArrowLeftRight, label: "Transfer", action: () => navigate("/topup") },
+        { icon: ArrowLeftRight, label: "Swap", action: () => navigate("/swap-withdrawal") },
+        { icon: CircleDollarSign, label: "Request", action: () => navigate("/request-payment") },
+        { icon: FileText, label: "Invoice", action: () => navigate("/send-invoice") },
       ],
     },
     {
-      title: "Wallet and Account",
+      title: "Secure banking",
+      layout: "grid-card",
+      color: "bg-green-50",
       items: [
         { icon: Wallet, label: "Wallet", action: () => navigate("/dashboard") },
         { icon: TrendingUp, label: "Analytics", action: () => navigate("/dashboard?section=analytics") },
         { icon: Users, label: "User profile", action: () => navigate("/profile") },
-        { icon: CreditCard, label: "OpenPay Virtual Card", action: () => navigate("/virtual-card") },
+        { icon: CreditCard, label: "Virtual Card", action: () => navigate("/virtual-card") },
         { icon: ArrowLeftRight, label: "Currency converter", action: () => navigate("/currency-converter") },
+        { icon: Pickaxe, label: "Mining", action: () => navigate("/mining") },
+        { icon: Coins, label: "Staking", action: () => navigate("/staking") },
       ],
     },
     {
-      title: "Merchant",
+      title: "Merchant services",
+      layout: "grid-card",
+      color: "bg-blue-50",
       items: [
         { icon: Store, label: "Merchant Portal", action: () => navigate("/merchant-onboarding") },
         { icon: Store, label: "Product Catalog", action: () => navigate("/merchant-products") },
@@ -187,7 +194,7 @@ const MenuPage = () => {
         ...(remittanceUiEnabled
           ? [{
               icon: Store,
-              label: hasRemittanceAccess ? "Remittance merchant center" : "Remittance merchant center (Coming soon)",
+              label: "Remittance Center",
               action: () => {
                 if (hasRemittanceAccess) {
                   navigate("/remittance-merchant");
@@ -202,155 +209,157 @@ const MenuPage = () => {
       ],
     },
     {
-      title: "Activity and Records",
+      title: "Earning & Rewards",
+      layout: "grid-card",
+      color: "bg-orange-50",
       items: [
-        { icon: Activity, label: "Activity", action: () => navigate("/activity") },
-        { icon: BookOpen, label: "OpenLedger", action: () => navigate("/ledger") },
-      ],
-    },
-    {
-      title: "Earning and Bonus",
-      items: [
-        { icon: Pickaxe, label: "Mining", action: () => navigate("/mining"), subtitle: "Earn 0.10 OPEN daily" },
-        { icon: Coins, label: "Staking", action: () => navigate("/staking"), subtitle: "Lock funds and earn yield" },
-        { icon: Users, label: "Affiliate", action: () => navigate("/affiliate"), subtitle: "Refer and earn rewards" },
+        { icon: Users, label: "Affiliate", action: () => navigate("/affiliate") },
         { icon: Clapperboard, label: "Pi Ad Network", action: () => navigate("/pi-ads") },
         {
           icon: CircleDollarSign,
-          label: welcomeClaimedAt ? "Welcome bonus claimed" : "Claim $1 welcome bonus",
+          label: welcomeClaimedAt ? "Bonus Claimed" : "Claim $1",
           action: () => handleClaimWelcome(),
           disabled: Boolean(welcomeClaimedAt) || claimingWelcome,
-          subtitle: welcomeClaimedAt ? "Already redeemed" : "One-time reward",
         },
+        { icon: Megaphone, label: "Announcements", action: () => navigate("/announcements") },
+        { icon: Megaphone, label: "Blog", action: () => window.open("https://www.openpy.space/blog", "_blank", "noopener,noreferrer") },
       ],
     },
     {
-      title: "Support",
+      title: "Activity & Records",
+      layout: "grid-card",
+      color: "bg-gray-50",
       items: [
+        { icon: Activity, label: "Activity", action: () => navigate("/activity") },
+        { icon: BookOpen, label: "OpenLedger", action: () => navigate("/ledger") },
         { icon: ShieldAlert, label: "Disputes", action: () => navigate("/disputes") },
         { icon: HelpCircle, label: "Help Center", action: () => navigate("/help-center") },
         { icon: Megaphone, label: "Announcements", action: () => navigate("/announcements") },
         { icon: Megaphone, label: "Blog", action: () => window.open("https://www.openpy.space/blog", "_blank", "noopener,noreferrer") },
-        { icon: Smartphone, label: "OpenPay Official Page", action: () => navigate("/openpay-official") },
-        { icon: Store, label: "Where to use OpenPay", action: () => navigate("/openpay-guide") },
+        { icon: Smartphone, label: "Official Page", action: () => navigate("/openpay-official") },
+        { icon: Store, label: "Guide", action: () => navigate("/openpay-guide") },
         { icon: Handshake, label: "Open Partner", action: () => navigate("/open-partner") },
       ],
     },
     {
-      title: "Legal and Docs",
+      title: "Utility & Apps",
+      layout: "grid-card",
+      color: "bg-purple-50",
       items: [
-        { icon: BookOpen, label: "OpenPay Documentation", action: () => navigate("/openpay-documentation") },
+        { icon: Smartphone, label: "OpenApp Utilities", action: () => navigate("/openapp") },
+        { icon: Monitor, label: "Pi Browser", action: () => navigate("/openpay-desktop") },
+        { icon: Monitor, label: "Desktop EXE", action: () => handleDesktopExe() },
+        { icon: Download, label: "Install APK", action: () => handleOpenApkModal() },
+        { icon: Smartphone, label: "Tablet APK", action: () => handleOpenApkModal() },
+        { icon: Smartphone, label: "iOS App", action: () => toast.message("Coming soon"), disabled: true },
+      ],
+    },
+    {
+      title: "Legal & Docs",
+      layout: "grid-card",
+      color: "bg-slate-50",
+      items: [
+        { icon: BookOpen, label: "Documentation", action: () => navigate("/openpay-documentation") },
         { icon: FileText, label: "OUSD Whitepaper", action: () => navigate("/whitepaper") },
         { icon: FileText, label: "Pi Whitepaper", action: () => navigate("/pi-whitepaper") },
-        { icon: FileText, label: "Pi MiCA Whitepaper", action: () => navigate("/pi-mica-whitepaper") },
+        { icon: FileText, label: "MiCA Whitepaper", action: () => navigate("/pi-mica-whitepaper") },
+        { icon: ShieldCheck, label: "Regulatory", action: () => navigate("/regulatory-status") },
         { icon: ShieldCheck, label: "GDPR", action: () => navigate("/gdpr") },
-        { icon: ShieldCheck, label: "Regulatory Status", action: () => navigate("/regulatory-status") },
-        { icon: Info, label: "About OpenPay", action: () => navigate("/about-openpay") },
+        { icon: Info, label: "About", action: () => navigate("/about-openpay") },
         { icon: FileCheck, label: "Terms", action: () => navigate("/terms") },
         { icon: Lock, label: "Privacy", action: () => navigate("/privacy") },
         { icon: Scale, label: "Legal", action: () => navigate("/legal") },
       ],
     },
     {
-      title: "API Docs",
+      title: "API & Developer",
+      layout: "grid-card",
+      color: "bg-indigo-50",
       items: [
-        { icon: BookOpen, label: "OpenPay API Docs", action: () => navigate("/openpay-api-docs") },
-        { icon: BookOpen, label: "OpenPay POS Docs", action: () => navigate("/openpay-pos-docs") },
-        { icon: BookOpen, label: "OpenPay Merchant Portal Docs", action: () => navigate("/openpay-merchant-portal-docs") },
+        { icon: BookOpen, label: "API Docs", action: () => navigate("/openpay-api-docs") },
+        { icon: BookOpen, label: "POS Docs", action: () => navigate("/openpay-pos-docs") },
+        { icon: BookOpen, label: "Merchant Docs", action: () => navigate("/openpay-merchant-portal-docs") },
       ],
     },
     ...(canOpenAdminDashboard
       ? [{
-          title: "Admin",
+          title: "Admin Control",
+          layout: "grid-card",
+          color: "bg-red-50",
           items: [
-            { icon: ShieldCheck, label: "Admin Dashboard", action: () => navigate("/admin-dashboard") },
-            { icon: ShieldCheck, label: "Swap Withdrawals", action: () => navigate("/admin-swap-withrawals") },
-            { icon: ShieldCheck, label: "Loan Applications", action: () => navigate("/admin-loan-applications") },
-            { icon: ShieldCheck, label: "Top Up Requests", action: () => navigate("/admin-topup-requests") },
+            { icon: ShieldCheck, label: "Dashboard", action: () => navigate("/admin-dashboard") },
+            { icon: ShieldCheck, label: "Withdrawals", action: () => navigate("/admin-swap-withrawals") },
+            { icon: ShieldCheck, label: "Loans", action: () => navigate("/admin-loan-applications") },
+            { icon: ShieldCheck, label: "Top Ups", action: () => navigate("/admin-topup-requests") },
             ...(canOpenMasterTopUp
               ? [{ icon: ShieldCheck, label: "Master Top Up", action: () => navigate("/master-topup") }]
               : []),
           ],
         }]
       : []),
-    {
-      title: "Utility App",
-      items: [
-        { icon: Smartphone, label: "OpenApp Utility Apps", action: () => navigate("/openapp") },
-      ],
-    },
-    {
-      title: "Install OpenPay",
-      items: [
-        {
-          icon: Monitor,
-          label: "Pi Browser",
-          action: () => navigate("/openpay-desktop"),
-          subtitle: "Pi Browser sign-in",
-        },
-        {
-          icon: Monitor,
-          label: "OpenPay Desktop EXE",
-          action: () => handleDesktopExe(),
-          subtitle: OPENPAY_DESKTOP_EXE_URL ? "Desktop browser app" : "Coming soon",
-        },
-        {
-          icon: Download,
-          label: canInstall ? "Install OpenPay" : "Install OpenPay APK",
-          action: () => handleOpenApkModal(),
-          subtitle: "Android phone & tablet APK",
-        },
-        {
-          icon: Smartphone,
-          label: "OpenPay App Tablet",
-          action: () => handleOpenApkModal(),
-          subtitle: "Android tablets APK",
-        },
-        {
-          icon: Smartphone,
-          label: "OpenPay App for iOS",
-          action: () => toast.message("Coming soon"),
-          subtitle: "Coming soon",
-          disabled: true,
-        },
-      ],
-    },
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="px-4 pt-6">
-        <h1 className="paypal-heading mb-5">Menu</h1>
+    <div className="min-h-screen bg-background pb-32">
+      <div className="px-4 pt-8">
+        <h1 className="text-3xl font-bold text-foreground mb-8">Services</h1>
+        
         {sections.map((section) => (
-          <div key={section.title} className="mb-6">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{section.title}</h2>
-            <div className="paypal-surface overflow-hidden rounded-2xl">
-            {section.items.map(({ icon: Icon, label, action, subtitle, disabled }) => (
-              <button
-                key={label}
-                onClick={action}
-                className={`flex w-full items-center gap-4 border-b border-border/60 px-3 py-3.5 text-left last:border-b-0 transition ${
-                  disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-secondary/60"
-                }`}
-                disabled={disabled}
-              >
-                <Icon className="h-5 w-5 text-paypal-blue" />
-                <div>
-                  <span className="text-foreground font-medium">{label}</span>
-                  {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+          <div key={section.title} className="mb-8">
+            {section.layout === "grid-top" ? (
+              <div className="flex justify-between items-start gap-2 mb-4 px-1">
+                {section.items.map(({ icon: Icon, label, action, disabled }) => (
+                  <button
+                    key={label}
+                    onClick={action}
+                    disabled={disabled}
+                    className={`flex flex-col items-center gap-2 flex-1 transition ${
+                      disabled ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
+                    }`}
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/30">
+                      <Icon className="h-6 w-6 text-foreground" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-center leading-tight text-muted-foreground">{label}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="paypal-surface overflow-hidden rounded-[2.5rem] border border-border/40 shadow-sm">
+                <div className={`px-6 py-4 ${section.color || "bg-secondary/10"}`}>
+                  <h2 className="text-lg font-bold text-foreground">{section.title}</h2>
                 </div>
-              </button>
-            ))}
-            </div>
+                <div className="p-4 grid grid-cols-4 gap-y-6 gap-x-2">
+                  {section.items.map(({ icon: Icon, label, action, disabled, subtitle }) => (
+                    <button
+                      key={label}
+                      onClick={action}
+                      disabled={disabled}
+                      className={`flex flex-col items-center gap-2 transition ${
+                        disabled ? "opacity-40 cursor-not-allowed" : "hover:scale-105 active:scale-95"
+                      }`}
+                    >
+                      <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-secondary/20 border border-border/10">
+                        <Icon className="h-7 w-7 text-foreground/80" />
+                      </div>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-[11px] font-bold text-center leading-tight text-foreground/90">{label}</span>
+                        {subtitle && <span className="text-[9px] text-muted-foreground text-center leading-tight">{subtitle}</span>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
         <button
           onClick={handleLogout}
-          className="paypal-surface w-full flex items-center gap-4 rounded-2xl px-3 py-3.5 transition hover:bg-red-50 text-destructive"
+          className="mt-4 w-full flex items-center justify-center gap-3 rounded-2xl bg-red-50 py-4 text-red-600 font-bold transition hover:bg-red-100"
         >
           <LogOut className="h-5 w-5" />
-          <span className="font-medium">Log Out</span>
+          <span>Log Out</span>
         </button>
       </div>
 

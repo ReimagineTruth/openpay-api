@@ -1850,15 +1850,21 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Display currency: <span className="font-semibold text-paypal-blue">{currencyTag}</span>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Rate: <span className="font-semibold text-paypal-blue">1 PI = {PI_TO_OUSD.toFixed(2)} OUSD</span>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Rate: <span className="font-semibold text-paypal-blue">1 USD = 1 OUSD</span>
-          </p>
+        <div className="mt-4 rounded-2xl bg-secondary/30 p-3 border border-secondary/50">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              Display currency: <span className="font-bold text-paypal-blue">{currencyTag}</span>
+            </p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <p className="text-xs text-muted-foreground">
+                Rate: <span className="font-semibold text-paypal-blue">1 PI = {PI_TO_OUSD.toFixed(2)} OUSD</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Rate: <span className="font-semibold text-paypal-blue">1 USD = 1 OUSD</span>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {activeSection === "savings" && (
@@ -3140,147 +3146,80 @@ const Dashboard = () => {
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="paypal-surface rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-paypal-blue/10">
-                    <TrendingUp className="h-5 w-5 text-paypal-blue" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Personal Analytics</p>
-                    <p className="text-xs text-muted-foreground">Track your wallet activity</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveSection("analytics")}
-                  className="rounded-xl bg-paypal-blue px-4 py-2 text-sm font-semibold text-white hover:bg-[#004dc5] transition"
-                >
-                  View
-                </button>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {/* Personal Analytics */}
+            <button
+              onClick={() => setActiveSection("analytics")}
+              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
+            >
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50">
+                <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
-              {personalAnalytics && (
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-white/5 p-2 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tx Count</p>
-                    <p className="text-sm font-bold text-foreground">{personalAnalytics?.summary?.transaction_count ?? 0}</p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 p-2 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Activity</p>
-                    <p className="text-sm font-bold text-foreground">{personalAnalytics?.summary?.recent_activity ?? 0}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+              <p className="text-xs font-bold text-foreground">Analytics</p>
+              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Wallet activity</p>
+            </button>
 
-            <div className="paypal-surface rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-paypal-blue/10">
-                    <ArrowLeftRight className="h-5 w-5 text-paypal-blue" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Swap Withdrawal</p>
-                    <p className="text-xs text-muted-foreground">Convert OUSD to PI</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveSection("swap")}
-                  className="rounded-xl bg-paypal-blue px-4 py-2 text-sm font-semibold text-white hover:bg-[#004dc5] transition"
-                >
-                  Start
-                </button>
+            {/* Swap Withdrawal */}
+            <button
+              onClick={() => setActiveSection("swap")}
+              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
+            >
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50">
+                <ArrowLeftRight className="h-6 w-6 text-indigo-600" />
               </div>
-              <div className="mt-3 flex items-center justify-center rounded-xl bg-white/5 p-3 text-center">
-                <p className="text-xs text-muted-foreground">
-                  Rate fixed: <span className="font-semibold text-paypal-blue">1 PI = {PI_TO_OUSD.toFixed(2)} OUSD</span>
-                </p>
-              </div>
-            </div>
+              <p className="text-xs font-bold text-foreground">Swap</p>
+              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">OUSD to PI</p>
+            </button>
 
-            <div className="paypal-surface rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-paypal-blue/10">
-                    <Pickaxe className="h-5 w-5 text-paypal-blue" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Mining</p>
-                    <p className="text-xs text-muted-foreground">
-                      {miningActive && typeof miningTimeLeft === "number"
-                        ? `Active - ${formatHMS(miningTimeLeft)} left`
-                        : "Start mining to earn daily rewards."}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/mining")}
-                  className="rounded-xl bg-paypal-blue px-4 py-2 text-sm font-semibold text-white hover:bg-[#004dc5] transition"
-                >
-                  Mine
-                </button>
+            {/* Mining */}
+            <button
+              onClick={() => navigate("/mining")}
+              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
+            >
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50">
+                <Pickaxe className={`h-6 w-6 text-orange-600 ${miningActive ? "animate-bounce-slow" : ""}`} />
               </div>
-              <div className="mt-3 flex items-center justify-center rounded-xl bg-white/5 p-3 text-center">
-                <p className="text-xs text-muted-foreground">
-                  {miningActive && typeof miningTimeLeft === "number"
-                    ? <>Session running. <span className="font-semibold text-paypal-blue">{formatHMS(Math.max(miningTimeLeft, 0))}</span> left</>
-                    : <>Mining active for 24h. <span className="font-semibold text-paypal-blue">Start now.</span></>}
-                </p>
-              </div>
-            </div>
+              <p className="text-xs font-bold text-foreground">Mining</p>
+              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">
+                {miningActive ? "Session active" : "Earn rewards"}
+              </p>
+            </button>
 
-            <div className="paypal-surface rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-paypal-blue/10">
-                    <Coins className="h-5 w-5 text-paypal-blue" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Staking</p>
-                    <p className="text-xs text-muted-foreground">Lock funds and earn yield</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/staking")}
-                  className="rounded-xl bg-paypal-blue px-4 py-2 text-sm font-semibold text-white hover:bg-[#004dc5] transition"
-                >
-                  Stake
-                </button>
+            {/* Staking */}
+            <button
+              onClick={() => navigate("/staking")}
+              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
+            >
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50">
+                <Coins className="h-6 w-6 text-green-600" />
               </div>
-              <div className="mt-3 flex items-center justify-center rounded-xl bg-white/5 p-3 text-center">
-                <p className="text-xs text-muted-foreground">
-                  Choose 7, 30, or 90 day locks to earn rewards.
-                </p>
-              </div>
-            </div>
+              <p className="text-xs font-bold text-foreground">Staking</p>
+              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Earn yield</p>
+            </button>
 
-            <div className="paypal-surface rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-paypal-blue/10">
-                    <HandCoins className="h-5 w-5 text-paypal-blue" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Affiliate Program</p>
-                    <p className="text-xs text-muted-foreground">Invite and earn rewards</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/affiliate")}
-                  className="rounded-xl bg-paypal-blue px-4 py-2 text-sm font-semibold text-white hover:bg-[#004dc5] transition"
-                >
-                  Invite
-                </button>
+            {/* Affiliate */}
+            <button
+              onClick={() => navigate("/affiliate")}
+              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
+            >
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50">
+                <HandCoins className="h-6 w-6 text-purple-600" />
               </div>
-              <div className="mt-3 flex items-center justify-center rounded-xl bg-white/5 p-3 text-center">
-                <p className="text-xs text-muted-foreground">Earn $1 per referral. <span className="font-semibold text-paypal-blue">Claim rewards.</span></p>
+              <p className="text-xs font-bold text-foreground">Affiliate</p>
+              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Refer & Earn</p>
+            </button>
+
+            {/* Contacts */}
+            <button
+              onClick={() => navigate("/contacts")}
+              className="paypal-surface flex flex-col items-center justify-center rounded-[2rem] p-4 text-center transition hover:scale-[1.02] active:scale-[0.98] border border-border/40"
+            >
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-50">
+                <Users className="h-6 w-6 text-pink-600" />
               </div>
-            </div>
+              <p className="text-xs font-bold text-foreground">Contacts</p>
+              <p className="mt-1 text-[10px] text-muted-foreground line-clamp-1">Manage network</p>
+            </button>
           </div>
         </CollapsibleContent>
       </Collapsible>
