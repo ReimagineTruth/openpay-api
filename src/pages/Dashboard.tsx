@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { getAppCookie, loadUserPreferences, setAppCookie, upsertUserPreferences } from "@/lib/userPreferences";
 import { isRemittanceUiEnabled } from "@/lib/remittanceAccess";
+import { isSolanaPayEnabled } from "@/lib/solanaPayAccess";
 import { playUiSound } from "@/lib/appSounds";
 import { isPlaceholderOpenPayAccount } from "@/lib/openpayIdentity";
 
@@ -88,8 +89,8 @@ const VENMO_ICON_URL =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Venmo_Logo.svg/1920px-Venmo_Logo.svg.png";
 const VISA_ICON_URL = "https://i.ibb.co/G3FGwngR/Visa-Inc-logo-2021-present-svg.png";
 const MASTERCARD_ICON_URL = "https://i.ibb.co/9kkZmFDq/Mastercard-2019-logo-svg.png";
-const USDT_ICON_URL = "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png";
-const USDC_ICON_URL = "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdc.png";
+const USDT_ICON_URL = "https://cryptologos.cc/logos/tether-usdt-logo.png?v=040";
+const USDC_ICON_URL = "https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=040";
 const SOLANA_PAY_ICON_URL = "https://cryptologos.cc/logos/solana-sol-logo.png?v=040";
 const TRANSFI_ICON_URL = "https://logo.clearbit.com/transfi.com";
 const ONRAMP_MONEY_ICON_URL = "https://logo.clearbit.com/onramp.money";
@@ -1572,6 +1573,7 @@ const Dashboard = () => {
     "Ewallet QR PH": 1,
     "USDT": 1,
     "USDC": 1,
+    "Solana Pay": 1,
     "PayPal": 1,
     "Apple Pay": 1,
     "Debit Card": 1,
@@ -1584,7 +1586,8 @@ const Dashboard = () => {
     "Banxa": 1,
   };
   const selectedRate = onrampRates[buyOnrampProvider] ?? 1;
-  const onrampRows: Array<{ key: BuyOnrampProvider; disabled?: boolean; subtitle: string; delta?: string; recommended?: boolean }> = [
+  const solanaPayEnabled = isSolanaPayEnabled();
+  const baseOnrampRows: Array<{ key: BuyOnrampProvider; disabled?: boolean; subtitle: string; delta?: string; recommended?: boolean }> = [
     { key: "Pi Payment", subtitle: "Active", recommended: true },
     { key: "Ewallet QR PH", subtitle: "Active" },
     { key: "USDT", subtitle: "Active" },
@@ -1601,7 +1604,9 @@ const Dashboard = () => {
     { key: "Onramp Money", subtitle: "Coming Soon", disabled: true },
     { key: "Banxa", subtitle: "Coming Soon", disabled: true },
   ];
-  const paymentMethodRows: Array<{ key: BuyPaymentMethod; recommended?: boolean; disabled?: boolean }> = [
+  const onrampRows =
+    solanaPayEnabled ? baseOnrampRows : baseOnrampRows.filter((row) => row.key !== "Solana Pay");
+  const basePaymentMethodRows: Array<{ key: BuyPaymentMethod; recommended?: boolean; disabled?: boolean }> = [
     { key: "Pi Payment", recommended: true },
     { key: "Ewallet" },
     { key: "USDT" },
@@ -1615,7 +1620,9 @@ const Dashboard = () => {
     { key: "Stripe" },
     { key: "Venmo" },
   ];
-  const supportedBuyPaymentMethods: BuyPaymentMethod[] = [
+  const paymentMethodRows =
+    solanaPayEnabled ? basePaymentMethodRows : basePaymentMethodRows.filter((row) => row.key !== "Solana Pay");
+  const baseSupportedBuyPaymentMethods: BuyPaymentMethod[] = [
     "Pi Payment",
     "Ewallet",
     "USDT",
@@ -1629,6 +1636,10 @@ const Dashboard = () => {
     "Stripe",
     "Venmo",
   ];
+  const supportedBuyPaymentMethods =
+    solanaPayEnabled
+      ? baseSupportedBuyPaymentMethods
+      : (baseSupportedBuyPaymentMethods.filter((method) => method !== "Solana Pay") as BuyPaymentMethod[]);
   const getBuyPaymentMethodLabel = (method: BuyPaymentMethod) => {
     if (method === "Ewallet") return "Ewallet QR PH";
     return method;

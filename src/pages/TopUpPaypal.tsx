@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Copy, HelpCircle } from "lucide-react";
+import { ArrowLeft, Copy, HelpCircle, ExternalLink, FileText, LifeBuoy, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import TopUpAccountDetails from "@/components/TopUpAccountDetails";
 import RegulatoryStatusModal from "@/components/RegulatoryStatusModal";
+import TopUpActionGrid from "@/components/TopUpActionGrid";
 
 const PAYPAL_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/1920px-PayPal.svg.png";
 const PAYPAL_CLIENT_ID = "BAABvvC7_J4mukHtbKyyIkmPBX7N1UzqgAkCmei4q0NbUxp4nBMiCxVLKir2SdQ68p5hbosDBWF8pvLFdE";
@@ -170,10 +171,51 @@ const TopUpPaypal = () => {
           Note: PayPal checkout will redirect you to PayPal. Review the top-up instructions below, then proceed with your top up.
         </p>
 
+        <TopUpActionGrid
+          actions={[
+            {
+              label: "Pay with PayPal",
+              onClick: () => {
+                if (!safetyAccepted) {
+                  handleOpenPaypal();
+                  return;
+                }
+                paypalSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              },
+              icon: <CreditCard className="h-4 w-4" />,
+            },
+            {
+              label: "Copy Link",
+              onClick: handleCopyPaypalLink,
+              icon: <Copy className="h-4 w-4" />,
+            },
+            {
+              label: "Open Link",
+              onClick: () => window.open(PAYPAL_DIRECT_URL, "_blank"),
+              icon: <ExternalLink className="h-4 w-4" />,
+            },
+            {
+              label: "Support",
+              onClick: openSupportWidget,
+              icon: <LifeBuoy className="h-4 w-4" />,
+            },
+            {
+              label: "Instructions",
+              onClick: () => setShowTopUpInstructions(true),
+              icon: <HelpCircle className="h-4 w-4" />,
+            },
+            {
+              label: "Regulatory",
+              onClick: () => setShowRegulatoryModal(true),
+              icon: <FileText className="h-4 w-4" />,
+            },
+          ]}
+        />
+
         <Button
           type="button"
           variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl"
+          className="mt-3 h-11 w-full rounded-2xl"
           onClick={() => setPaymentCompleted(true)}
           disabled={!safetyAccepted || safeUsdAmount <= 0}
         >
@@ -185,68 +227,6 @@ const TopUpPaypal = () => {
             <TopUpAccountDetails providerName="PayPal" amount={safeUsdAmount} submitLabel="Submit PayPal Top Up" />
           </div>
         )}
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => {
-            if (!safetyAccepted) {
-              handleOpenPaypal();
-              return;
-            }
-            paypalSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }}
-        >
-          <img src={PAYPAL_ICON_URL} alt="PayPal" className="mr-2 h-5 w-auto object-contain" />
-          Pay with PayPal
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => setShowTopUpInstructions(true)}
-        >
-          OpenPay Top-Up Instructions
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={handleCopyPaypalLink}
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          Copy PayPal Link
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={() => window.open(PAYPAL_DIRECT_URL, "_blank")}
-        >
-          Open PayPal Link
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={openSupportWidget}
-        >
-          Live Customer Service
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={() => setShowRegulatoryModal(true)}
-        >
-          Regulatory Status
-        </Button>
 
         <Button
           type="button"

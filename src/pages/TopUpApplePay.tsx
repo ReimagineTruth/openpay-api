@@ -1,10 +1,11 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Copy, HelpCircle } from "lucide-react";
+import { ArrowLeft, Copy, HelpCircle, ExternalLink, LifeBuoy, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import TopUpAccountDetails from "@/components/TopUpAccountDetails";
+import TopUpActionGrid from "@/components/TopUpActionGrid";
 
 const APPLE_PAY_ICON_URL =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Apple_Pay_logo.svg/1920px-Apple_Pay_logo.svg.png";
@@ -105,10 +106,46 @@ const TopUpApplePay = () => {
           Note: Apple Pay checkout may redirect you. Review the top-up instructions below, then proceed with your top up.
         </p>
 
+        <TopUpActionGrid
+          actions={[
+            {
+              label: "Pay with Apple Pay",
+              onClick: () => {
+                if (!safetyAccepted) {
+                  handleOpenApplePay();
+                  return;
+                }
+                toast.info("Apple Pay will open when integrated.");
+              },
+              icon: <CreditCard className="h-4 w-4" />,
+            },
+            {
+              label: "Copy Link",
+              onClick: handleCopyApplePayLink,
+              icon: <Copy className="h-4 w-4" />,
+            },
+            {
+              label: "Open Link",
+              onClick: () => window.open(applePayCheckoutUrl, "_blank"),
+              icon: <ExternalLink className="h-4 w-4" />,
+            },
+            {
+              label: "Support",
+              onClick: openSupportWidget,
+              icon: <LifeBuoy className="h-4 w-4" />,
+            },
+            {
+              label: "Instructions",
+              onClick: () => setShowTopUpInstructions(true),
+              icon: <HelpCircle className="h-4 w-4" />,
+            },
+          ]}
+        />
+
         <Button
           type="button"
           variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl"
+          className="mt-3 h-11 w-full rounded-2xl"
           onClick={() => setPaymentCompleted(true)}
           disabled={!safetyAccepted || safeUsdAmount <= 0}
         >
@@ -120,49 +157,6 @@ const TopUpApplePay = () => {
             <TopUpAccountDetails providerName="Apple Pay" amount={safeUsdAmount} submitLabel="Submit Apple Pay Top Up" />
           </div>
         )}
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => {
-            if (!safetyAccepted) {
-              handleOpenApplePay();
-              return;
-            }
-          }}
-        >
-          <img src={APPLE_PAY_ICON_URL} alt="Apple Pay" className="mr-2 h-5 w-auto object-contain" />
-          Pay with Apple Pay
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => setShowTopUpInstructions(true)}
-        >
-          OpenPay Top-Up Instructions
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={handleCopyApplePayLink}
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          Copy Apple Pay Link
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={openSupportWidget}
-        >
-          Live Customer Service
-        </Button>
 
         <Button
           type="button"

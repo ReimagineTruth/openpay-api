@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Copy, ExternalLink, HelpCircle } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, HelpCircle, LifeBuoy, CreditCard, ListChecks } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import TopUpAccountDetails from "@/components/TopUpAccountDetails";
+import TopUpActionGrid from "@/components/TopUpActionGrid";
 const JQRPH_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/QR_Ph_Logo.svg/960px-QR_Ph_Logo.svg.png?20250310160234";
 const E_WALLET_PHP_PER_OUSD = 57;
 
@@ -100,10 +101,46 @@ const TopUpEwalletQrPh = () => {
           Note: Scanning this QR code will redirect you to a third-party payment provider. Read the top-up instructions below, review all disclaimers, then proceed with your top up.
         </p>
 
+        <TopUpActionGrid
+          actions={[
+            {
+              label: "Pay QR PH",
+              onClick: handleOpenPayQrPh,
+              icon: <CreditCard className="h-4 w-4" />,
+              disabled: roundedOpenUsdAmount <= 0,
+            },
+            {
+              label: "Copy Link",
+              onClick: handleCopyQrLink,
+              icon: <Copy className="h-4 w-4" />,
+            },
+            {
+              label: "Open Link",
+              onClick: () => window.open(payQrPhUrl, "_blank", "noopener,noreferrer"),
+              icon: <ExternalLink className="h-4 w-4" />,
+            },
+            {
+              label: "Support",
+              onClick: openSupportWidget,
+              icon: <LifeBuoy className="h-4 w-4" />,
+            },
+            {
+              label: "Instructions",
+              onClick: () => setShowTopUpInstructions(true),
+              icon: <HelpCircle className="h-4 w-4" />,
+            },
+            {
+              label: "Supported Banks",
+              onClick: () => setShowSupportedQrPh(true),
+              icon: <ListChecks className="h-4 w-4" />,
+            },
+          ]}
+        />
+
         <Button
           type="button"
           variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl"
+          className="mt-3 h-11 w-full rounded-2xl"
           onClick={() => setPaymentCompleted(true)}
           disabled={roundedOpenUsdAmount <= 0}
         >
@@ -116,43 +153,7 @@ const TopUpEwalletQrPh = () => {
           </div>
         )}
 
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={handleOpenPayQrPh}
-        >
-          <img src={JQRPH_ICON_URL} alt="JQRPh" className="mr-2 h-5 w-auto object-contain" />
-          Pay QR PH
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => setShowTopUpInstructions(true)}
-        >
-          OpenPay Top-Up Instructions
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={handleCopyQrLink}
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          Copy Pay QR PH Link
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={openSupportWidget}
-        >
-          Live Customer Service
-        </Button>
+        
 
         <Button
           type="button"

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, Copy, ExternalLink, LifeBuoy, FileText, CreditCard, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { PI_TO_USD, useCurrency } from "@/contexts/CurrencyContext";
 import { getFunctionErrorMessage } from "@/lib/supabaseFunctionError";
@@ -11,6 +11,7 @@ import TransactionReceipt, { type ReceiptData } from "@/components/TransactionRe
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import TopUpAccountDetails from "@/components/TopUpAccountDetails";
 import RegulatoryStatusModal from "@/components/RegulatoryStatusModal";
+import TopUpActionGrid from "@/components/TopUpActionGrid";
 
 const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const PI_PAYMENT_ICON_URL = "https://i.ibb.co/jk8XtTPj/pi-network-pi-icons-pi-logo-design-illustration-trendy-and-modern-crypto-currency-pi-symbol-for-logo.png";
@@ -396,80 +397,56 @@ const TopUp = () => {
           </div>
         )}
 
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => {
-            piSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-            handleTopUp();
-          }}
-          disabled={loading || safeAmount <= 0}
-        >
-          <img src={PI_PAYMENT_ICON_URL} alt="Pi Payment" className="mr-2 h-8 w-auto object-contain" />
-          Pay with Pi
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => setShowInstructions(true)}
-        >
-          OpenPay Top-Up Instructions
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={createTopUpLink}
-          disabled={safeAmount <= 0}
-        >
-          Generate Top Up Link
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={copyGeneratedTopUpLink}
-          disabled={!generatedTopUpLink}
-        >
-          Copy Top Up Link
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={() => window.open(generatedTopUpLink, "_blank")}
-          disabled={!generatedTopUpLink}
-        >
-          Open Top Up Link
-        </Button>
+        <TopUpActionGrid
+          actions={[
+            {
+              label: "Pay with Pi",
+              onClick: () => {
+                piSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                handleTopUp();
+              },
+              icon: <CreditCard className="h-4 w-4" />,
+              disabled: loading || safeAmount <= 0,
+            },
+            {
+              label: "Generate Link",
+              onClick: createTopUpLink,
+              icon: <Link2 className="h-4 w-4" />,
+              disabled: safeAmount <= 0,
+            },
+            {
+              label: "Copy Link",
+              onClick: copyGeneratedTopUpLink,
+              icon: <Copy className="h-4 w-4" />,
+              disabled: !generatedTopUpLink,
+            },
+            {
+              label: "Open Link",
+              onClick: () => window.open(generatedTopUpLink, "_blank"),
+              icon: <ExternalLink className="h-4 w-4" />,
+              disabled: !generatedTopUpLink,
+            },
+            {
+              label: "Support",
+              onClick: openSupportWidget,
+              icon: <LifeBuoy className="h-4 w-4" />,
+            },
+            {
+              label: "Instructions",
+              onClick: () => setShowInstructions(true),
+              icon: <HelpCircle className="h-4 w-4" />,
+            },
+            {
+              label: "Regulatory",
+              onClick: () => setShowRegulatoryModal(true),
+              icon: <FileText className="h-4 w-4" />,
+            },
+          ]}
+        />
 
         {!!generatedTopUpLink && (
           <p className="mt-2 break-all text-xs text-muted-foreground">{generatedTopUpLink}</p>
         )}
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={openSupportWidget}
-        >
-          Live Customer Service
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl"
-          onClick={() => setShowRegulatoryModal(true)}
-        >
-          Regulatory Status
-        </Button>
 
         <Button
           type="button"

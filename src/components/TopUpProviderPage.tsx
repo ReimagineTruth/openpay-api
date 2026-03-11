@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink, HelpCircle, FileText, LifeBuoy, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import TopUpAccountDetails from "@/components/TopUpAccountDetails";
 import RegulatoryStatusModal from "@/components/RegulatoryStatusModal";
 import { QRCodeSVG } from "qrcode.react";
+import TopUpActionGrid from "@/components/TopUpActionGrid";
 
 type TopUpProviderPageProps = {
   providerName: string;
@@ -180,10 +181,35 @@ const TopUpProviderPage = ({
           </div>
         )}
 
+        <TopUpActionGrid
+          actions={[
+            {
+              label: providerUrl ? `Open ${providerName}` : normalizedAddress ? "Copy Address" : providerName,
+              onClick: handleProceed,
+              icon: normalizedAddress ? <Copy className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />,
+            },
+            {
+              label: "Support",
+              onClick: openSupportWidget,
+              icon: <LifeBuoy className="h-4 w-4" />,
+            },
+            {
+              label: "Instructions",
+              onClick: () => setShowTopUpInstructions(true),
+              icon: <HelpCircle className="h-4 w-4" />,
+            },
+            {
+              label: "Regulatory",
+              onClick: () => setShowRegulatoryModal(true),
+              icon: <FileText className="h-4 w-4" />,
+            },
+          ]}
+        />
+
         <Button
           type="button"
           variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl"
+          className="mt-3 h-11 w-full rounded-2xl"
           onClick={() => setPaymentCompleted(true)}
           disabled={!safetyAccepted || safeUsdAmount <= 0}
         >
@@ -200,32 +226,7 @@ const TopUpProviderPage = ({
           </div>
         )}
 
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={openSupportWidget}
-        >
-          Live Customer Service
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => setShowTopUpInstructions(true)}
-        >
-          {providerName} Top-Up Instructions
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 h-11 w-full rounded-2xl border-paypal-blue/40 bg-white text-foreground hover:bg-secondary/30"
-          onClick={() => setShowRegulatoryModal(true)}
-        >
-          Regulatory Status
-        </Button>
+        
 
         <Button
           type="button"

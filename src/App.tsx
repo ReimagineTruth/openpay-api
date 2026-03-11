@@ -92,6 +92,7 @@ import AppLanguageTranslate from "./components/AppLanguageTranslate";
 import SupportWidget from "./components/SupportWidget";
 import { CookieConsentProvider } from "./contexts/CookieConsentContext";
 import PageTransition from "./components/PageTransition";
+import { isSolanaPayEnabled } from "@/lib/solanaPayAccess";
 
 const queryClient = new QueryClient();
 
@@ -158,7 +159,7 @@ const AppRoutes = () => {
         <Route path="/topup-venmo" element={<TopUpVenmo />} />
         <Route path="/topup-usdt" element={<TopUpUSDT />} />
         <Route path="/topup-usdc" element={<TopUpUSDC />} />
-        <Route path="/topup-solana-pay" element={<TopUpSolanaPay />} />
+        {isSolanaPayEnabled() ? <Route path="/topup-solana-pay" element={<TopUpSolanaPay />} /> : null}
         <Route path="/receive" element={<ReceivePage />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/menu" element={<MenuPage />} />
