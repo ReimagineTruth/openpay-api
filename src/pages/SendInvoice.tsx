@@ -243,13 +243,18 @@ const SendInvoice = () => {
     const invoiceRate = invoiceMeta?.rate ?? 1;
     const ousdAmount = invoiceRate ? (parsedAmount / invoiceRate) * PI_TO_USD : parsedAmount;
     const fullDescription = description.trim();
+    const descriptionWithOriginalInfo = fullDescription 
+      ? `${fullDescription} [${invoiceCurrencyCode} ${parsedAmount.toFixed(2)}]`
+      : `[${invoiceCurrencyCode} ${parsedAmount.toFixed(2)}]`;
+
     const { error } = await supabase.from("invoices").insert({
       sender_id: userId,
       recipient_id: recipientId,
       amount: Number(ousdAmount.toFixed(2)),
-      original_amount: Number(parsedAmount.toFixed(2)),
-      original_currency_code: invoiceCurrencyCode,
-      description: fullDescription || "",
+      // Temporarily commented out until schema cache is updated
+      // original_amount: Number(parsedAmount.toFixed(2)),
+      // original_currency_code: invoiceCurrencyCode,
+      description: descriptionWithOriginalInfo,
       due_date: dueDate || null,
       status: "pending",
     });
@@ -274,6 +279,14 @@ const SendInvoice = () => {
 
     const parseOriginalAmount = (text?: string | null) => {
       if (!text) return null;
+      
+      // Try [CODE AMOUNT] format first (used in new inserts)
+      const bracketMatch = text.match(/\[(\w+)\s+([\d.]+)\]/);
+      if (bracketMatch) {
+        return { code: bracketMatch[1].toUpperCase(), amount: Number(bracketMatch[2]) };
+      }
+
+      // Fallback to legacy "Original amount: AMOUNT CODE" format
       const match = text.match(/Original amount:\s*([0-9.,]+)\s*([A-Za-z]{2,6})/i);
       if (!match) return null;
       const rawAmount = match[1].replace(/,/g, "");
