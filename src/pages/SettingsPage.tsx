@@ -37,6 +37,7 @@ const SettingsPage = () => {
     typeof window !== "undefined" && "Notification" in window ? Notification.permission : "unsupported",
   );
   const [appLanguage, setAppLanguage] = useState(getStoredAppLanguage());
+  const [customLanguage, setCustomLanguage] = useState("");
   const [qrPrintSettings, setQrPrintSettings] = useState<Record<string, unknown>>({});
   const [themeMode, setThemeMode] = useState<AppThemeMode>(getStoredAppTheme());
   const [resettingOnboarding, setResettingOnboarding] = useState(false);
@@ -259,6 +260,22 @@ const SettingsPage = () => {
     window.setTimeout(() => window.location.reload(), 250);
   };
 
+  const handleApplyCustomLanguage = () => {
+    const raw = customLanguage.trim().replace(/_/g, "-");
+    if (!raw) {
+      toast.error("Enter a language code (example: es, fr, ja, zh-CN).");
+      return;
+    }
+
+    const looksValid = /^[a-zA-Z]{2,3}(-[a-zA-Z]{2,4})?$/.test(raw);
+    if (!looksValid) {
+      toast.error("Invalid language code. Use codes like es, fr, ja, pt-BR, zh-CN.");
+      return;
+    }
+
+    void handleChangeLanguage(raw);
+  };
+
   const handleChangeTheme = async (nextTheme: AppThemeMode) => {
     setThemeMode(nextTheme);
     persistAndApplyAppTheme(nextTheme);
@@ -332,6 +349,17 @@ const SettingsPage = () => {
               </option>
             ))}
           </select>
+          <div className="mt-2 flex gap-2">
+            <Input
+              value={customLanguage}
+              onChange={(e) => setCustomLanguage(e.target.value)}
+              placeholder='Any language code (e.g. "es", "pt-BR", "zh-CN")'
+              className="h-11 flex-1 rounded-2xl bg-white"
+            />
+            <Button type="button" variant="outline" onClick={handleApplyCustomLanguage} className="h-11 rounded-2xl">
+              Apply
+            </Button>
+          </div>
         </div>
         <div className="mb-4">
           <p className="mb-1 text-sm text-muted-foreground">Theme</p>

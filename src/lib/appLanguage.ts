@@ -12,6 +12,7 @@ export const APP_LANGUAGE_OPTIONS: AppLanguageOption[] = [
   { code: "de", label: "German" },
   { code: "it", label: "Italian" },
   { code: "pt", label: "Portuguese" },
+  { code: "pt-BR", label: "Portuguese (Brazil)" },
   { code: "ru", label: "Russian" },
   { code: "ar", label: "Arabic" },
   { code: "hi", label: "Hindi" },
@@ -36,7 +37,8 @@ export const APP_LANGUAGE_OPTIONS: AppLanguageOption[] = [
   { code: "he", label: "Hebrew" },
   { code: "ta", label: "Tamil" },
   { code: "te", label: "Telugu" },
-  { code: "fil", label: "Filipino" },
+  // Google Translate uses `tl` for Filipino/Tagalog.
+  { code: "tl", label: "Filipino" },
 ];
 
 const setGoogleTranslateCookie = (languageCode: string) => {
