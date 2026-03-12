@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Lock, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowLeft, Clock, Lock, ShieldCheck, Wallet, History, ArrowDownToLine, ArrowUpToLine } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,22 @@ type StakeRow = {
   created_at: string;
 };
 
+type StakingHistoryRow = {
+  id: string;
+  amount: number;
+  note: string | null;
+  status: string | null;
+  created_at: string;
+};
+
+const parseStakeRewardFromNote = (note: string | null): number | null => {
+  if (!note) return null;
+  const match = note.match(/reward\s+([0-9]+(?:\.[0-9]+)?)/i);
+  if (!match?.[1]) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+};
+
 const STAKE_OPTIONS = [
   { days: 7, rate: 0.02 },
   { days: 30, rate: 0.05 },
@@ -35,6 +51,7 @@ const StakingPage = () => {
   const [lockDays, setLockDays] = useState<number>(30);
   const [staking, setStaking] = useState(false);
   const [positions, setPositions] = useState<StakeRow[]>([]);
+  const [historyRows, setHistoryRows] = useState<StakingHistoryRow[]>([]);
   const [showRegulatoryModal, setShowRegulatoryModal] = useState(false);
 
   const parsedAmount = Number(amount);
@@ -53,17 +70,26 @@ const StakingPage = () => {
         return;
       }
 
-      const [{ data: wallet }, { data: stakeRows }] = await Promise.all([
+      const [{ data: wallet }, { data: stakeRows }, { data: stakingHistory }] = await Promise.all([
         supabase.from("wallets").select("balance").eq("user_id", user.id).single(),
         (supabase as any)
           .from("staking_positions")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
+        (supabase as any)
+          .from("transactions")
+          .select("id, amount, note, status, created_at")
+          .eq("sender_id", user.id)
+          .eq("receiver_id", user.id)
+          .ilike("note", "Stake %")
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
 
       setBalance(Number(wallet?.balance || 0));
       setPositions((stakeRows as StakeRow[] | null) || []);
+      setHistoryRows((stakingHistory as StakingHistoryRow[] | null) || []);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to load staking data");
     } finally {
@@ -113,6 +139,12 @@ const StakingPage = () => {
       toast.error(error instanceof Error ? error.message : "Claim failed");
     }
   };
+
+  const totalRewardsEarned = useMemo(() => {
+    return (historyRows || [])
+      .filter((row) => String(row.note || "").toLowerCase().includes("stake claim"))
+      .reduce((sum, row) => sum + (parseStakeRewardFromNote(row.note) ?? 0), 0);
+  }, [historyRows]);
 
   return (
     <div className="min-h-screen bg-background px-4 pt-4 pb-24">
@@ -232,6 +264,63 @@ const StakingPage = () => {
                   >
                     {canClaim ? "Claim reward" : "Locked"}
                   </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <History className="h-4 w-4 text-paypal-blue" />
+            <h2 className="text-lg font-semibold text-foreground">Staking history</h2>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Rewards earned: {totalRewardsEarned.toFixed(2)} OPEN USD
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="rounded-2xl border border-border bg-white p-4 text-sm text-muted-foreground">Loading...</div>
+        ) : historyRows.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-white p-6 text-center text-sm text-muted-foreground">
+            No staking history yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {historyRows.map((row) => {
+              const note = String(row.note || "");
+              const lower = note.toLowerCase();
+              const isLockEvent = lower.includes("stake lock");
+              const isClaimEvent = lower.includes("stake claim");
+              const reward = parseStakeRewardFromNote(row.note);
+              const label = isLockEvent ? "Stake locked" : isClaimEvent ? "Stake claimed" : "Staking activity";
+              const Icon = isLockEvent ? ArrowDownToLine : isClaimEvent ? ArrowUpToLine : History;
+              return (
+                <div key={row.id} className="rounded-2xl border border-border bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paypal-blue/10 text-paypal-blue">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{note}</p>
+                        <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                          {row.created_at ? format(new Date(row.created_at), "MMM d, yyyy HH:mm") : "N/A"}{" "}
+                          {row.status ? `· ${row.status}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-foreground">{Number(row.amount || 0).toFixed(2)} OPEN USD</p>
+                      {reward !== null && reward > 0 && (
+                        <p className="text-[10px] font-bold text-paypal-blue">Reward {reward.toFixed(2)}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               );
             })}

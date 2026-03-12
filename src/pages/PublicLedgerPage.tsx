@@ -28,6 +28,8 @@ type PublicLedgerEntry = {
 
 const PAGE_SIZE = 30;
 const PI_LOGO_URL = "https://i.ibb.co/jk8XtTPj/pi-network-pi-icons-pi-logo-design-illustration-trendy-and-modern-crypto-currency-pi-symbol-for-logo.png";
+const USDT_FALLBACK_ICON_URL = "/icons/usdt.svg";
+const USDC_FALLBACK_ICON_URL = "/icons/usdc.svg";
 const PROVIDER_LOGOS: Record<string, string> = {
   "Pi Payment": PI_LOGO_URL,
   "Pi Wallet": PI_LOGO_URL,
@@ -53,8 +55,8 @@ const PROVIDER_LOGOS: Record<string, string> = {
   "Crypto": "https://i.ibb.co/jk8XtTPj/pi-network-pi-icons-pi-logo-design-illustration-trendy-and-modern-crypto-currency-pi-symbol-for-logo.png",
   "Bitcoin": "https://i.ibb.co/L8Q4b1fF/bitcoin-logo.png",
   "Ethereum": "https://i.ibb.co/68vQz2kK/ethereum-logo.png",
-  "USDT": "https://i.ibb.co/L8Q4b1fF/bitcoin-logo.png",
-  "USDC": "https://i.ibb.co/L8Q4b1fF/bitcoin-logo.png",
+  "USDT": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Tether_Logo.svg/1920px-Tether_Logo.svg.png",
+  "USDC": "https://upload.wikimedia.org/wikipedia/fr/1/18/Logo-USDC-2023.png",
   "Other": "https://i.ibb.co/3Rj2v1mL/cash-icon.png",
 };
 const isMissingPrivateLedgerRpcError = (message: string | undefined) =>
@@ -235,7 +237,7 @@ const PublicLedgerPage = () => {
             const evt = (row.event_type || "").toLowerCase();
             const isTopup = evt.includes("topup") || evt.includes("deposit") || evt.includes("receive") || evt.includes("incoming");
             const isWithdraw = evt.includes("withdraw") || evt.includes("payout") || evt.includes("send") || evt.includes("outgoing") || evt.includes("payment");
-            const paymentMethod = String(row.payload?.payment_method || row.payload?.provider || "").trim();
+            const paymentMethod = String(row.payload?.payment_method || row.payload?.provider || row.note || "").trim();
             
             // Enhanced logo detection with multiple fallback strategies
             const getProviderLogo = (method: string): string => {
@@ -286,6 +288,13 @@ const PublicLedgerPage = () => {
               providerLogo ||
               (row.payload?.pi_wallet_address ? PI_LOGO_URL : "") ||
               (inferredPiLogo ? PI_LOGO_URL : "");
+            const upperMethodHint = String(paymentMethod || noteHint || "").toUpperCase();
+            const methodFallbackLogo =
+              upperMethodHint.includes("USDT") || upperMethodHint.includes("TETHER")
+                ? USDT_FALLBACK_ICON_URL
+                : upperMethodHint.includes("USDC")
+                  ? USDC_FALLBACK_ICON_URL
+                  : "";
             const currencyCode = String(row.currency_code || "OUSD").toUpperCase();
             const currencyMeta = currencies.find((currency) => currency.code === currencyCode);
             const currencyFlag = currencyMeta?.flag || (currencyCode === "PI" ? "PI" : "OP");
@@ -337,7 +346,16 @@ const PublicLedgerPage = () => {
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   {(isTopup || isWithdraw) && methodLogo ? (
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/50 overflow-hidden border border-border/50">
-                      <img src={methodLogo} alt="Method" className="h-6 w-6 object-contain" />
+                      <img
+                        src={methodLogo}
+                        alt="Method"
+                        className="h-6 w-6 object-contain"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          if (!methodFallbackLogo) return;
+                          e.currentTarget.src = methodFallbackLogo;
+                        }}
+                      />
                     </div>
                   ) : (
                     primaryName || primaryUsername ? (

@@ -76,6 +76,41 @@ type BuyPaymentMethod =
   | "PayPal"
   | "Stripe"
   | "Venmo";
+
+const inferTopupPaymentMethod = (tx: Transaction): BuyPaymentMethod | null => {
+  if (!tx?.is_topup) return null;
+  const hint = `${tx.note || ""} ${tx.other_name || ""} ${tx.other_username || ""}`.toLowerCase();
+  if (hint.includes("usdt") || hint.includes("tether")) return "USDT";
+  if (hint.includes("usdc")) return "USDC";
+  if (hint.includes("paypal")) return "PayPal";
+  if (hint.includes("ewallet") || hint.includes("qr ph") || hint.includes("qrph") || hint.includes("jqr")) return "Ewallet";
+  if (hint.includes("solana")) return "Solana Pay";
+  if (hint.includes("apple pay") || hint.includes("apple")) return "Apple Pay";
+  if (hint.includes("google pay") || hint.includes("google")) return "Google Pay";
+  if (hint.includes("debit")) return "Debit Card";
+  if (hint.includes("credit") || hint.includes("mastercard")) return "Credit Card";
+  if (hint.includes("stripe")) return "Stripe";
+  if (hint.includes("venmo")) return "Venmo";
+  if (hint.includes("pi")) return "Pi Payment";
+  return null;
+};
+
+const getPaymentMethodIcon = (method: BuyPaymentMethod | null) => {
+  if (!method) return null;
+  if (method === "Pi Payment") return { src: PI_PAYMENT_ICON_URL, fallback: "" };
+  if (method === "Ewallet") return { src: JQRPH_ICON_URL, fallback: "" };
+  if (method === "PayPal") return { src: PAYPAL_ICON_URL, fallback: "" };
+  if (method === "USDT") return { src: USDT_ICON_URL, fallback: USDT_ICON_FALLBACK_URL };
+  if (method === "USDC") return { src: USDC_ICON_URL, fallback: USDC_ICON_FALLBACK_URL };
+  if (method === "Solana Pay") return { src: SOLANA_PAY_ICON_URL, fallback: "" };
+  if (method === "Apple Pay") return { src: APPLE_PAY_ICON_URL, fallback: "" };
+  if (method === "Google Pay") return { src: GOOGLE_PAY_ICON_URL, fallback: "" };
+  if (method === "Debit Card") return { src: VISA_ICON_URL, fallback: "" };
+  if (method === "Credit Card") return { src: MASTERCARD_ICON_URL, fallback: "" };
+  if (method === "Stripe") return { src: STRIPE_ICON_URL, fallback: "" };
+  if (method === "Venmo") return { src: VENMO_ICON_URL, fallback: "" };
+  return null;
+};
 const JQRPH_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/QR_Ph_Logo.svg/960px-QR_Ph_Logo.svg.png?20250310160234";
 const PI_PAYMENT_ICON_URL = "https://i.ibb.co/jk8XtTPj/pi-network-pi-icons-pi-logo-design-illustration-trendy-and-modern-crypto-currency-pi-symbol-for-logo.png";
 const PAYPAL_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/1920px-PayPal.svg.png";
@@ -89,8 +124,10 @@ const VENMO_ICON_URL =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Venmo_Logo.svg/1920px-Venmo_Logo.svg.png";
 const VISA_ICON_URL = "https://i.ibb.co/G3FGwngR/Visa-Inc-logo-2021-present-svg.png";
 const MASTERCARD_ICON_URL = "https://i.ibb.co/9kkZmFDq/Mastercard-2019-logo-svg.png";
-const USDT_ICON_URL = "https://cryptologos.cc/logos/tether-usdt-logo.png?v=040";
-const USDC_ICON_URL = "https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=040";
+const USDT_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Tether_Logo.svg/1920px-Tether_Logo.svg.png";
+const USDC_ICON_URL = "https://upload.wikimedia.org/wikipedia/fr/1/18/Logo-USDC-2023.png";
+const USDT_ICON_FALLBACK_URL = "/icons/usdt.svg";
+const USDC_ICON_FALLBACK_URL = "/icons/usdc.svg";
 const SOLANA_PAY_ICON_URL = "https://cryptologos.cc/logos/solana-sol-logo.png?v=040";
 const TRANSFI_ICON_URL = "https://logo.clearbit.com/transfi.com";
 const ONRAMP_MONEY_ICON_URL = "https://logo.clearbit.com/onramp.money";
@@ -2378,20 +2415,24 @@ const Dashboard = () => {
                   Buy OpenUSD
                 </div>
               </div>
-              <span className="ml-auto ios-active rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue backdrop-blur-sm">
-                Onramper
-              </span>
+              <button
+                type="button"
+                onClick={() => setShowOnrampPicker(true)}
+                className="ml-auto ios-active inline-flex items-center gap-1 rounded-full bg-paypal-blue/10 px-4 py-1.5 text-xs font-bold text-paypal-blue backdrop-blur-sm"
+              >
+                Onramper <ChevronDown className="h-3.5 w-3.5" />
+              </button>
             </div>
 
             <div className="relative flex flex-col items-center justify-center text-center py-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
-                  <Coins className="h-6 w-6 text-paypal-blue" />
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
+                    <BrandLogo className="h-6 w-6 text-paypal-blue" />
+                  </div>
+                  <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                    {buyOpenUsdDisplay}
+                  </h2>
                 </div>
-                <h2 className="text-5xl font-black tracking-tighter text-foreground">
-                  {buyOpenUsdDisplay}
-                </h2>
-              </div>
               <p className="mt-3 text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
                 You get (OPEN USD)
               </p>
@@ -2403,8 +2444,51 @@ const Dashboard = () => {
                 <p className="text-base font-bold text-foreground">{buySpendAmount || "0"} {buySpendUnit}</p>
               </div>
               <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Provider</p>
-                <p className="text-base font-bold text-foreground">{buyOnrampProvider}</p>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Provider</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowOnrampPicker(true)}
+                    className="text-[10px] font-black uppercase tracking-widest text-paypal-blue"
+                  >
+                    Change
+                  </button>
+                </div>
+                <p className="inline-flex items-center gap-2 text-base font-bold text-foreground">
+                  {buyOnrampProvider === "Pi Payment" && <img src={PI_PAYMENT_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "Ewallet QR PH" && <img src={JQRPH_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "PayPal" && <img src={PAYPAL_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "USDT" && (
+                    <img
+                      src={USDT_ICON_URL}
+                      alt=""
+                      className="h-5 w-auto object-contain"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = USDT_ICON_FALLBACK_URL;
+                      }}
+                    />
+                  )}
+                  {buyOnrampProvider === "USDC" && (
+                    <img
+                      src={USDC_ICON_URL}
+                      alt=""
+                      className="h-5 w-auto object-contain"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = USDC_ICON_FALLBACK_URL;
+                      }}
+                    />
+                  )}
+                  {buyOnrampProvider === "Solana Pay" && <img src={SOLANA_PAY_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "Apple Pay" && <img src={APPLE_PAY_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "Google Pay" && <img src={GOOGLE_PAY_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "Debit Card" && <img src={VISA_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "Credit Card" && <img src={MASTERCARD_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "Stripe" && <img src={STRIPE_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider === "Venmo" && <img src={VENMO_ICON_URL} alt="" className="h-5 w-auto object-contain" />}
+                  {buyOnrampProvider}
+                </p>
               </div>
             </div>
 
@@ -2434,11 +2518,11 @@ const Dashboard = () => {
               <p className="mt-1 text-xs font-medium text-muted-foreground">{buySpendRateText}</p>
             </div>
 
-            <div className="rounded-2xl border border-border/70 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">Payment method</p>
-                <button onClick={() => setShowPaymentMethodPicker(true)} className="text-xs font-bold text-paypal-blue">Change</button>
-              </div>
+              <div className="rounded-2xl border border-border/70 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-foreground">Payment method</p>
+                  <button onClick={() => setShowPaymentMethodPicker(true)} className="text-xs font-bold text-paypal-blue">Change</button>
+                </div>
               <button
                 type="button"
                 onClick={() => setShowPaymentMethodPicker(true)}
@@ -2446,6 +2530,37 @@ const Dashboard = () => {
               >
                 <span className="inline-flex items-center gap-2 text-sm font-bold text-foreground">
                   {buyPaymentMethod === "Pi Payment" && <img src={PI_PAYMENT_ICON_URL} alt="" className="h-6 w-auto" />}
+                  {buyPaymentMethod === "Ewallet" && <img src={JQRPH_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "PayPal" && <img src={PAYPAL_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "USDT" && (
+                    <img
+                      src={USDT_ICON_URL}
+                      alt=""
+                      className="h-6 w-auto object-contain"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = USDT_ICON_FALLBACK_URL;
+                      }}
+                    />
+                  )}
+                  {buyPaymentMethod === "USDC" && (
+                    <img
+                      src={USDC_ICON_URL}
+                      alt=""
+                      className="h-6 w-auto object-contain"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = USDC_ICON_FALLBACK_URL;
+                      }}
+                    />
+                  )}
+                  {buyPaymentMethod === "Solana Pay" && <img src={SOLANA_PAY_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "Apple Pay" && <img src={APPLE_PAY_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "Google Pay" && <img src={GOOGLE_PAY_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "Debit Card" && <img src={VISA_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "Credit Card" && <img src={MASTERCARD_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "Stripe" && <img src={STRIPE_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
+                  {buyPaymentMethod === "Venmo" && <img src={VENMO_ICON_URL} alt="" className="h-6 w-auto object-contain" />}
                   {getBuyPaymentMethodLabel(buyPaymentMethod)}
                 </span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -3076,11 +3191,33 @@ const Dashboard = () => {
                             <button key={tx.id} onClick={() => showReceipt(tx)} className="flex w-full items-center justify-between p-4 text-left hover:bg-secondary/40 transition">
                 <div className="flex items-center gap-3">
                   <div className="relative h-10 w-10">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-paypal-light-blue/50 bg-secondary">
-                      <span className="text-xs font-bold text-secondary-foreground">
-                        {getInitials(tx.other_name || "Unknown")}
-                      </span>
-                    </div>
+                    {(() => {
+                      const inferredMethod = inferTopupPaymentMethod(tx);
+                      const methodIcon = getPaymentMethodIcon(inferredMethod);
+                      if (tx.is_topup && methodIcon) {
+                        return (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-paypal-light-blue/50 bg-secondary overflow-hidden">
+                            <img
+                              src={methodIcon.src}
+                              alt=""
+                              className="h-6 w-6 object-contain"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                if (!methodIcon.fallback) return;
+                                e.currentTarget.src = methodIcon.fallback;
+                              }}
+                            />
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-paypal-light-blue/50 bg-secondary">
+                          <span className="text-xs font-bold text-secondary-foreground">
+                            {getInitials(tx.other_name || "Unknown")}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     {tx.other_avatar_url ? (
                       <img
                         src={tx.other_avatar_url}
@@ -3404,10 +3541,26 @@ const Dashboard = () => {
                           <img src={PAYPAL_ICON_URL} alt="PayPal" className="h-6 w-auto object-contain" />
                         )}
                         {row.key === "USDT" && (
-                          <img src={USDT_ICON_URL} alt="USDT" className="h-6 w-auto object-contain" />
+                          <img
+                            src={USDT_ICON_URL}
+                            alt="USDT"
+                            className="h-6 w-auto object-contain"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.src = USDT_ICON_FALLBACK_URL;
+                            }}
+                          />
                         )}
                         {row.key === "USDC" && (
-                          <img src={USDC_ICON_URL} alt="USDC" className="h-6 w-auto object-contain" />
+                          <img
+                            src={USDC_ICON_URL}
+                            alt="USDC"
+                            className="h-6 w-auto object-contain"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.src = USDC_ICON_FALLBACK_URL;
+                            }}
+                          />
                         )}
                         {row.key === "Solana Pay" && (
                           <img src={SOLANA_PAY_ICON_URL} alt="Solana Pay" className="h-6 w-auto object-contain" />
@@ -3485,7 +3638,7 @@ const Dashboard = () => {
       </Dialog>
 
       <Dialog open={showPaymentMethodPicker} onOpenChange={setShowPaymentMethodPicker}>
-        <DialogContent className="top-auto bottom-0 translate-y-0 rounded-b-none rounded-t-3xl px-5 pb-7 pt-5 sm:max-w-lg">
+        <DialogContent className="top-auto bottom-0 max-h-[85vh] translate-y-0 overflow-y-auto overscroll-contain rounded-b-none rounded-t-3xl px-5 pb-7 pt-5 sm:max-w-lg">
           <DialogTitle className="text-center text-2xl font-bold text-foreground">Choose payment method</DialogTitle>
           <DialogDescription className="text-center text-sm text-muted-foreground">
             PI to OpenUSD buy.
@@ -3494,6 +3647,28 @@ const Dashboard = () => {
             {paymentMethodRows.map((row) => {
               const selected = buyPaymentMethod === row.key;
               const disabled = row.disabled ?? !supportedBuyPaymentMethods.includes(row.key);
+              const targetOpenUsdAmount = buyOpenUsdAmount > 0 ? buyOpenUsdAmount : 0;
+              const usdPaymentMethods: BuyPaymentMethod[] = [
+                "PayPal",
+                "Apple Pay",
+                "Google Pay",
+                "Debit Card",
+                "Credit Card",
+                "Stripe",
+                "Venmo",
+              ];
+              const quoteLabel =
+                row.key === "Ewallet"
+                  ? `${(targetOpenUsdAmount * E_WALLET_PHP_PER_OUSD).toFixed(2)} PHP`
+                  : row.key === "USDT"
+                    ? `${targetOpenUsdAmount.toFixed(2)} USDT`
+                    : row.key === "USDC"
+                      ? `${targetOpenUsdAmount.toFixed(2)} USDC`
+                      : row.key === "Solana Pay"
+                        ? `${targetOpenUsdAmount.toFixed(2)} USDC`
+                        : usdPaymentMethods.includes(row.key)
+                          ? `${targetOpenUsdAmount.toFixed(2)} USD`
+                          : `${(targetOpenUsdAmount * OUSD_TO_PI).toFixed(5)} PI`;
               return (
                 <button
                   key={row.key}
@@ -3529,54 +3704,84 @@ const Dashboard = () => {
                     }
                     setShowPaymentMethodPicker(false);
                   }}
-                  className={`flex h-14 w-full items-center justify-between rounded-2xl border px-4 ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                     disabled
-                      ? "border-border/60 bg-secondary/30 text-muted-foreground"
-                      : "border-border/70 bg-white hover:bg-secondary/20"
+                      ? "border-border/50 bg-secondary/40 text-muted-foreground"
+                      : selected
+                        ? "border-paypal-blue/50 bg-white"
+                        : "border-border/70 bg-white hover:bg-secondary/20"
                   }`}
                 >
-                  <span className="inline-flex items-center gap-2 text-base font-semibold">
-                    {row.key === "Pi Payment" && (
-                      <img src={PI_PAYMENT_ICON_URL} alt="Pi Payment" className="h-9 w-auto object-contain" />
-                    )}
-                    {row.key === "Ewallet" && (
-                      <img src={JQRPH_ICON_URL} alt="JQRPh" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "PayPal" && (
-                      <img src={PAYPAL_ICON_URL} alt="PayPal" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "USDT" && (
-                      <img src={USDT_ICON_URL} alt="USDT" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "USDC" && (
-                      <img src={USDC_ICON_URL} alt="USDC" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "Solana Pay" && (
-                      <img src={SOLANA_PAY_ICON_URL} alt="Solana Pay" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "Apple Pay" && (
-                      <img src={APPLE_PAY_ICON_URL} alt="Apple Pay" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "Google Pay" && (
-                      <img src={GOOGLE_PAY_ICON_URL} alt="Google Pay" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "Debit Card" && (
-                      <img src={VISA_ICON_URL} alt="Visa" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "Credit Card" && (
-                      <img src={MASTERCARD_ICON_URL} alt="Mastercard" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "Stripe" && (
-                      <img src={STRIPE_ICON_URL} alt="Stripe" className="h-5 w-auto object-contain" />
-                    )}
-                    {row.key === "Venmo" && (
-                      <img src={VENMO_ICON_URL} alt="Venmo" className="h-5 w-auto object-contain" />
-                    )}
-                    {getBuyPaymentMethodLabel(row.key)}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {row.recommended && <span className="rounded-md bg-paypal-blue/10 px-2 py-0.5 text-xs font-semibold text-paypal-blue">Recommended</span>}
-                    {selected && <Check className="h-5 w-5 text-paypal-blue" />}
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="inline-flex items-center gap-2 text-2xl font-semibold text-foreground">
+                        {row.key === "Pi Payment" && (
+                          <img src={PI_PAYMENT_ICON_URL} alt="Pi Payment" className="h-10 w-auto object-contain" />
+                        )}
+                        {row.key === "Ewallet" && (
+                          <img src={JQRPH_ICON_URL} alt="JQRPh" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "PayPal" && (
+                          <img src={PAYPAL_ICON_URL} alt="PayPal" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "USDT" && (
+                          <img
+                            src={USDT_ICON_URL}
+                            alt="USDT"
+                            className="h-6 w-auto object-contain"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.src = USDT_ICON_FALLBACK_URL;
+                            }}
+                          />
+                        )}
+                        {row.key === "USDC" && (
+                          <img
+                            src={USDC_ICON_URL}
+                            alt="USDC"
+                            className="h-6 w-auto object-contain"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.src = USDC_ICON_FALLBACK_URL;
+                            }}
+                          />
+                        )}
+                        {row.key === "Solana Pay" && (
+                          <img src={SOLANA_PAY_ICON_URL} alt="Solana Pay" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "Apple Pay" && (
+                          <img src={APPLE_PAY_ICON_URL} alt="Apple Pay" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "Google Pay" && (
+                          <img src={GOOGLE_PAY_ICON_URL} alt="Google Pay" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "Debit Card" && (
+                          <img src={VISA_ICON_URL} alt="Visa" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "Credit Card" && (
+                          <img src={MASTERCARD_ICON_URL} alt="Mastercard" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "Stripe" && (
+                          <img src={STRIPE_ICON_URL} alt="Stripe" className="h-6 w-auto object-contain" />
+                        )}
+                        {row.key === "Venmo" && (
+                          <img src={VENMO_ICON_URL} alt="Venmo" className="h-5 w-auto object-contain" />
+                        )}
+                        {getBuyPaymentMethodLabel(row.key)}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm text-muted-foreground">Active</p>
+                        {row.recommended && (
+                          <span className="rounded-md bg-paypal-blue/10 px-2 py-0.5 text-xs font-semibold text-paypal-blue">
+                            Recommended
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {!disabled && <p className="text-3xl font-semibold text-foreground">{quoteLabel}</p>}
+                      {!disabled && selected && <Check className="ml-auto mt-1 h-4 w-4 text-paypal-blue" />}
+                    </div>
                   </div>
                 </button>
               );
