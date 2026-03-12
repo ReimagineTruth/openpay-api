@@ -222,7 +222,7 @@ const AppRoutes = () => {
       {showRouteSplash && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-gradient-to-b from-paypal-blue to-[#072a7a]">
           <div className="text-center">
-            <AuthMark className="mx-auto mb-6 h-20 w-20" />
+            <AuthMark className="mx-auto mb-6 h-32 w-32" />
             <p className="text-3xl font-bold tracking-tight text-white">OpenPay</p>
             <p className="mt-1 text-sm text-white/80">Loading page...</p>
             <p className="mt-1 text-xs font-medium tracking-normal text-white/65">Powered by Pi Network</p>
