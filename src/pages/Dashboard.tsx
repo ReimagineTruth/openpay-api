@@ -1964,7 +1964,7 @@ const Dashboard = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
                   <PiggyBank className="h-6 w-6 text-paypal-blue" />
                 </div>
-                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                <h2 className="text-5xl font-black tracking-tighter text-foreground min-w-0 flex-1 overflow-hidden">
                   <AnimatedCounter value={savings?.savings_balance ?? 0} />
                 </h2>
               </div>
@@ -2078,7 +2078,7 @@ const Dashboard = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
                   <TrendingUp className="h-6 w-6 text-paypal-blue" />
                 </div>
-                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                <h2 className="text-5xl font-black tracking-tighter text-foreground min-w-0 flex-1 overflow-hidden">
                   {creditScoreDisplay}
                 </h2>
               </div>
@@ -2164,7 +2164,7 @@ const Dashboard = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
                   <HandCoins className="h-6 w-6 text-paypal-blue" />
                 </div>
-                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                <h2 className="text-5xl font-black tracking-tighter text-foreground min-w-0 flex-1 overflow-hidden">
                   <AnimatedCounter value={availableToBorrow} />
                 </h2>
               </div>
@@ -2429,7 +2429,7 @@ const Dashboard = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
                     <BrandLogo className="h-6 w-6 text-paypal-blue" />
                   </div>
-                  <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                  <h2 className="text-5xl font-black tracking-tighter text-foreground min-w-0 flex-1 overflow-hidden">
                     {buyOpenUsdDisplay}
                   </h2>
                 </div>
@@ -2652,7 +2652,7 @@ const Dashboard = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
                   <Pickaxe className={`h-6 w-6 text-paypal-blue ${activeMiningSession ? "animate-bounce-slow" : ""}`} />
                 </div>
-                <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                <h2 className="text-5xl font-black tracking-tighter text-foreground min-w-0 flex-1 overflow-hidden">
                   <AnimatedCounter value={miningBalance} codeOverride="OUSD" />
                 </h2>
               </div>
@@ -2735,7 +2735,7 @@ const Dashboard = () => {
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
                       <TrendingUp className="h-6 w-6 text-paypal-blue" />
                     </div>
-                    <h2 className="text-5xl font-black tracking-tighter text-foreground">
+                    <h2 className="text-5xl font-black tracking-tighter text-foreground min-w-0 flex-1 overflow-hidden">
                       <AnimatedCounter value={personalAnalytics.summary.net_balance} />
                     </h2>
                   </div>
@@ -2780,21 +2780,21 @@ const Dashboard = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
                       <span className="text-sm text-muted-foreground">Avg Transaction</span>
-                      <span className="text-sm font-bold">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_transaction_value)}</span>
+                      <span className="text-sm font-bold text-foreground">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_transaction_value)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
                       <span className="text-sm text-muted-foreground">Avg Top-up</span>
-                      <span className="text-sm font-bold">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_topup_amount)}</span>
+                      <span className="text-sm font-bold text-foreground">{formatCompactCurrency(personalAnalytics.detailed_metrics.avg_topup_amount)}</span>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
                       <span className="text-sm text-muted-foreground">Primary Currency</span>
-                      <span className="text-sm font-bold">{personalAnalytics.detailed_metrics.most_used_currency}</span>
+                      <span className="text-sm font-bold text-foreground">{personalAnalytics.detailed_metrics.most_used_currency}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-xl bg-black/5 dark:bg-white/5">
                       <span className="text-sm text-muted-foreground">Total Activities</span>
-                      <span className="text-sm font-bold">{personalAnalytics.detailed_metrics.total_activities}</span>
+                      <span className="text-sm font-bold text-foreground">{personalAnalytics.detailed_metrics.total_activities}</span>
                     </div>
                   </div>
                 </div>
@@ -2833,7 +2833,7 @@ const Dashboard = () => {
                                    activity.type === 'topup' ? '+' : '•'}
                                 </div>
                                 <div>
-                                  <p className="text-sm font-bold capitalize">{activity?.type?.replace('_', ' ') || 'Activity'}</p>
+                                  <p className="text-sm font-bold capitalize text-foreground">{activity?.type?.replace('_', ' ') || 'Activity'}</p>
                                   {activity.type === 'transaction' && (
                                     <p className="text-[10px] font-black text-muted-foreground uppercase">{getPiCodeLabel(currency.code)}</p>
                                   )}
@@ -2846,7 +2846,15 @@ const Dashboard = () => {
                               </span>
                             </td>
                             <td className="py-4 text-right">
-                              <span className="text-sm font-black">
+                              <span className={`text-sm font-black ${
+                                (() => {
+                                  if (activity.type === 'transaction') {
+                                    const isOut = activity.sender_id === userId && !(activity.sender_id === activity.receiver_id && activity.receiver_id === userId);
+                                    return isOut ? 'text-red-500' : 'text-green-500';
+                                  }
+                                  return 'text-foreground';
+                                })()
+                              }`}>
                                 {(() => {
                                   if (activity.type === 'transaction') {
                                     const isOut = activity.sender_id === userId && !(activity.sender_id === activity.receiver_id && activity.receiver_id === userId);
@@ -2950,7 +2958,7 @@ const Dashboard = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-paypal-blue/10 shadow-inner">
                 <BrandLogo className="h-8 w-8 text-paypal-blue" />
               </div>
-              <h2 className="text-5xl font-black tracking-tighter text-foreground">
+              <h2 className="text-5xl font-black tracking-tighter text-foreground min-w-0 flex-1 overflow-hidden">
                 <AnimatedCounter value={walletCardAmount} />
               </h2>
             </div>
@@ -2993,7 +3001,7 @@ const Dashboard = () => {
         <div className="mx-4 mt-4 paypal-surface rounded-3xl p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-border/70 p-3">
-              <p className="mb-2 text-sm font-semibold">Move merchant balance to savings</p>
+              <p className="mb-2 text-sm font-semibold text-foreground">Move merchant balance to savings</p>
               <input
                 value={formatAmountInput(merchantSavingsAmount)}
                 onChange={(e) => setMerchantSavingsAmount(normalizeAmountInput(e.target.value))}
@@ -3011,7 +3019,7 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="rounded-2xl border border-border/70 p-3">
-              <p className="mb-2 text-sm font-semibold">Move merchant balance to wallet</p>
+              <p className="mb-2 text-sm font-semibold text-foreground">Move merchant balance to wallet</p>
               <input
                 value={formatAmountInput(merchantWithdrawAmount)}
                 onChange={(e) => setMerchantWithdrawAmount(normalizeAmountInput(e.target.value))}
@@ -3031,7 +3039,7 @@ const Dashboard = () => {
           </div>
           <div className="mt-4 rounded-2xl border border-border/70 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-semibold">Recent merchant activity</p>
+              <p className="text-sm font-semibold text-foreground">Recent merchant activity</p>
               {merchantActivity.length > 0 && <p className="text-xs text-muted-foreground">{merchantActivity.length} latest</p>}
             </div>
             {merchantActivity.length === 0 ? (

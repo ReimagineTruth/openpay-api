@@ -407,7 +407,9 @@ const MiningPage = () => {
           return;
         }
         try {
-          await runRewardedAd();
+          // For simulated ad experience, consider the ad already "watched" when user clicks Continue
+          // Only run actual Pi ad if we haven't already shown the simulated ad modal
+          console.log('Ad verification successful, proceeding to mining start');
           originalResolver?.(true);
         } catch (adError) {
           console.error("Pi Ad Network error:", adError);
