@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
-import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer } from "lucide-react";
+import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { clearAllAppSecurityUnlocks } from "@/lib/appSecurity";
 import { canAccessRemittanceMerchant, isRemittanceUiEnabled } from "@/lib/remittanceAccess";
@@ -177,6 +177,7 @@ const MenuPage = () => {
         { icon: Wallet, label: "Wallet", action: () => navigate("/dashboard") },
         { icon: TrendingUp, label: "Analytics", action: () => navigate("/dashboard?section=analytics") },
         { icon: Users, label: "User profile", action: () => navigate("/profile") },
+        { icon: UserCheck, label: "KYC Verification", action: () => navigate("/kyc") },
         { icon: CreditCard, label: "Virtual Card", action: () => navigate("/virtual-card") },
         { icon: ArrowLeftRight, label: "Currency converter", action: () => navigate("/currency-converter") },
         { icon: Pickaxe, label: "Mining", action: () => navigate("/mining") },
@@ -297,6 +298,7 @@ const MenuPage = () => {
           textColor: "text-red-900 dark:text-red-100",
           items: [
             { icon: ShieldCheck, label: "Dashboard", action: () => navigate("/admin-dashboard") },
+            { icon: ShieldCheck, label: "KYC Review", action: () => navigate("/admin-kyc-review") },
             { icon: ShieldCheck, label: "Withdrawals", action: () => navigate("/admin-swap-withrawals") },
             { icon: ShieldCheck, label: "Loans", action: () => navigate("/admin-loan-applications") },
             { icon: ShieldCheck, label: "Top Ups", action: () => navigate("/admin-topup-requests") },

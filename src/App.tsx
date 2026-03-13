@@ -85,6 +85,9 @@ import PublicWalletPaymentPage from "./pages/PublicWalletPaymentPage";
 import OpenAppPage from "./pages/OpenAppPage";
 import OpenPayDesktopPage from "./pages/OpenPayDesktopPage";
 import VirtualCardPage from "./pages/VirtualCardPage";
+import KycPage from "./pages/KycPage";
+import KycStatusPage from "./pages/KycStatusPage";
+import AdminKycReview from "./pages/AdminKycReview";
 import LiveCustomerServicePage from "./pages/LiveCustomerServicePage";
 import SwapWithdrawalPage from "./pages/SwapWithdrawalPage";
 import ConfirmPinPage from "./pages/ConfirmPinPage";
@@ -216,6 +219,9 @@ const AppRoutes = () => {
         <Route path="/merchant-checkout/thank-you" element={<MerchantCheckoutThankYouPage />} />
         <Route path="/pos-thank-you" element={<PosThankYouPage />} />
         <Route path="/virtual-card" element={<VirtualCardPage />} />
+        <Route path="/kyc" element={<KycPage />} />
+        <Route path="/kyc-status" element={<KycStatusPage />} />
+        <Route path="/admin-kyc-review" element={<AdminKycReview />} />
         <Route path="/remittance-merchant" element={<RemittanceMerchantPage />} />
         <Route path="/openpay-official" element={<OpenPayOfficialPage />} />
         <Route path="/openapp" element={<OpenAppPage />} />

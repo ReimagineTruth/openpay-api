@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
-import { Bell, Check, ChevronDown, ChevronUp, CircleDollarSign, Coins, Copy, CreditCard, Eye, EyeOff, ExternalLink, FileText, HandCoins, PiggyBank, QrCode, RefreshCw, Settings, Store, TrendingUp, Users, Pickaxe, LayoutGrid, ArrowLeftRight } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, Bell, Settings, ChevronUp, ChevronDown, ExternalLink, PiggyBank, Eye, EyeOff, HandCoins, QrCode, Check, LayoutGrid } from "lucide-react";
 import { format, differenceInSeconds } from "date-fns";
 import CurrencySelector from "@/components/CurrencySelector";
 import { PI_TO_USD, useCurrency } from "@/contexts/CurrencyContext";
@@ -397,33 +397,9 @@ const Dashboard = () => {
     live: null,
   });
   const [merchantActivity, setMerchantActivity] = useState<MerchantActivityEntry[]>([]);
-  const [miningActive, setMiningActive] = useState(false);
-  const [miningTimeLeft, setMiningTimeLeft] = useState<number | null>(null);
   const [miningBalance, setMiningBalance] = useState(0);
   const [activeMiningSession, setActiveMiningSession] = useState<any>(null);
-
-  useEffect(() => {
-    if (!activeMiningSession?.expires_at) {
-      setMiningActive(false);
-      setMiningTimeLeft(null);
-      return;
-    }
-    const update = () => {
-      const now = new Date();
-      const expiry = new Date(activeMiningSession.expires_at);
-      const diff = differenceInSeconds(expiry, now);
-      if (diff > 0) {
-        setMiningActive(true);
-        setMiningTimeLeft(diff);
-      } else {
-        setMiningActive(false);
-        setMiningTimeLeft(0);
-      }
-    };
-    update();
-    const id = setInterval(update, 1000);
-    return () => clearInterval(id);
-  }, [activeMiningSession]);
+  const [kycStatus, setKycStatus] = useState<'not_submitted' | 'pending' | 'under_review' | 'approved' | 'rejected' | 'additional_info_required'>('not_submitted');
   const [merchantSavingsAmount, setMerchantSavingsAmount] = useState("");
   const [merchantWithdrawAmount, setMerchantWithdrawAmount] = useState("");
   const [movingMerchantToSavings, setMovingMerchantToSavings] = useState(false);
@@ -610,6 +586,27 @@ const Dashboard = () => {
     checkPinVerification();
   }, [location.state, navigate, location.pathname, location.search, isInitialLoadDone]);
 
+  const loadKycStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // For now, we'll use localStorage since the table doesn't exist yet
+      // This will be updated after we create the database schema
+      const storedApplication = localStorage.getItem('kyc_application');
+      
+      if (storedApplication) {
+        const parsedApplication = JSON.parse(storedApplication);
+        setKycStatus(parsedApplication.status);
+      } else {
+        setKycStatus('not_submitted');
+      }
+    } catch (error) {
+      console.error('Error loading KYC status:', error);
+      setKycStatus('not_submitted');
+    }
+  };
+
   const loadSavingsAndLoan = useCallback(async () => {
     try {
       // Attempt to accrue daily interest first (best-effort)
@@ -716,6 +713,7 @@ const Dashboard = () => {
       setLoanApplication(null);
       setLoanPaymentHistory([]);
       setCreditScore(0);
+      await loadKycStatus();
     }
   }, []);
 
@@ -1215,43 +1213,7 @@ const Dashboard = () => {
     void loadDashboard();
   }, [loadDashboard]);
 
-  // Mining countdown timer
-  useEffect(() => {
-    if (!activeMiningSession || !activeMiningSession.expires_at) {
-      setMiningTimeLeft(0);
-      return;
-    }
-
-    const updateTimer = () => {
-      try {
-        if (!activeMiningSession?.expires_at) return;
-        
-        const now = new Date();
-        const expiry = new Date(activeMiningSession.expires_at);
-        
-        if (isNaN(expiry.getTime())) {
-          setMiningTimeLeft(0);
-          return;
-        }
-
-        const diff = Math.floor((expiry.getTime() - now.getTime()) / 1000);
-        
-        if (diff <= 0) {
-          setMiningTimeLeft(0);
-          loadDashboard();
-        } else {
-          setMiningTimeLeft(diff);
-        }
-      } catch (err) {
-        setMiningTimeLeft(0);
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [activeMiningSession, loadDashboard]);
-
+  
   useEffect(() => {
     if (!userId || walletView !== "merchant") return;
     void loadMerchantActivity(merchantMode);
@@ -1515,6 +1477,24 @@ const Dashboard = () => {
   };
 
   const handleRequestLoan = async () => {
+    // Check KYC status first
+    if (kycStatus !== 'approved') {
+      if (kycStatus === 'not_submitted') {
+        toast.error("KYC verification is required to apply for a loan. Please complete KYC verification first.");
+        navigate("/kyc");
+      } else if (kycStatus === 'pending' || kycStatus === 'under_review') {
+        toast.error("Your KYC verification is under review. Please wait for approval before applying for a loan.");
+        navigate("/kyc-status");
+      } else if (kycStatus === 'rejected') {
+        toast.error("KYC verification was rejected. Please contact support for assistance.");
+        navigate("/kyc-status");
+      } else if (kycStatus === 'additional_info_required') {
+        toast.error("Additional KYC information is required. Please provide the requested information.");
+        navigate("/kyc-status");
+      }
+      return;
+    }
+
     const principal = Number(loanAmount);
     const term = Number(loanTermMonths);
     if (!Number.isFinite(principal) || principal <= 0) {
@@ -1522,7 +1502,11 @@ const Dashboard = () => {
       return;
     }
     if (!Number.isFinite(term) || term < 1 || term > 60) {
-      toast.error("Term must be between 1 and 60 months");
+      toast.error("Enter a valid loan term (1-60 months)");
+      return;
+    }
+    if (!loanApplicantName.trim() || !loanContactNumber.trim() || !loanAddressLine.trim() || !loanCity.trim() || !loanCountry.trim()) {
+      toast.error("Complete all loan application details");
       return;
     }
     if (!loanAgreementAccepted) {
@@ -1792,18 +1776,11 @@ const Dashboard = () => {
             onClick={() => navigate("/mining")}
             className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 transition-colors hover:bg-white/15 cursor-pointer"
           >
-            <Pickaxe className={`h-4 w-4 text-white ${miningTimeLeft > 0 ? "animate-bounce-slow" : ""}`} />
+            <Pickaxe className="h-4 w-4 text-white" />
             <div className="flex flex-col leading-none">
               <span className="text-[10px] font-black text-white/70 uppercase">Mining</span>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-black text-white">{miningBalance.toFixed(2)}</span>
-                {miningTimeLeft > 0 && (
-                  <span className="text-[10px] font-black text-paypal-blue bg-white px-1.5 py-0.5 rounded-md animate-pulse">
-                    {Math.floor(miningTimeLeft / 3600)}:
-                    {Math.floor((miningTimeLeft % 3600) / 60).toString().padStart(2, '0')}:
-                    {(miningTimeLeft % 60).toString().padStart(2, '0')}
-                  </span>
-                )}
               </div>
             </div>
           </div>
@@ -2217,6 +2194,51 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
+                {/* KYC Status Indicator */}
+                <div className={`rounded-xl p-3 border ${
+                  kycStatus === 'approved' 
+                    ? 'bg-green-50 border-green-200' 
+                    : kycStatus === 'pending' || kycStatus === 'under_review'
+                    ? 'bg-blue-50 border-blue-200'
+                    : kycStatus === 'rejected'
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-orange-50 border-orange-200'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    {kycStatus === 'approved' ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : kycStatus === 'pending' || kycStatus === 'under_review' ? (
+                      <Clock className="h-5 w-5 text-blue-600" />
+                    ) : kycStatus === 'rejected' ? (
+                      <XCircle className="h-5 w-5 text-red-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-orange-600" />
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">
+                        KYC Status: {kycStatus === 'approved' ? 'Verified' : 
+                                   kycStatus === 'pending' ? 'Submitted' :
+                                   kycStatus === 'under_review' ? 'Under Review' :
+                                   kycStatus === 'rejected' ? 'Rejected' : 'Required'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {kycStatus === 'approved' ? 'You can apply for loans up to your available credit limit.' :
+                         kycStatus === 'pending' || kycStatus === 'under_review' ? 'Your KYC is being reviewed. Loan applications require KYC approval.' :
+                         kycStatus === 'rejected' ? 'KYC was rejected. Please contact support for assistance.' :
+                         'KYC verification is required to apply for loans.'}
+                      </p>
+                    </div>
+                    {kycStatus !== 'approved' && (
+                      <button
+                        onClick={() => navigate(kycStatus === 'not_submitted' ? '/kyc' : '/kyc-status')}
+                        className="px-3 py-1 text-xs font-semibold rounded-full bg-white border border-current hover:bg-gray-50 transition-colors"
+                      >
+                        {kycStatus === 'not_submitted' ? 'Complete KYC' : 'View Status'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <p className="text-xs text-muted-foreground">Provide accurate details. This application is reviewed by OpenPay admin before approval.</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1 text-xs text-muted-foreground">
@@ -2246,11 +2268,11 @@ const Dashboard = () => {
                   </label>
                 </div>
                 <button
-                  disabled={requestingLoan || loanApplication?.status === "pending"}
+                  disabled={requestingLoan || loanApplication?.status === "pending" || kycStatus !== 'approved'}
                   onClick={handleRequestLoan}
-                  className="h-12 w-full rounded-xl bg-paypal-blue text-lg font-semibold text-white transition hover:bg-[#004dc5]"
+                  className="h-12 w-full rounded-xl bg-paypal-blue text-lg font-semibold text-white transition hover:bg-[#004dc5] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {requestingLoan ? "Submitting..." : "Submit Loan Application"}
+                  {requestingLoan ? "Submitting..." : kycStatus !== 'approved' ? "KYC Required" : "Submit Loan Application"}
                 </button>
               </div>
             )}
@@ -2661,13 +2683,7 @@ const Dashboard = () => {
               </p>
             </div>
 
-            <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Time left</p>
-                <p className="text-base font-bold text-foreground">
-                  {miningTimeLeft > 0 ? `${Math.floor(miningTimeLeft / 3600)}h ${Math.floor((miningTimeLeft % 3600) / 60)}m` : "0h 0m"}
-                </p>
-              </div>
+            <div className="relative mt-8">
               <div className="rounded-2xl bg-black/5 dark:bg-white/5 p-4 border border-white/5 backdrop-blur-sm">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Daily rate</p>
                 <p className="text-base font-bold text-foreground">0.10 OUSD</p>
@@ -3142,7 +3158,7 @@ const Dashboard = () => {
             {[
               { id: "analytics", label: "Analytics", sub: "Wallet activity", icon: TrendingUp, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => setActiveSection("analytics") },
               { id: "swap", label: "Swap", sub: "OUSD to PI", icon: ArrowLeftRight, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => setActiveSection("swap") },
-              { id: "mining", label: "Mining", sub: miningActive ? "Session active" : "Earn rewards", icon: Pickaxe, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/mining"), animate: miningActive },
+              { id: "mining", label: "Mining", sub: "Earn rewards", icon: Pickaxe, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/mining") },
               { id: "staking", label: "Staking", sub: "Earn yield", icon: Coins, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/staking") },
               { id: "affiliate", label: "Affiliate", sub: "Refer & Earn", icon: HandCoins, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/affiliate") },
               { id: "contacts", label: "Contacts", sub: "Manage network", icon: Users, color: "bg-blue-50 dark:bg-blue-900/20", iconColor: "text-blue-600 dark:text-blue-400", action: () => navigate("/contacts") },
@@ -3154,7 +3170,7 @@ const Dashboard = () => {
                 className="paypal-surface ios-active flex flex-col items-center justify-center rounded-[2rem] p-5 text-center shadow-lg shadow-black/5 animate-in-up text-foreground"
               >
                 <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-2xl ${item.color} shadow-inner`}>
-                  <item.icon className={`h-6 w-6 ${item.iconColor} ${item.animate ? "animate-bounce-slow" : ""}`} />
+                  <item.icon className={`h-6 w-6 ${item.iconColor}`} />
                 </div>
                 <p className="text-[11px] font-black tracking-tight text-foreground uppercase">{item.label}</p>
                 <p className="mt-1 text-[9px] font-bold text-muted-foreground/70 line-clamp-1">{item.sub}</p>
