@@ -2256,7 +2256,7 @@ const Dashboard = () => {
             )}
 
             <div className="mt-3 rounded-2xl border border-border/70 p-3">
-              <p className="mb-2 text-sm font-semibold">Pay monthly installment</p>
+              <p className="mb-2 text-sm font-semibold text-black">Pay monthly installment</p>
               <input
                 value={formatAmountInput(loanPaymentAmount)}
                 onChange={(e) => setLoanPaymentAmount(normalizeAmountInput(e.target.value))}
@@ -2295,7 +2295,7 @@ const Dashboard = () => {
             </div>
             <div className="mt-3 rounded-2xl border border-border/70 p-3">
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-sm font-semibold">Loan payment history</p>
+                <p className="text-sm font-semibold text-black">Loan payment history</p>
                 <p className="text-xs text-muted-foreground">{loanPaymentHistory.length} records</p>
               </div>
               {loanPaymentHistory.length === 0 ? (
@@ -2305,7 +2305,7 @@ const Dashboard = () => {
                   {loanPaymentHistory.map((entry) => (
                     <div key={entry.id} className="px-3 py-2">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">{formatCompactCurrency(entry.amount)}</p>
+                        <p className="text-sm font-medium text-green-500">{formatCompactCurrency(entry.amount)}</p>
                         <p className="text-xs uppercase text-muted-foreground">{entry.payment_method}</p>
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -2897,6 +2897,7 @@ const Dashboard = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
+                <CreditCard className="mr-1.5 h-3.5 w-3.5" />
                 Personal wallet
               </button>
               <button
@@ -2908,6 +2909,7 @@ const Dashboard = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
+                <Store className="mr-1.5 h-3.5 w-3.5" />
                 Merchant wallet
               </button>
             </div>
