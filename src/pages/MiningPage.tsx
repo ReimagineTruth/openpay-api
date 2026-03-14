@@ -411,8 +411,8 @@ const MiningPage = () => {
           // Run actual Pi ad network when user clicks Continue
           setAdLoading(true);
           console.log('Starting Pi ad network verification...');
-          await runRewardedAd();
-          console.log('Pi ad verification successful, proceeding to mining start');
+          const adResult = await runRewardedAd();
+          console.log('Pi ad verification successful, proceeding to mining start', adResult);
           originalResolver?.(true);
         } catch (adError) {
           console.error("Pi Ad Network error:", adError);
@@ -514,6 +514,7 @@ const MiningPage = () => {
       } else {
         console.log('Ad not verified, running ad gate');
         const ok = await runAdGate({ usePiAd: true });
+        console.log('Ad gate completed with result:', ok);
         if (!ok) {
           if (!isAuto) {
             toast.error("Ad verification required to start mining.");
@@ -532,11 +533,19 @@ const MiningPage = () => {
         }
       }
 
+      console.log('Proceeding to start mining session with adVerified:', adVerifiedFlag);
+
       // Basic anti-cheat: in a real app, use a proper fingerprinting library
       const deviceFingerprint = navigator.userAgent; 
       const piBrowserUsed = isPiBrowserUserAgent() || Boolean(window.Pi);
        
       // Try database function first
+      console.log('Calling startMiningSessionRpc with params:', {
+        deviceFingerprint,
+        ipAddress: "client-side-ip",
+        adVerified: adVerifiedFlag,
+        piBrowserUsed,
+      });
       const result = await startMiningSessionRpc({
         deviceFingerprint,
         ipAddress: "client-side-ip",
@@ -546,13 +555,18 @@ const MiningPage = () => {
       const data = result.data;
       const error = result.error;
 
+      console.log('Mining session RPC result:', { data, error });
+
       if (error) {
+        console.error('Mining session start failed:', error);
         toast.error(error.message || "Failed to start mining");
         return;
       } else if (data && (data as any).error) {
+        console.error('Mining session start failed with data error:', (data as any).error);
         toast.error((data as any).error);
         return;
       } else {
+        console.log('Mining session started successfully, setting active session');
         try {
           const expiresAt = (data as any)?.expires_at;
           const sessionId = (data as any)?.session_id;
@@ -565,16 +579,19 @@ const MiningPage = () => {
               is_active: true,
               created_at: new Date().toISOString(),
             };
+            console.log('Setting optimistic session:', optimisticSession);
             setActiveSession(optimisticSession);
             persistLocalSession(optimisticSession);
           }
-        } catch {
+        } catch (sessionError) {
+          console.error('Failed to set optimistic session:', sessionError);
           // ignore optimistic state failures
         }
         const bonusText = piBrowserUsed ? " with Pi Browser bonus!" : "";
         if (!isAuto) {
           toast.success(`Mining started${bonusText} Check back in 24 hours to claim your reward.`);
         }
+        console.log('Calling loadMiningData to refresh state');
         await loadMiningData();
       }
     } catch (error) {
