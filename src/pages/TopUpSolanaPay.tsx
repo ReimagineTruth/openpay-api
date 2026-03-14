@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Copy } from "lucide-react";
+import { ArrowLeft, Copy, MessageSquare, History } from "lucide-react";
 import { toast } from "sonner";
 import { PaymentButton } from "@solana-commerce/kit";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,14 @@ const TopUpSolanaPay = () => {
       fallbackSolPriceUsd: 150,
     };
   }, [safeUsdAmount]);
+
+  const openTelegramSupport = () => {
+    window.open("https://t.me/openpayofficial", "_blank", "noopener,noreferrer");
+  };
+
+  const openTopUpHistory = () => {
+    navigate("/topup-history");
+  };
 
   const canPay = Boolean(merchantWallet) && safeUsdAmount > 0;
 
@@ -186,6 +194,37 @@ const TopUpSolanaPay = () => {
         >
           Done
         </Button>
+
+        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MessageSquare className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Need help with Solana Pay?</p>
+                <p className="text-xs text-blue-700">Get instant support on Telegram</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={openTopUpHistory}
+                variant="outline"
+                size="sm"
+                className="border-blue-200 text-blue-700 hover:bg-blue-100"
+              >
+                <History className="h-4 w-4 mr-1" />
+                History
+              </Button>
+              <Button
+                onClick={openTelegramSupport}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                size="sm"
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Support
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

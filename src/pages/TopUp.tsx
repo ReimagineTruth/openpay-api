@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, HelpCircle, Copy, ExternalLink, LifeBuoy, FileText, CreditCard, Link2, MessageCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, Copy, ExternalLink, LifeBuoy, FileText, CreditCard, Link2, MessageCircle, History } from "lucide-react";
 import { toast } from "sonner";
 import { PI_TO_USD, useCurrency } from "@/contexts/CurrencyContext";
 import { getFunctionErrorMessage } from "@/lib/supabaseFunctionError";
@@ -322,6 +322,10 @@ const TopUp = () => {
     window.open("https://t.me/openpayofficial/1", "_blank", "noopener,noreferrer");
   };
 
+  const openTopUpHistory = () => {
+    navigate("/topup-history");
+  };
+
   const topUpButtonLabel = loading
     ? "Processing Pi payment..."
     : safeAmount > 0
@@ -439,6 +443,11 @@ const TopUp = () => {
               label: "Telegram Support",
               onClick: openTelegramSupport,
               icon: <MessageCircle className="h-4 w-4" />,
+            },
+            {
+              label: "Top-Up History",
+              onClick: openTopUpHistory,
+              icon: <History className="h-4 w-4" />,
             },
             {
               label: "Instructions",

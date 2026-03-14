@@ -154,6 +154,13 @@ const TopUpHistoryPage = () => {
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+          <Button
+            onClick={openTelegramSupport}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <MessageSquare className="h-4 w-4 mr-1" />
+            Telegram Support
+          </Button>
         </div>
 
         {/* Stats Cards */}

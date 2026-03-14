@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ExternalLink, HelpCircle, FileText, LifeBuoy, Copy, MessageCircle } from "lucide-react";
+import { ArrowLeft, ExternalLink, HelpCircle, FileText, LifeBuoy, Copy, MessageCircle, History } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -94,6 +94,10 @@ const TopUpProviderPage = ({
 
   const openTelegramSupport = () => {
     window.open("https://t.me/openpayofficial/1", "_blank", "noopener,noreferrer");
+  };
+
+  const openTopUpHistory = () => {
+    navigate("/topup-history");
   };
 
   return (
@@ -201,6 +205,11 @@ const TopUpProviderPage = ({
               label: "Telegram Support",
               onClick: openTelegramSupport,
               icon: <MessageCircle className="h-4 w-4" />,
+            },
+            {
+              label: "Top-Up History",
+              onClick: openTopUpHistory,
+              icon: <History className="h-4 w-4" />,
             },
             {
               label: "Instructions",

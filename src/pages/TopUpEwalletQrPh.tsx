@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Copy, HelpCircle, ExternalLink, FileText, LifeBuoy, CreditCard, ListChecks, MessageCircle } from "lucide-react";
+import { ArrowLeft, Copy, HelpCircle, ExternalLink, FileText, LifeBuoy, CreditCard, ListChecks, MessageCircle, History } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,10 @@ const TopUpEwalletQrPh = () => {
 
   const openTelegramSupport = () => {
     window.open("https://t.me/openpayofficial/1", "_blank", "noopener,noreferrer");
+  };
+
+  const openTopUpHistory = () => {
+    navigate("/topup-history");
   };
 
   const confirmOpenPayQrPh = () => {
@@ -132,6 +136,11 @@ const TopUpEwalletQrPh = () => {
               label: "Telegram Support",
               onClick: openTelegramSupport,
               icon: <MessageCircle className="h-4 w-4" />,
+            },
+            {
+              label: "Top-Up History",
+              onClick: openTopUpHistory,
+              icon: <History className="h-4 w-4" />,
             },
             {
               label: "Instructions",

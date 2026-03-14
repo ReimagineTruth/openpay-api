@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
-import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck, History } from "lucide-react";
+import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck, History, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { clearAllAppSecurityUnlocks } from "@/lib/appSecurity";
 import { canAccessRemittanceMerchant, isRemittanceUiEnabled } from "@/lib/remittanceAccess";
@@ -242,6 +242,7 @@ const MenuPage = () => {
         { icon: BookOpen, label: "OpenLedger", action: () => navigate("/ledger") },
         { icon: ShieldAlert, label: "Disputes", action: () => navigate("/disputes") },
         { icon: HelpCircle, label: "Help Center", action: () => navigate("/help-center") },
+        { icon: MessageSquare, label: "Telegram Support", action: () => window.open("https://t.me/openpayofficial", "_blank", "noopener,noreferrer") },
         { icon: Megaphone, label: "Announcements", action: () => navigate("/announcements") },
         { icon: Megaphone, label: "Blog", action: () => window.open("https://www.openpy.space/blog", "_blank", "noopener,noreferrer") },
         { icon: Smartphone, label: "Official Page", action: () => navigate("/openpay-official") },
