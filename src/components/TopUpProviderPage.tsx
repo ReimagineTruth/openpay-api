@@ -229,7 +229,6 @@ const TopUpProviderPage = ({
           variant="outline"
           className="mt-3 h-11 w-full rounded-2xl"
           onClick={() => setPaymentCompleted(true)}
-          disabled={!safetyAccepted || safeUsdAmount <= 0}
         >
           I completed {providerName} payment - Submit proof
         </Button>

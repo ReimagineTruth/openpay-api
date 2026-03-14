@@ -160,7 +160,6 @@ const TopUpEwalletQrPh = () => {
           variant="outline"
           className="mt-3 h-11 w-full rounded-2xl"
           onClick={() => setPaymentCompleted(true)}
-          disabled={roundedOpenUsdAmount <= 0}
         >
           I completed QR PH payment
         </Button>

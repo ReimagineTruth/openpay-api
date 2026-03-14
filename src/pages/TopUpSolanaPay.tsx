@@ -170,7 +170,6 @@ const TopUpSolanaPay = () => {
           variant="outline"
           className="mt-4 h-11 w-full rounded-2xl"
           onClick={() => setPaymentCompleted(true)}
-          disabled={safeUsdAmount <= 0}
         >
           I completed Solana Pay payment - Submit proof
         </Button>
