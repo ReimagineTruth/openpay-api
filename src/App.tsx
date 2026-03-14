@@ -3,9 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import AdminMrwainAuth from "./pages/AdminMrwainAuth";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ForgotMpinPage from "./pages/ForgotMpinPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -107,8 +109,15 @@ const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const routeLoaderReady = useRef(false);
   const [showRouteSplash, setShowRouteSplash] = useState(true);
+  const navigateRef = useRef(navigate);
+  
+  // Update the ref whenever navigate changes
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -127,6 +136,35 @@ const AppRoutes = () => {
     const timer = window.setTimeout(() => setShowRouteSplash(false), 500);
     return () => window.clearTimeout(timer);
   }, [location.pathname, location.search]);
+
+  // Handle OAuth callbacks
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email, 'current path:', location.pathname);
+      
+      if (event === 'SIGNED_IN' && session) {
+        // Handle successful OAuth sign-in
+        // Clear any URL hash fragments from OAuth flow
+        if (window.location.hash) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // Only redirect if not already on dashboard or auth callback
+        if (location.pathname !== '/dashboard' && location.pathname !== '/auth/callback') {
+          console.log('Redirecting to dashboard from:', location.pathname);
+          navigateRef.current('/dashboard', { replace: true });
+        }
+      } else if (event === 'SIGNED_OUT') {
+        // Only redirect if not already on sign-in page
+        if (location.pathname !== '/sign-in' && !location.pathname.includes('/signin')) {
+          console.log('Redirecting to sign-in from:', location.pathname);
+          navigateRef.current('/sign-in', { replace: true });
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [location.pathname]);
 
   const LegacyAdminMrwainRedirect = () => {
     const current = useLocation();
@@ -154,6 +192,7 @@ const AppRoutes = () => {
         <Route path="/master-topup" element={<AdminMasterTopUp />} />
         <Route path="/signin" element={<Navigate to="/sign-in?mode=signin" replace />} />
         <Route path="/signup" element={<Navigate to="/sign-in?mode=signup" replace />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/send" element={<SendMoney />} />
         <Route path="/scan-qr" element={<QrScannerPage />} />

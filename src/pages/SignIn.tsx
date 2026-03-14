@@ -67,7 +67,7 @@ const SignIn = () => {
               setLoading(true);
               const { lovable } = await import("@/integrations/lovable/index");
               const { error } = await lovable.auth.signInWithOAuth("apple", {
-                redirect_uri: window.location.origin,
+                redirect_uri: `${window.location.origin}/auth/callback`,
               });
               setLoading(false);
               if (error) toast.error(String(error));

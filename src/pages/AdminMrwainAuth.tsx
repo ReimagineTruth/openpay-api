@@ -55,22 +55,21 @@ const AdminMrwainAuth = () => {
       return;
     }
 
-    if (!signupCode.trim()) {
-      setLoading(false);
-      toast.error("Sign-up code is required");
-      return;
+    const userData: any = {
+      full_name: fullName,
+      username,
+      ...(referralParam ? { referral_code: referralParam } : {}),
+    };
+    
+    if (signupCode.trim()) {
+      userData.signup_code = signupCode.trim().toUpperCase();
     }
 
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-          username,
-          signup_code: signupCode.trim().toUpperCase(),
-          ...(referralParam ? { referral_code: referralParam } : {}),
-        },
+        data: userData,
         emailRedirectTo: window.location.origin,
       },
     });
@@ -158,10 +157,9 @@ const AdminMrwainAuth = () => {
                 />
                 <Input
                   type="text"
-                  placeholder="Sign-up Code"
+                  placeholder="Your Friend Affiliate Code (Optional)"
                   value={signupCode}
                   onChange={(e) => setSignupCode(e.target.value)}
-                  required
                   className="h-12 rounded-2xl border-white/70 bg-white"
                 />
               </>
@@ -218,7 +216,7 @@ const AdminMrwainAuth = () => {
                 setLoading(true);
                 const { lovable } = await import("@/integrations/lovable/index");
                 const { error } = await lovable.auth.signInWithOAuth("apple", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: `${window.location.origin}/auth/callback`,
                 });
                 setLoading(false);
                 if (error) toast.error(String(error));

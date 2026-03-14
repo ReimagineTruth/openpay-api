@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,11 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [signupCode, setSignupCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralParam = searchParams.get("ref")?.trim().toLowerCase() || "";
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +24,20 @@ const SignUp = () => {
       return;
     }
     setLoading(true);
+    
+    const userData: any = { full_name: fullName, username };
+    if (signupCode.trim()) {
+      userData.signup_code = signupCode.trim().toUpperCase();
+    }
+    if (referralParam) {
+      userData.referral_code = referralParam;
+    }
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, username },
+        data: userData,
         emailRedirectTo: window.location.origin,
       },
     });
@@ -69,6 +81,13 @@ const SignUp = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              className="h-12 rounded-2xl border-white/70 bg-white"
+            />
+            <Input
+              type="text"
+              placeholder="Your Friend Affiliate Code (Optional)"
+              value={signupCode}
+              onChange={(e) => setSignupCode(e.target.value)}
               className="h-12 rounded-2xl border-white/70 bg-white"
             />
             <Input
