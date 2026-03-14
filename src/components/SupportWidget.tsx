@@ -13,6 +13,9 @@ type SupportConversation = {
   user_id: string;
   status: string;
   last_message_at: string | null;
+  priority?: string;
+  category?: string;
+  ticket_id?: string | null;
   created_at: string;
 };
 
@@ -23,7 +26,12 @@ type SupportMessage = {
   sender_role: "user" | "agent";
   message: string;
   attachment_url?: string | null;
+  attachment_type?: string | null;
+  message_status?: string;
+  priority?: string;
+  category?: string;
   created_at: string;
+  read_at?: string | null;
 };
 
 type SupportFaqCategory = {
@@ -37,6 +45,25 @@ type SupportFaqItem = {
   category_id: string | null;
   question: string;
   answer: string;
+  priority?: string;
+  category_name?: string;
+};
+
+type SupportCategory = {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  color?: string;
+  is_active?: boolean;
+};
+
+type SupportPriority = {
+  id: string;
+  level: string;
+  description: string;
+  color?: string;
+  auto_assign_hours?: number;
 };
 
 type SupportConversationRow = SupportConversation & {
@@ -76,6 +103,13 @@ const SupportWidget = () => {
   const [allConversations, setAllConversations] = useState<SupportConversationRow[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [supportTicketId, setSupportTicketId] = useState<string | null>(null);
+  const [supportCategories, setSupportCategories] = useState<SupportCategory[]>([]);
+  const [supportPriorities, setSupportPriorities] = useState<SupportPriority[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("general");
+  const [selectedPriority, setSelectedPriority] = useState<string>("normal");
+  const [showTicketForm, setShowTicketForm] = useState(false);
+  const [ticketSubject, setTicketSubject] = useState("");
+  const [ticketDescription, setTicketDescription] = useState("");
   const [imageViewerUrl, setImageViewerUrl] = useState<string | null>(null);
   const isSupportPage = location.pathname === "/support";
 
@@ -179,6 +213,20 @@ const SupportWidget = () => {
         .from("support_faq_items")
         .select("id, category_id, question, answer");
       setFaqItems((itemRows || []) as SupportFaqItem[]);
+
+      // Load support categories and priorities
+      const { data: catData } = await supabase
+        .from("support_categories")
+        .select("id, name, description, icon, color, is_active")
+        .eq("is_active", true)
+        .order("name");
+      setSupportCategories((catData || []) as SupportCategory[]);
+
+      const { data: priorityData } = await supabase
+        .from("support_priorities")
+        .select("id, level, description, color, auto_assign_hours")
+        .order("auto_assign_hours");
+      setSupportPriorities((priorityData || []) as SupportPriority[]);
     };
     void boot();
   }, []);
@@ -265,7 +313,7 @@ const SupportWidget = () => {
     const loadMessages = async (conversationId: string) => {
       const { data } = await supabase
         .from("support_messages")
-        .select("id, conversation_id, sender_id, sender_role, message, created_at")
+        .select("id, conversation_id, sender_id, sender_role, message, attachment_url, attachment_type, message_status, priority, category, created_at, read_at")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
       setMessages((data || []) as SupportMessage[]);
@@ -408,6 +456,10 @@ const SupportWidget = () => {
         sender_role: isAgent ? "agent" : "user",
         message: text || (attachmentUrl ? "Image attached" : ""),
         attachment_url: attachmentUrl || null,
+        attachment_type: attachmentFile?.type || attachmentType || null,
+        message_status: "sent",
+        priority: selectedPriority,
+        category: selectedCategory,
       });
     if (error) {
       toast.error(error.message || "Failed to send message");
@@ -427,12 +479,20 @@ const SupportWidget = () => {
         sender_role: isAgent ? "agent" : "user",
         message: text || (attachmentUrl ? "Image attached" : ""),
         attachment_url: attachmentUrl || null,
+        attachment_type: attachmentFile?.type || attachmentType || null,
+        message_status: "sent",
+        priority: selectedPriority,
+        category: selectedCategory,
         created_at: new Date().toISOString(),
       },
     ]);
     const { error: convoUpdateError } = await supabase
       .from("support_conversations")
-      .update({ last_message_at: new Date().toISOString() })
+      .update({ 
+        last_message_at: new Date().toISOString(),
+        priority: selectedPriority,
+        category: selectedCategory
+      })
       .eq("id", conversationId);
     if (convoUpdateError) {
       toast.error(convoUpdateError.message || "Message sent but failed to refresh conversation");
