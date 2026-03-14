@@ -103,6 +103,7 @@ import AppFooter from "./components/AppFooter";
 import AuthMark from "./components/AuthMark";
 import AppLanguageTranslate from "./components/AppLanguageTranslate";
 import SupportWidget from "./components/SupportWidget";
+import SupportPage from "./pages/SupportPage";
 import { CookieConsentProvider } from "./contexts/CookieConsentContext";
 import PageTransition from "./components/PageTransition";
 import { isSolanaPayEnabled } from "@/lib/solanaPayAccess";
@@ -270,7 +271,7 @@ const AppRoutes = () => {
         <Route path="/openapp" element={<OpenAppPage />} />
         <Route path="/openpay-desktop" element={<OpenPayDesktopPage />} />
         <Route path="/live-customer-service" element={<LiveCustomerServicePage />} />
-        <Route path="/support" element={<></>} />
+        <Route path="/support" element={<SupportPage />} />
         <Route path="/swap-withdrawal" element={<SwapWithdrawalPage />} />
         <Route path="/confirm-pin" element={<ConfirmPinPage />} />
         <Route path="*" element={<NotFound />} />
