@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
-import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck } from "lucide-react";
+import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck, History } from "lucide-react";
 import { toast } from "sonner";
 import { clearAllAppSecurityUnlocks } from "@/lib/appSecurity";
 import { canAccessRemittanceMerchant, isRemittanceUiEnabled } from "@/lib/remittanceAccess";
@@ -166,6 +166,7 @@ const MenuPage = () => {
         { icon: ArrowLeftRight, label: "Swap", action: () => navigate("/swap-withdrawal") },
         { icon: CircleDollarSign, label: "Request", action: () => navigate("/request-payment") },
         { icon: FileText, label: "Invoice", action: () => navigate("/send-invoice") },
+        { icon: History, label: "Top-Up History", action: () => navigate("/topup-history") },
       ],
     },
     {
