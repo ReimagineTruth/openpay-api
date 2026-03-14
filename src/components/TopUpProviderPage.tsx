@@ -231,7 +231,7 @@ const TopUpProviderPage = ({
           onClick={() => setPaymentCompleted(true)}
           disabled={!safetyAccepted || safeUsdAmount <= 0}
         >
-          I completed {providerName} payment
+          I completed {providerName} payment - Submit proof
         </Button>
 
         {paymentCompleted && (
@@ -328,41 +328,104 @@ const TopUpProviderPage = ({
       </Dialog>
 
       <Dialog open={showTopUpInstructions} onOpenChange={setShowTopUpInstructions}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl sm:max-w-lg">
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl sm:max-w-xl">
           <DialogTitle className="text-xl font-bold text-foreground">{providerName} Top-Up Instructions</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Follow these steps to complete your {providerName} deposit.
+            Complete step-by-step guide to successfully top up your OpenPay account
           </DialogDescription>
 
-          <div className="rounded-2xl border border-border p-3 text-sm text-foreground space-y-3">
-            <p className="font-semibold">1. Copy the {providerName} address</p>
-            <p className="text-muted-foreground">
-              Use the copy button on the deposit screen to avoid mistakes.
-            </p>
+          <div className="rounded-2xl border border-border p-3 text-sm text-foreground space-y-4">
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">📋 Step 1: Prepare Payment Details</p>
+              <p className="text-muted-foreground">
+                • Copy the {providerName} address using the copy button<br/>
+                • Double-check the network: <span className="font-medium">{normalizedNetwork || "As shown on deposit screen"}</span><br/>
+                • Note the exact amount: <span className="font-medium">{usdDisplay} {providerUnit}</span>
+              </p>
+            </div>
 
-            <p className="font-semibold">2. Send on the correct network</p>
-            <p className="text-muted-foreground">
-              Network: {normalizedNetwork || "Use the network shown on the deposit screen."}
-            </p>
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">💳 Step 2: Complete Payment</p>
+              <p className="text-muted-foreground">
+                • Open your {providerName} app/wallet<br/>
+                • Send <span className="font-medium">{usdDisplay} {providerUnit}</span> to the copied address<br/>
+                • Use the correct network to avoid loss of funds<br/>
+                • Wait for transaction confirmation (few minutes)
+              </p>
+            </div>
 
-            <p className="font-semibold">3. Send the exact amount</p>
-            <p className="text-muted-foreground">
-              OpenPay credits 1 {providerName} = 1 OPEN USD. Send only {providerName} to this address.
-            </p>
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">📸 Step 3: Prepare Payment Proof</p>
+              <p className="text-muted-foreground">
+                • Take a screenshot of the completed transaction<br/>
+                • Include: Transaction hash, amount, recipient address<br/>
+                • Save the reference/transaction ID<br/>
+                • Make sure all details are clearly visible
+              </p>
+            </div>
 
-            <p className="font-semibold">4. Wait for confirmation</p>
-            <p className="text-muted-foreground">
-              Network confirmations can take a few minutes depending on traffic.
-            </p>
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">✅ Step 4: Submit Top-Up Request</p>
+              <p className="text-muted-foreground">
+                • Click <span className="font-medium">"I completed {providerName} payment - Submit proof"</span><br/>
+                • Upload your payment proof screenshot<br/>
+                • Enter the reference/transaction ID<br/>
+                • Fill in your account details<br/>
+                • Submit for review
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">⏱️ Step 5: Wait for Processing</p>
+              <p className="text-muted-foreground">
+                • Your request will be reviewed by our team<br/>
+                • Usually processed within 24 hours<br/>
+                • Check status in <span className="font-medium">Top-Up History</span><br/>
+                • You'll receive notification when approved
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+              <p className="font-semibold text-blue-900">🆘 Need Help?</p>
+              <p className="text-blue-800 text-sm mt-1">
+                • Contact Telegram Support: <a href="https://t.me/openpayofficial" target="_blank" rel="noopener noreferrer" className="underline">@openpayofficial</a><br/>
+                • Check your Top-Up History for status updates<br/>
+                • Keep your payment proof handy for verification
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+              <p className="font-semibold text-yellow-900">⚠️ Important Notes</p>
+              <p className="text-yellow-800 text-sm mt-1">
+                • Send only {providerName} to this address<br/>
+                • Wrong network = loss of funds<br/>
+                • Minimum amount: 1 {providerUnit}<br/>
+                • Keep your transaction ID for reference
+              </p>
+            </div>
           </div>
 
-          <Button
-            type="button"
-            className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]"
-            onClick={() => setShowTopUpInstructions(false)}
-          >
-            I Understand
-          </Button>
+          <div className="flex gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 h-11 rounded-2xl"
+              onClick={() => {
+                setShowTopUpInstructions(false);
+                navigate("/topup-history");
+              }}
+            >
+              <History className="h-4 w-4 mr-2" />
+              View History
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 h-11 rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]"
+              onClick={() => setShowTopUpInstructions(false)}
+            >
+              I Understand
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

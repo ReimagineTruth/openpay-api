@@ -485,39 +485,108 @@ const TopUp = () => {
       />
 
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-        <DialogContent className="rounded-3xl sm:max-w-lg">
-          <DialogTitle className="text-xl font-bold text-foreground">Top Up Instructions</DialogTitle>
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl sm:max-w-xl">
+          <DialogTitle className="text-xl font-bold text-foreground">Pi Payment Top-Up Instructions</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Top up works on OpenPay app and browser across desktop, mobile, and tablet.
+            Complete step-by-step guide to successfully top up using Pi Payment
           </DialogDescription>
 
-          <div className="rounded-2xl border border-border p-3 text-sm text-foreground">
-            <p>1. You can top up your OpenPay balance using Pi payments or approved third-party partner providers.</p>
-            <p>2. Third-party provider top up is supported on desktop, mobile, tablet, and browser.</p>
-            <p>3. Pi Payment top up works only in Pi Browser.</p>
-            <p>4. If you use OpenPay app with email login, sign in with the same email in Pi Browser first, then top up.</p>
-            <p>5. If you do not have Pi in your wallet, buy Pi in your Pi Wallet onramp first, then top up in OpenPay.</p>
-            <p>6. Third-party provider availability, limits, fees, and processing time depend on partner terms.</p>
-            <p>7. You can also exchange with another OpenPay user or merchant who accepts real-currency exchange.</p>
-            <p>8. OpenPay top up has no fee from OpenPay. A merchant or partner may add exchange or processing fee terms.</p>
+          <div className="rounded-2xl border border-border p-3 text-sm text-foreground space-y-4">
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">📋 Step 1: Prepare Your Pi Wallet</p>
+              <p className="text-muted-foreground">
+                • Ensure you have sufficient Pi in your wallet<br/>
+                • Use Pi Browser for Pi Payment (required)<br/>
+                • If using OpenPay app with email login, sign in with same email in Pi Browser first<br/>
+                • If no Pi, buy from Pi Wallet onramp first
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">💳 Step 2: Complete Pi Payment</p>
+              <p className="text-muted-foreground">
+                • Enter the amount you want to top up<br/>
+                • Click "Pay with Pi" button<br/>
+                • Confirm payment in Pi Browser<br/>
+                • Wait for transaction confirmation
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">📸 Step 3: Save Payment Proof</p>
+              <p className="text-muted-foreground">
+                • Take screenshot of completed payment<br/>
+                • Save transaction hash/reference<br/>
+                • Note the amount and timestamp<br/>
+                • Keep proof for your records
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">✅ Step 4: Check Your Balance</p>
+              <p className="text-muted-foreground">
+                • Pi Payment credits instantly to your account<br/>
+                • Check your OpenPay balance after payment<br/>
+                • View transaction in your activity history<br/>
+                • Contact support if issues arise
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+              <p className="font-semibold text-blue-900">🆘 Need Help?</p>
+              <p className="text-blue-800 text-sm mt-1">
+                • Telegram Support: <a href="https://t.me/openpayofficial" target="_blank" rel="noopener noreferrer" className="underline">@openpayofficial</a><br/>
+                • Check Top-Up History for transaction status<br/>
+                • Pi payments work only in Pi Browser<br/>
+                • Keep payment proof for verification
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+              <p className="font-semibold text-yellow-900">⚠️ Important Notes</p>
+              <p className="text-yellow-800 text-sm mt-1">
+                • Pi Payment works only in Pi Browser<br/>
+                • No OpenPay fees for Pi Payment<br/>
+                • Instant crediting to your account<br/>
+                • Minimum amount: 0.01 Pi
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-paypal-light-blue/40 bg-paypal-light-blue/10 p-3 text-xs text-muted-foreground">
+              <p className="font-semibold">About Pi Network</p>
+              <p className="mt-1">
+                OpenPay is an independent platform built for the Pi Network ecosystem and is not affiliated with any
+                government authority or central bank. OpenPay is powered by the Pi digital currency. For more information,
+                visit{" "}
+                <a href="https://minepi.com" target="_blank" rel="noreferrer" className="font-semibold text-paypal-blue">
+                  minepi.com
+                </a>
+                .
+              </p>
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-paypal-light-blue/40 bg-paypal-light-blue/10 p-3 text-xs text-muted-foreground">
-            OpenPay is an independent platform built for the Pi Network ecosystem and is not affiliated with any
-            government authority or central bank. OpenPay is powered by the Pi digital currency. For more information,
-            visit{" "}
-            <a href="https://minepi.com" target="_blank" rel="noreferrer" className="font-semibold text-paypal-blue">
-              minepi.com
-            </a>
-            .
+          <div className="flex gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 h-11 rounded-2xl"
+              onClick={() => {
+                setShowInstructions(false);
+                navigate("/topup-history");
+              }}
+            >
+              <History className="h-4 w-4 mr-2" />
+              View History
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 h-11 rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]"
+              onClick={() => setShowInstructions(false)}
+            >
+              I Understand
+            </Button>
           </div>
-
-          <Button
-            className="h-11 w-full rounded-2xl bg-paypal-blue text-white hover:bg-[#004dc5]"
-            onClick={() => setShowInstructions(false)}
-          >
-            I Understand
-          </Button>
         </DialogContent>
       </Dialog>
 

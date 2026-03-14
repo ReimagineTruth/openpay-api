@@ -172,8 +172,19 @@ const TopUpSolanaPay = () => {
           onClick={() => setPaymentCompleted(true)}
           disabled={safeUsdAmount <= 0}
         >
-          I completed Solana Pay payment
+          I completed Solana Pay payment - Submit proof
         </Button>
+
+        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <p className="text-sm font-semibold text-blue-900 mb-2">📋 Solana Pay Instructions</p>
+          <div className="text-xs text-blue-800 space-y-1">
+            <p>1. Click "Pay with Solana Pay" and scan QR or connect wallet</p>
+            <p>2. Send {usdDisplay} USDC to the merchant wallet</p>
+            <p>3. Save transaction signature after payment</p>
+            <p>4. Click "I completed Solana Pay payment - Submit proof"</p>
+            <p>5. Upload payment proof and submit request</p>
+          </div>
+        </div>
 
         {paymentCompleted && (
           <div className="mt-5 rounded-2xl border border-border bg-white p-4">
