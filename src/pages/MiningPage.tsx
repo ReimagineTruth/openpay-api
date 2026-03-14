@@ -243,9 +243,17 @@ const MiningPage = () => {
 
   useEffect(() => {
     const ad = (searchParams.get("ad") || "").toLowerCase();
-    if (ad !== "rewarded") return;
-    if (timeLeft > 0 || starting || loading) return;
+    console.log('Mining page useEffect - checking ad parameter:', ad);
+    if (ad !== "rewarded") {
+      console.log('Not a rewarded ad parameter, skipping auto-start');
+      return;
+    }
+    if (timeLeft > 0 || starting || loading) {
+      console.log('Cannot auto-start - conditions not met:', { timeLeft, starting, loading });
+      return;
+    }
     if (!piSdkInitialized) {
+      console.log('Pi SDK not initialized, setting pending auto-start');
       pendingAutoStartRef.current = true;
       return;
     }
@@ -254,8 +262,18 @@ const MiningPage = () => {
   }, [searchParams, timeLeft, starting, loading, piSdkInitialized]);
 
   useEffect(() => {
-    if (!piSdkInitialized || !pendingAutoStartRef.current) return;
-    if (timeLeft > 0 || starting || loading) return;
+    if (!piSdkInitialized || !pendingAutoStartRef.current) {
+      console.log('Pending auto-start useEffect - conditions not met:', { 
+        piSdkInitialized, 
+        hasPendingRef: pendingAutoStartRef.current 
+      });
+      return;
+    }
+    if (timeLeft > 0 || starting || loading) {
+      console.log('Pending auto-start - cannot start, conditions not met:', { timeLeft, starting, loading });
+      return;
+    }
+    console.log('Clearing pending auto-start and initiating mining');
     pendingAutoStartRef.current = false;
     console.log('Auto-starting mining from pending reference');
     void handleStartMining({ auto: true, adVerified: true });
