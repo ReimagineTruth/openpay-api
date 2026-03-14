@@ -49,6 +49,7 @@ const MiningPage = () => {
   const [adCountdown, setAdCountdown] = useState(5);
   const adResolveRef = useRef<((v: boolean) => void) | null>(null);
   const [adImgError, setAdImgError] = useState(false);
+  const [adLoading, setAdLoading] = useState(false);
   const [activeSession, setActiveSession] = useState<MiningSession | null>(null);
   const [claimableSession, setClaimableSession] = useState<MiningSession | null>(null);
   const [rewards, setRewards] = useState<MiningReward[]>([]);
@@ -407,14 +408,18 @@ const MiningPage = () => {
           return;
         }
         try {
-          // For simulated ad experience, consider the ad already "watched" when user clicks Continue
-          // Only run actual Pi ad if we haven't already shown the simulated ad modal
-          console.log('Ad verification successful, proceeding to mining start');
+          // Run actual Pi ad network when user clicks Continue
+          setAdLoading(true);
+          console.log('Starting Pi ad network verification...');
+          await runRewardedAd();
+          console.log('Pi ad verification successful, proceeding to mining start');
           originalResolver?.(true);
         } catch (adError) {
           console.error("Pi Ad Network error:", adError);
           toast.error(adError instanceof Error ? adError.message : "Ad Network error. Please try again.");
           originalResolver?.(false);
+        } finally {
+          setAdLoading(false);
         }
       };
     });
@@ -1029,13 +1034,13 @@ const MiningPage = () => {
             )}
           </div>
           <div className="mt-3">
-            <p className="text-base font-semibold text-foreground">OpenApp — Discover Pi apps</p>
+            <p className="text-base font-semibold text-foreground">Watch Rewarded Ad</p>
             <p className="text-sm text-muted-foreground">
-              Explore and launch applications built within the Pi ecosystem. Find trending apps, categories, and more.
+              Click Continue to watch a Pi Network rewarded ad. After watching, you can start mining!
             </p>
           </div>
           <div className="mt-2 h-10 rounded-xl bg-secondary/50 flex items-center justify-center text-muted-foreground text-sm">
-            Ad playing... {adCountdown}s
+            {adLoading ? "Loading ad..." : `Ready to watch ad`}
           </div>
           <Button asChild variant="outline" className="mt-3 w-full rounded-2xl">
             <a
@@ -1049,7 +1054,7 @@ const MiningPage = () => {
           <div className="mt-4">
             <Button
               className="w-full rounded-2xl"
-              disabled={adCountdown > 0}
+              disabled={adCountdown > 0 || adLoading}
               onClick={() => {
                 setAdModalOpen(false);
                 if (adResolveRef.current) {
@@ -1058,7 +1063,7 @@ const MiningPage = () => {
                 }
               }}
             >
-              Continue
+              {adLoading ? "Loading Ad..." : "Continue"}
             </Button>
           </div>
         </DialogContent>
