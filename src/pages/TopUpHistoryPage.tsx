@@ -34,6 +34,8 @@ const TopUpHistoryPage = () => {
   const [selectedRequest, setSelectedRequest] = useState<TopUpRequest | null>(null);
   const [showProofDialog, setShowProofDialog] = useState(false);
   const [showSupportDialog, setShowSupportDialog] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadTopUpHistory();
@@ -71,6 +73,11 @@ const TopUpHistoryPage = () => {
 
   const openTelegramSupport = () => {
     window.open("https://t.me/openpayofficial", "_blank", "noopener,noreferrer");
+  };
+
+  const openImageModal = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
+    setShowImageModal(true);
   };
 
   const copyTelegramLink = () => {
@@ -331,67 +338,101 @@ const TopUpHistoryPage = () => {
             ))
           )}
         </div>
+      </div>
 
-        {/* Proof Dialog */}
-        <Dialog open={showProofDialog} onOpenChange={setShowProofDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogTitle>Top-Up Proof</DialogTitle>
-            <DialogDescription>
-              Payment proof for the top-up request
-            </DialogDescription>
-            {selectedRequest?.proof_url && (
-              <div className="mt-4">
+      {/* Proof Dialog */}
+      <Dialog open={showProofDialog} onOpenChange={setShowProofDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogTitle>Top-Up Proof</DialogTitle>
+          <DialogDescription>
+            Payment proof for the top-up request
+          </DialogDescription>
+          {selectedRequest?.proof_url && (
+            <div className="mt-4">
+              <button 
+                type="button"
+                onClick={() => openImageModal(selectedRequest.proof_url)}
+                className="block w-full"
+              >
                 <img 
                   src={selectedRequest.proof_url} 
                   alt="Top-up proof" 
-                  className="w-full rounded-lg border border-border"
+                  className="w-full rounded-lg border border-border hover:opacity-90 transition-opacity cursor-pointer"
                 />
-                <div className="mt-3 text-sm text-muted-foreground">
-                  <p><strong>Amount:</strong> ${selectedRequest.amount}</p>
-                  <p><strong>Provider:</strong> {selectedRequest.provider}</p>
-                  <p><strong>Reference:</strong> {selectedRequest.reference_code}</p>
-                  <p><strong>Date:</strong> {formatDate(selectedRequest.created_at)}</p>
-                </div>
+              </button>
+              <div className="mt-3 text-sm text-muted-foreground">
+                <p><strong>Amount:</strong> ${selectedRequest.amount}</p>
+                <p><strong>Provider:</strong> {selectedRequest.provider}</p>
+                <p><strong>Reference:</strong> {selectedRequest.reference_code}</p>
+                <p><strong>Date:</strong> {formatDate(selectedRequest.created_at)}</p>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Support Dialog */}
-        <Dialog open={showSupportDialog} onOpenChange={setShowSupportDialog}>
-          <DialogContent className="max-w-md">
-            <DialogTitle>Need Help?</DialogTitle>
-            <DialogDescription>
-              If your top-up was rejected, you can get help from our support team.
-            </DialogDescription>
-            <div className="mt-4 space-y-3">
               <Button
-                onClick={openTelegramSupport}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Contact Support on Telegram
-              </Button>
-              <Button
+                onClick={() => openImageModal(selectedRequest.proof_url)}
+                className="mt-3 w-full"
                 variant="outline"
-                onClick={copyTelegramLink}
-                className="w-full"
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Copy Telegram Link
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/support")}
-                className="w-full"
-              >
-                <HelpCircle className="h-4 w-4 mr-2" />
-                Visit Support Center
+                View Full Size Image
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Modal */}
+      <Dialog open={showImageModal} onOpenChange={setShowImageModal}>
+        <DialogContent className="rounded-3xl sm:max-w-4xl">
+          <DialogTitle className="text-lg font-bold text-foreground">Payment Proof</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Full-size preview of payment proof. Click outside to close.
+          </DialogDescription>
+          {selectedImageUrl ? (
+            <div className="mt-4">
+              <img 
+                src={selectedImageUrl} 
+                alt="Payment proof full size" 
+                className="w-full rounded-2xl object-contain max-h-[70vh]" 
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No image available.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Support Dialog */}
+      <Dialog open={showSupportDialog} onOpenChange={setShowSupportDialog}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>Need Help?</DialogTitle>
+          <DialogDescription>
+            If your top-up was rejected, you can get help from our support team.
+          </DialogDescription>
+          <div className="mt-4 space-y-3">
+            <Button
+              onClick={openTelegramSupport}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Contact Support on Telegram
+            </Button>
+            <Button
+              variant="outline"
+              onClick={copyTelegramLink}
+              className="w-full"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Copy Telegram Link
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/support")}
+              className="w-full"
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Visit Support Center
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
