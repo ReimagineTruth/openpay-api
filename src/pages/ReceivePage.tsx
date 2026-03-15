@@ -389,7 +389,7 @@ const ReceivePage = () => {
 
         <div className="space-y-4">
           <div className="rounded-3xl bg-white/10 border border-white/20 backdrop-blur-sm p-4">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/60">Custom Amount (optional)</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white">Custom Amount (optional)</p>
             <Input
               type="number"
               min="0.01"
@@ -402,7 +402,7 @@ const ReceivePage = () => {
           </div>
 
           <div className="rounded-3xl bg-white/10 border border-white/20 backdrop-blur-sm p-4">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/60">Currency</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white">Currency</p>
             <div className="relative">
               {(currencyCode === "PI" || currencyCode === "OUSD") && (
                 <img
