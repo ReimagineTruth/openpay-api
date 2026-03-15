@@ -116,6 +116,11 @@ const PiAdsPage = () => {
 
       if (typeof window !== "undefined") {
         window.localStorage.setItem("pi_ad_rewarded_at", String(Date.now()));
+        window.localStorage.setItem("pi_ad_rewarded_id", String(adResult.adId));
+        console.log('Ad reward stored in localStorage:', {
+          rewardedAt: Date.now(),
+          adId: adResult.adId
+        });
       }
       toast.success("Rewarded ad verified successfully");
       const returnTo = searchParams.get("returnTo");
@@ -125,8 +130,10 @@ const PiAdsPage = () => {
         const parsed = new URL(url);
         parsed.searchParams.set("ad", "rewarded");
         const nextPath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        console.log('Navigating to return path:', nextPath);
         navigate(nextPath, { replace: true });
       } else {
+        console.log('Navigating to mining page with ad reward');
         navigate("/mining?ad=rewarded", { replace: true });
       }
     } catch (error) {

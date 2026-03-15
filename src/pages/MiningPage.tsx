@@ -285,16 +285,39 @@ const MiningPage = () => {
     if (activeSession || claimableSession || timeLeft > 0) return;
     if (!isPiEnvironment()) return;
     if (typeof window === "undefined") return;
+    
+    // Check for recent ad reward with extended time window
     const rewardedAt = Number(window.localStorage.getItem("pi_ad_rewarded_at") || 0);
+    const rewardedId = window.localStorage.getItem("pi_ad_rewarded_id");
+    
     if (!rewardedAt) return;
-    if (Date.now() - rewardedAt > 2 * 60 * 1000) {
+    
+    // Extended time window from 2 minutes to 5 minutes
+    if (Date.now() - rewardedAt > 5 * 60 * 1000) {
+      console.log('Ad reward expired, cleaning up');
       window.localStorage.removeItem("pi_ad_rewarded_at");
+      window.localStorage.removeItem("pi_ad_rewarded_id");
       return;
     }
-    console.log('Detected recent ad reward, auto-activating mining');
+    
+    console.log('Detected recent ad reward, auto-activating mining:', { 
+      rewardedAt, 
+      rewardedId, 
+      timeSince: Date.now() - rewardedAt 
+    });
+    
     adRewardHandledRef.current = true;
-    window.localStorage.removeItem("pi_ad_rewarded_at");
-    window.localStorage.removeItem("pi_ad_rewarded_id");
+    
+    // Don't immediately remove the storage items - give the mining session time to start
+    setTimeout(() => {
+      try {
+        window.localStorage.removeItem("pi_ad_rewarded_at");
+        window.localStorage.removeItem("pi_ad_rewarded_id");
+      } catch (e) {
+        console.warn('Failed to clear ad reward storage:', e);
+      }
+    }, 10000); // Clear after 10 seconds
+    
     void handleStartMining({ auto: true, adVerified: true });
   }, [piSdkInitialized, starting, loading, activeSession, claimableSession, timeLeft]);
 
@@ -309,7 +332,8 @@ const MiningPage = () => {
 
   const isPiEnvironment = () => {
     if (typeof window === "undefined") return false;
-    return isPiBrowserUserAgent() || Boolean(window.Pi);
+    // More lenient Pi environment detection
+    return isPiBrowserUserAgent() || Boolean(window.Pi) || Boolean((window as any).Pi);
   };
 
   const resetMiningState = () => {
@@ -553,9 +577,15 @@ const MiningPage = () => {
 
       console.log('Proceeding to start mining session with adVerified:', adVerifiedFlag);
 
-      // Basic anti-cheat: in a real app, use a proper fingerprinting library
-      const deviceFingerprint = navigator.userAgent; 
-      const piBrowserUsed = isPiBrowserUserAgent() || Boolean(window.Pi);
+      // Enhanced Pi Browser detection
+      const deviceFingerprint = navigator.userAgent; // Basic anti-cheat: in a real app, use a proper fingerprinting library
+      const piBrowserUsed = isPiBrowserUserAgent() || Boolean(window.Pi) || Boolean((window as any).Pi);
+      console.log('Pi Browser detection:', { 
+        userAgent: navigator.userAgent,
+        hasPiSDK: Boolean(window.Pi),
+        hasPiSDKAlt: Boolean((window as any).Pi),
+        piBrowserUsed 
+      });
        
       // Try database function first
       console.log('Calling startMiningSessionRpc with params:', {

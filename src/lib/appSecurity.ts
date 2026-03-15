@@ -88,7 +88,23 @@ export const hashSecret = async (value: string): Promise<string> => {
 export const isPiBrowserUserAgent = () => {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
-  return /pibrowser|pi browser|minepi|pi\s*network|pinetwork/i.test(ua);
+  
+  // Enhanced Pi Browser detection patterns
+  const piPatterns = [
+    /pibrowser/i,
+    /pi\s*browser/i,
+    /minepi/i,
+    /pi\s*network/i,
+    /pinetwork/i,
+    /pi\s*app/i,
+    /piwallet/i,
+    /pi\s*mobile/i,
+    /kina/i,  // Kina browser (Pi's official browser)
+    /android.*pi/i,  // Android with Pi
+    /ios.*pi/i,  // iOS with Pi
+  ];
+  
+  return piPatterns.some(pattern => pattern.test(ua)) || Boolean(window.Pi);
 };
 
 export const getBiometricSupportStatus = async (): Promise<BiometricSupportStatus> => {
