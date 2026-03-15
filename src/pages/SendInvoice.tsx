@@ -472,7 +472,7 @@ const SendInvoice = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-8">
+    <div className="min-h-screen bg-paypal-blue px-4 pt-4 pb-10 text-white">
       <div className="flex items-center justify-between gap-3 px-4 pt-4 mb-4">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/menu")}>
