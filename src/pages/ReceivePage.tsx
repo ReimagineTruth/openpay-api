@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Copy, Share2 } from "lucide-react";
+import { ArrowLeft, Copy, Share2, ChevronDown } from "lucide-react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -369,7 +369,7 @@ const ReceivePage = () => {
       `}</style>
       <div className="mb-6 flex items-center gap-4 animate-in-up">
         <button onClick={() => navigate("/dashboard")} className="ios-active rounded-full p-2 hover:bg-secondary/50 transition-colors">
-          <ArrowLeft className="h-6 w-6 text-foreground" />
+          <ArrowLeft className="h-6 w-6 text-white" />
         </button>
         <h1 className="text-2xl font-black tracking-tight text-white">Receive</h1>
       </div>
@@ -397,7 +397,7 @@ const ReceivePage = () => {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 25.00"
-              className="h-12 rounded-2xl border-none bg-white dark:bg-white/5 text-base font-bold shadow-sm focus-visible:ring-1 focus-visible:ring-blue-500/30"
+              className="h-12 rounded-2xl border-none bg-white dark:bg-white/5 text-base font-bold text-foreground shadow-sm focus-visible:ring-1 focus-visible:ring-blue-500/30"
             />
           </div>
 
@@ -405,28 +405,6 @@ const ReceivePage = () => {
             <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/60">Currency</p>
             <div className="relative">
               {(currencyCode === "PI" || currencyCode === "OUSD") && (
-                <img
-                  src={currencyCode === "PI" ? PURE_PI_ICON_URL : OPENPAY_ICON_URL}
-                  alt={currencyCode === "PI" ? "Pure Pi" : "Open USD"}
-                  className="pointer-events-none absolute left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full object-cover shadow-sm"
-                />
-              )}
-              <select
-                value={currencyCode}
-                onChange={(e) => setCurrencyCode(e.target.value)}
-                className={`h-12 w-full rounded-2xl border-none bg-white dark:bg-white/5 text-base font-bold text-foreground shadow-sm focus:ring-1 focus:ring-blue-500/30 appearance-none ${currencyCode === "PI" || currencyCode === "OUSD" ? "pl-11 pr-4" : "px-4"}`}
-              >
-                {currencies.map((c) => (
-                  <option key={c.code} value={c.code} className="dark:bg-slate-900">
-                    {`${c.code === "PI" ? "PI " : c.code === "OUSD" ? "" : `${c.flag} `}${getPiCodeLabel(c.code)} - ${c.name}`}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="mt-8 rounded-[2rem] border border-white/20 bg-white p-6 shadow-inner shadow-black/5 animate-in-fade">
@@ -679,6 +657,7 @@ const ReceivePage = () => {
           <Button className="ios-active h-14 w-full rounded-2xl bg-blue-600 text-white font-black text-lg shadow-xl shadow-blue-500/20 animate-in-up" style={{ animationDelay: "500ms" }} onClick={() => navigate("/send")}>
             Open Express Send
           </Button>
+
         </div>
         </div>
       </div>
