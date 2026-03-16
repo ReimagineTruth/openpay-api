@@ -429,6 +429,15 @@ const Dashboard = () => {
   const [personalToMerchantAmount, setPersonalToMerchantAmount] = useState("");
   const [movingToMerchant, setMovingToMerchant] = useState(false);
   
+  // Dashboard preferences state
+  const [dashboardPreferences, setDashboardPreferences] = useState({
+    showMerchantTransferFeature: true,
+    showMerchantBalanceDetails: true,
+    showMerchantActivityFeed: true,
+  });
+  const [merchantTransferHistory, setMerchantTransferHistory] = useState<any[]>([]);
+  const [showTransferHistory, setShowTransferHistory] = useState(false);
+  
   // Mining state
   
   // Analytics state
@@ -724,6 +733,59 @@ const Dashboard = () => {
       setLoanPaymentHistory([]);
       setCreditScore(0);
       await loadKycStatus();
+    }
+  }, []);
+
+  const loadDashboardPreferences = useCallback(async () => {
+    try {
+      const { data, error } = await (supabase as any).rpc("get_my_dashboard_preferences");
+      if (error) {
+        console.warn("Failed to load dashboard preferences", error);
+        return;
+      }
+      if (data && data.length > 0) {
+        setDashboardPreferences({
+          showMerchantTransferFeature: data[0].show_merchant_transfer_feature,
+          showMerchantBalanceDetails: data[0].show_merchant_balance_details,
+          showMerchantActivityFeed: data[0].show_merchant_activity_feed,
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to load dashboard preferences", error);
+    }
+  }, []);
+
+  const loadMerchantTransferHistory = useCallback(async () => {
+    try {
+      const { data, error } = await (supabase as any).rpc("get_my_merchant_transfer_history", {
+        p_mode: merchantMode,
+        p_limit: 20,
+      });
+      if (error) {
+        console.warn("Failed to load merchant transfer history", error);
+        return;
+      }
+      setMerchantTransferHistory(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.warn("Failed to load merchant transfer history", error);
+    }
+  }, [merchantMode]);
+
+  const updateDashboardPreferences = useCallback(async (preferences: Partial<typeof dashboardPreferences>) => {
+    try {
+      const { error } = await (supabase as any).rpc("update_my_dashboard_preferences", {
+        p_show_merchant_transfer_feature: preferences.showMerchantTransferFeature,
+        p_show_merchant_balance_details: preferences.showMerchantBalanceDetails,
+        p_show_merchant_activity_feed: preferences.showMerchantActivityFeed,
+      });
+      if (error) {
+        toast.error("Failed to update preferences");
+        return;
+      }
+      setDashboardPreferences(prev => ({ ...prev, ...preferences }));
+      toast.success("Preferences updated");
+    } catch (error) {
+      toast.error("Failed to update preferences");
     }
   }, []);
 
@@ -1211,13 +1273,15 @@ const Dashboard = () => {
 
       void loadSavingsAndLoan();
       void loadMerchantBalances();
+      void loadDashboardPreferences();
+      void loadMerchantTransferHistory();
     } catch (error) {
       console.error("Dashboard load error:", error);
       // Don't toast here to avoid spamming if user is not logged in
     } finally {
       setRefreshing(false);
     }
-  }, [navigate, loadSavingsAndLoan, loadMerchantBalances]);
+  }, [navigate, loadSavingsAndLoan, loadMerchantBalances, loadDashboardPreferences, loadMerchantTransferHistory]);
 
   useEffect(() => {
     void loadDashboard();
@@ -1228,6 +1292,11 @@ const Dashboard = () => {
     if (!userId || walletView !== "merchant") return;
     void loadMerchantActivity(merchantMode);
   }, [userId, walletView, merchantMode, loadMerchantActivity]);
+
+  useEffect(() => {
+    if (!userId) return;
+    void loadMerchantTransferHistory();
+  }, [userId, merchantMode, loadMerchantTransferHistory]);
 
   useEffect(() => {
     if (!userId || activeSection !== "analytics") return;
@@ -1515,6 +1584,7 @@ const Dashboard = () => {
     toast.success("Transferred to merchant wallet");
     playUiSound("receive");
     await loadDashboard();
+    await loadMerchantTransferHistory();
   };
 
   const handleRequestLoan = async () => {
@@ -3111,11 +3181,37 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {walletView === "personal" && (
+      {walletView === "personal" && dashboardPreferences.showMerchantTransferFeature && (
         <div className="mx-4 mt-4 paypal-surface rounded-3xl p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Transfer to Merchant Wallet</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowTransferHistory(!showTransferHistory)}
+                className="p-2 rounded-lg hover:bg-border/50 transition-colors"
+                title="Transfer History"
+              >
+                <Clock className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => updateDashboardPreferences({ showMerchantTransferFeature: false })}
+                className="p-2 rounded-lg hover:bg-border/50 transition-colors"
+                title="Hide Feature"
+              >
+                <EyeOff className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-1">
             <div className="rounded-2xl border border-border/70 p-3">
-              <p className="mb-2 text-sm font-semibold text-foreground">Transfer to merchant wallet ({merchantMode})</p>
+              <div className="flex items-center gap-2 mb-2">
+                <Store className="h-4 w-4 text-paypal-blue" />
+                <p className="text-sm font-semibold text-foreground">
+                  Transfer to merchant wallet ({merchantMode})
+                </p>
+                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Live</span>
+              </div>
               <input
                 value={formatAmountInput(personalToMerchantAmount)}
                 onChange={(e) => setPersonalToMerchantAmount(normalizeAmountInput(e.target.value))}
@@ -3133,12 +3229,47 @@ const Dashboard = () => {
                   {movingToMerchant ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Store className="h-4 w-4" />
+                    <HandCoins className="h-4 w-4" />
                   )}
                   <span>Transfer to Merchant</span>
                 </span>
               </button>
             </div>
+
+            {showTransferHistory && (
+              <div className="rounded-2xl border border-border/70 p-3">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-foreground">Recent Transfers</p>
+                  <button
+                    onClick={() => loadMerchantTransferHistory()}
+                    className="p-1 rounded hover:bg-border/50 transition-colors"
+                    title="Refresh"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                  </button>
+                </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {merchantTransferHistory.length > 0 ? (
+                    merchantTransferHistory.map((transfer) => (
+                      <div key={transfer.transfer_id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                        <div className="flex-1">
+                          <p className="text-xs font-medium">{transfer.transfer_type}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(transfer.created_at), 'MMM dd, HH:mm')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold">{formatCompactCurrency(Number(transfer.amount))}</p>
+                          <p className="text-xs text-muted-foreground">{transfer.currency}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-4">No transfer history</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -3439,6 +3570,30 @@ const Dashboard = () => {
           <button onClick={openBuyOptions} className="min-w-0 flex-1 rounded-full border-2 border-paypal-blue bg-white py-4 text-center text-base font-bold text-paypal-blue shadow-lg shadow-black/10 transition-transform active:scale-95">Buy</button>
         </div>
       </div>
+
+      {/* Dashboard Preferences Section */}
+      {!dashboardPreferences.showMerchantTransferFeature && (
+        <div className="mx-4 mt-4 paypal-surface rounded-3xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-foreground">Hidden Features</h3>
+            <Settings className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+              <div>
+                <p className="text-sm font-medium">Transfer to Merchant Wallet</p>
+                <p className="text-xs text-muted-foreground">Move funds from personal to merchant wallet</p>
+              </div>
+              <button
+                onClick={() => updateDashboardPreferences({ showMerchantTransferFeature: true })}
+                className="px-3 py-1 bg-paypal-blue text-white text-xs rounded-full hover:bg-[#004dc5] transition-colors"
+              >
+                Show
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav active="home" />
       <TransactionReceipt open={receiptOpen} onOpenChange={setReceiptOpen} receipt={receiptData} />
