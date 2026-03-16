@@ -22,14 +22,18 @@ const BottomNav = ({ active }: BottomNavProps) => {
           <button
             key={key}
             onClick={() => navigate(path)}
-            className={`flex min-w-[85px] flex-col items-center gap-1.5 rounded-2xl py-2.5 transition-all duration-300 active:scale-95 ${
+            className={`flex min-w-[85px] flex-col items-center gap-1.5 rounded-2xl py-2.5 transition-all duration-300 active:scale-95 relative ${
               active === key 
                 ? "bg-secondary/80 text-paypal-blue shadow-inner" 
                 : "text-muted-foreground hover:bg-secondary/40"
-            }`}
+            } ${active === key && key === "menu" ? "animate-pulse ring-2 ring-paypal-blue/30 ring-offset-2" : ""}`}
           >
             <Icon className={`w-6 h-6 transition-transform ${active === key ? "scale-110" : ""}`} />
-            <span className={`text-[11px] tracking-tight ${active === key ? "font-extrabold" : "font-semibold"}`}>{label}</span>
+            <span className={`text-[11px] tracking-tight transition-all duration-300 ${
+              active === key 
+                ? "font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-paypal-blue to-blue-600 drop-shadow-sm" 
+                : "font-semibold"
+            }`}>{label}</span>
           </button>
         ))}
         </div>
