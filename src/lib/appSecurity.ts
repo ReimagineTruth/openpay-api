@@ -102,9 +102,29 @@ export const isPiBrowserUserAgent = () => {
     /kina/i,  // Kina browser (Pi's official browser)
     /android.*pi/i,  // Android with Pi
     /ios.*pi/i,  // iOS with Pi
+    /pi\s*0\.10/i,  // Pi Browser 0.10 specific
+    /pi\sversion\s*0\.10/i,  // Pi Browser version 0.10
+    /pi\s*browser\s*0\.10/i,  // Pi Browser 0.10
+    /pi\s*browser\s*version\s*0\.10/i,  // Pi Browser version 0.10
+    /pi\s*0\.10\s*browser/i,  // Pi Browser 0.10
+    /chrome.*pi.*0\.10/i,  // Chrome-based Pi Browser 0.10
+    /mobile.*pi.*0\.10/i,  // Mobile Pi Browser 0.10
   ];
   
-  return piPatterns.some(pattern => pattern.test(ua)) || Boolean(window.Pi);
+  // Check for Pi SDK presence
+  const hasPiSDK = Boolean(window.Pi) || Boolean((window as any).Pi);
+  
+  // Check for Pi Browser specific features
+  const hasPiFeatures = typeof window !== 'undefined' && (
+    Boolean((window as any).Pi?.Ads) ||
+    Boolean((window as any).Pi?.authenticate) ||
+    Boolean((window as any).pi_network) ||
+    Boolean((window as any).PiNetwork) ||
+    Boolean((window as any).pi_sdk) ||
+    Boolean((window as any).PiSdk)
+  );
+  
+  return piPatterns.some(pattern => pattern.test(ua)) || hasPiSDK || hasPiFeatures;
 };
 
 export const getBiometricSupportStatus = async (): Promise<BiometricSupportStatus> => {

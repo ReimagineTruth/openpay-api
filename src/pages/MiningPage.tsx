@@ -292,8 +292,8 @@ const MiningPage = () => {
     
     if (!rewardedAt) return;
     
-    // Extended time window from 2 minutes to 5 minutes
-    if (Date.now() - rewardedAt > 5 * 60 * 1000) {
+    // Extended time window from 2 minutes to 10 minutes for Pi Browser 0.10
+    if (Date.now() - rewardedAt > 10 * 60 * 1000) {
       console.log('Ad reward expired, cleaning up');
       window.localStorage.removeItem("pi_ad_rewarded_at");
       window.localStorage.removeItem("pi_ad_rewarded_id");
@@ -316,7 +316,7 @@ const MiningPage = () => {
       } catch (e) {
         console.warn('Failed to clear ad reward storage:', e);
       }
-    }, 10000); // Clear after 10 seconds
+    }, 15000); // Clear after 15 seconds
     
     void handleStartMining({ auto: true, adVerified: true });
   }, [piSdkInitialized, starting, loading, activeSession, claimableSession, timeLeft]);
@@ -333,7 +333,7 @@ const MiningPage = () => {
   const isPiEnvironment = () => {
     if (typeof window === "undefined") return false;
     // More lenient Pi environment detection
-    return isPiBrowserUserAgent() || Boolean(window.Pi) || Boolean((window as any).Pi);
+    return isPiBrowserUserAgent() || Boolean(window.Pi) || Boolean((window as any).Pi) || Boolean((window as any).pi_network);
   };
 
   const resetMiningState = () => {
@@ -827,7 +827,7 @@ const MiningPage = () => {
               <div className="flex items-center justify-center gap-1.5 rounded-full bg-black/20 px-3 py-1 text-xs font-bold uppercase tracking-widest backdrop-blur-sm">
                 <CircleDollarSign className="h-3 w-3 text-yellow-400" />
                 <span>{currentDailyRate.toFixed(2)} OPEN / DAY</span>
-                {isPiBrowserUserAgent() && (
+                {(isPiBrowserUserAgent() || isPiEnvironment()) && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-paypal-blue/20 px-2 py-0.5 text-[10px] font-bold text-paypal-blue">
                     <Zap className="h-2.5 w-2.5" />
                     Pi Browser
