@@ -20,7 +20,9 @@ DECLARE
   v_personal_wallet_balance NUMERIC(12,2);
   v_merchant_available NUMERIC(12,2);
   v_transfer_id UUID;
-  v_merchant_account public.merchant_accounts%ROWTYPE;
+  v_gross NUMERIC(14,2) := 0;
+  v_refunded NUMERIC(14,2) := 0;
+  v_transferred NUMERIC(14,2) := 0;
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Unauthorized';
@@ -48,27 +50,24 @@ BEGIN
     RAISE EXCEPTION 'Insufficient personal wallet balance';
   END IF;
 
-  -- Get and lock the merchant account
-  SELECT * INTO v_merchant_account
-  FROM public.merchant_accounts
-  WHERE user_id = v_user_id AND mode = v_mode
-  FOR UPDATE;
-
-  IF v_merchant_account.id IS NULL THEN
-    RAISE EXCEPTION 'Merchant account not found for mode: %', v_mode;
-  END IF;
-
-  -- Calculate current available balance
-  SELECT COALESCE(
-    SUM(CASE WHEN mp.status = 'succeeded' 
-      THEN ROUND(mp.amount / COALESCE(NULLIF(sc.usd_rate, 0), 1), 2) 
-      ELSE 0 END) - 
-    COALESCE(v_merchant_account.transferred_total, 0) -
-    COALESCE(v_merchant_account.refunded_total, 0), 0
-  ) INTO v_merchant_available
+  -- Calculate current merchant available balance
+  SELECT
+    COALESCE(SUM(CASE WHEN mp.status = 'succeeded' THEN ROUND(mp.amount / COALESCE(NULLIF(sc.usd_rate, 0), 1), 2) ELSE 0 END), 0),
+    COALESCE(SUM(CASE WHEN mp.status = 'refunded' THEN ROUND(mp.amount / COALESCE(NULLIF(sc.usd_rate, 0), 1), 2) ELSE 0 END), 0)
+  INTO v_gross, v_refunded
   FROM public.merchant_payments mp
-  LEFT JOIN public.settlement_currencies sc ON mp.currency_code = sc.code
-  WHERE mp.merchant_id = v_merchant_account.id;
+  LEFT JOIN public.supported_currencies sc
+    ON sc.iso_code = UPPER(COALESCE(mp.currency, 'USD'))
+  WHERE mp.merchant_user_id = v_user_id
+    AND mp.key_mode = v_mode;
+
+  SELECT COALESCE(SUM(mbt.amount), 0)
+  INTO v_transferred
+  FROM public.merchant_balance_transfers mbt
+  WHERE mbt.merchant_user_id = v_user_id
+    AND mbt.key_mode = v_mode;
+
+  v_merchant_available := v_gross - v_refunded - v_transferred;
 
   -- Deduct from personal wallet
   UPDATE public.wallets
@@ -76,18 +75,31 @@ BEGIN
       updated_at = NOW()
   WHERE user_id = v_user_id;
 
-  -- Add to merchant transferred_total
-  UPDATE public.merchant_accounts
-  SET transferred_total = COALESCE(transferred_total, 0) + v_amount,
-      updated_at = NOW()
-  WHERE id = v_merchant_account.id;
-
-  -- Create transfer record
+  -- Add to merchant balance transfers
   v_transfer_id := gen_random_uuid();
 
+  INSERT INTO public.merchant_balance_transfers (
+    id,
+    merchant_user_id,
+    key_mode,
+    amount,
+    transfer_type,
+    note,
+    created_at
+  ) VALUES (
+    v_transfer_id,
+    v_user_id,
+    v_mode,
+    v_amount,
+    'transfer_in',
+    COALESCE(p_note, 'Transfer from personal wallet'),
+    NOW()
+  );
+
+  -- Create activity record
   INSERT INTO public.merchant_activity (
     id,
-    merchant_id,
+    merchant_user_id,
     activity_type,
     amount,
     currency,
@@ -96,8 +108,8 @@ BEGIN
     source,
     created_at
   ) VALUES (
-    v_transfer_id,
-    v_merchant_account.id,
+    gen_random_uuid(),
+    v_user_id,
     'transfer_from_personal_wallet',
     v_amount,
     'OUSD',
