@@ -57,10 +57,21 @@ const MiningPage = () => {
   const [activeReferrals, setActiveReferrals] = useState(0);
   const adRewardHandledRef = useRef(false);
   const [piAuthUser, setPiAuthUser] = useState(false);
+  const [adsWatched, setAdsWatched] = useState(0);
+  const [requiredAds, setRequiredAds] = useState(2);
 
   const persistLocalSession = (session: MiningSession) => {
     if (!session?.user_id || !session?.expires_at) return;
     localStorage.setItem("mining_session", JSON.stringify(session));
+  };
+
+  const persistAdWatchCount = (count: number) => {
+    localStorage.setItem("mining_ads_watched", String(count));
+  };
+
+  const loadAdWatchCount = () => {
+    const stored = localStorage.getItem("mining_ads_watched");
+    return stored ? parseInt(stored, 10) : 0;
   };
 
   const loadMiningData = async () => {
@@ -68,6 +79,10 @@ const MiningPage = () => {
     if (!user) return;
 
     setPiAuthUser(Boolean((user as any)?.user_metadata?.pi_uid));
+    
+    // Load ad watch count
+    const adCount = loadAdWatchCount();
+    setAdsWatched(adCount);
 
     setLoading(true);
     try {
@@ -300,26 +315,53 @@ const MiningPage = () => {
       return;
     }
     
-    console.log('Detected recent ad reward, auto-activating mining:', { 
+    console.log('Detected recent ad reward, updating ad count:', { 
       rewardedAt, 
       rewardedId, 
-      timeSince: Date.now() - rewardedAt 
+      timeSince: Date.now() - rewardedAt,
+      currentAdsWatched: adsWatched
     });
     
-    adRewardHandledRef.current = true;
+    // Increment ad watch count
+    const newAdCount = adsWatched + 1;
+    setAdsWatched(newAdCount);
+    persistAdWatchCount(newAdCount);
     
-    // Don't immediately remove the storage items - give the mining session time to start
-    setTimeout(() => {
+    console.log(`Ad progress: ${newAdCount}/${requiredAds} ads watched`);
+    
+    // Only mark as handled and start mining if required ads reached
+    if (newAdCount >= requiredAds) {
+      console.log('Required ads completed, auto-activating mining');
+      adRewardHandledRef.current = true;
+      
+      // Reset ad count after successful activation
+      setAdsWatched(0);
+      persistAdWatchCount(0);
+      
+      // Don't immediately remove the storage items - give the mining session time to start
+      setTimeout(() => {
+        try {
+          window.localStorage.removeItem("pi_ad_rewarded_at");
+          window.localStorage.removeItem("pi_ad_rewarded_id");
+        } catch (e) {
+          console.warn('Failed to clear ad reward storage:', e);
+        }
+      }, 15000); // Clear after 15 seconds
+      
+      void handleStartMining({ auto: true, adVerified: true });
+    } else {
+      // Clear current ad reward but keep count for next ad
       try {
         window.localStorage.removeItem("pi_ad_rewarded_at");
         window.localStorage.removeItem("pi_ad_rewarded_id");
       } catch (e) {
         console.warn('Failed to clear ad reward storage:', e);
       }
-    }, 15000); // Clear after 15 seconds
-    
-    void handleStartMining({ auto: true, adVerified: true });
-  }, [piSdkInitialized, starting, loading, activeSession, claimableSession, timeLeft]);
+      
+      // Show progress to user
+      toast.success(`Ad ${newAdCount}/${requiredAds} completed! Watch ${requiredAds - newAdCount} more ad${requiredAds - newAdCount > 1 ? 's' : ''} to start mining.`);
+    }
+  }, [piSdkInitialized, starting, loading, activeSession, claimableSession, timeLeft, adsWatched, requiredAds]);
 
   const initPi = () => {
     if (!window.Pi) {
@@ -340,6 +382,8 @@ const MiningPage = () => {
     setActiveSession(null);
     setClaimableSession(null);
     setTimeLeft(0);
+    setAdsWatched(0);
+    persistAdWatchCount(0);
     localStorage.removeItem("mining_session");
   };
 
@@ -875,7 +919,7 @@ const MiningPage = () => {
                 className="group relative mt-8 h-16 w-full max-w-[260px] overflow-hidden rounded-[1.25rem] bg-white text-lg font-black uppercase tracking-wider text-[#003087] hover:bg-white/90 shadow-[0_8px_20px_rgba(255,255,255,0.3)] transition-all active:scale-95"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-paypal-blue/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                {starting ? "Initializing..." : "Engage Mining"}
+                {starting ? "Initializing..." : adsWatched > 0 ? `Continue (${adsWatched}/${requiredAds} Ads)` : "Engage Mining"}
               </Button>
             )}
 
@@ -1077,10 +1121,35 @@ const MiningPage = () => {
         }
       }}>
         <DialogContent className="rounded-2xl">
-          <DialogTitle>Watch Ad to Start Mining</DialogTitle>
+          <DialogTitle>Watch Ads to Start Mining</DialogTitle>
           <div className="mt-2 text-sm text-muted-foreground">
-            Please watch this short ad to unlock your mining session.
+            Watch {requiredAds} rewarded ads to unlock your mining session. Progress: {adsWatched}/{requiredAds}
           </div>
+          
+          {/* Progress indicator */}
+          <div className="mt-3">
+            <div className="flex gap-1">
+              {Array.from({ length: requiredAds }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 flex-1 rounded-full ${
+                    index < adsWatched 
+                      ? 'bg-green-500' 
+                      : 'bg-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-xs font-medium text-muted-foreground text-center">
+              {adsWatched === 0 
+                ? `Watch ${requiredAds} ads to start mining`
+                : adsWatched < requiredAds 
+                  ? `${requiredAds - adsWatched} more ad${requiredAds - adsWatched > 1 ? 's' : ''} needed`
+                  : 'All ads completed! Starting mining...'
+              }
+            </p>
+          </div>
+          
           <div className="mt-4 h-40 w-full overflow-hidden rounded-xl bg-secondary/40">
             {adImgError ? (
               <div className="flex h-full w-full items-center justify-center gap-2 text-muted-foreground">
@@ -1099,13 +1168,13 @@ const MiningPage = () => {
             )}
           </div>
           <div className="mt-3">
-            <p className="text-base font-semibold text-foreground">Watch Rewarded Ad</p>
+            <p className="text-base font-semibold text-foreground">Watch Rewarded Ad {adsWatched + 1}/{requiredAds}</p>
             <p className="text-sm text-muted-foreground">
-              Click Continue to watch a Pi Network rewarded ad. After watching, you can start mining!
+              Click Continue to watch a Pi Network rewarded ad. Complete {requiredAds} ads to start mining!
             </p>
           </div>
           <div className="mt-2 h-10 rounded-xl bg-secondary/50 flex items-center justify-center text-muted-foreground text-sm">
-            {adLoading ? "Loading ad..." : `Ready to watch ad`}
+            {adLoading ? "Loading ad..." : `Ready to watch ad ${adsWatched + 1}/${requiredAds}`}
           </div>
           <Button asChild variant="outline" className="mt-3 w-full rounded-2xl">
             <a
@@ -1128,7 +1197,7 @@ const MiningPage = () => {
                 }
               }}
             >
-              {adLoading ? "Loading Ad..." : "Continue"}
+              {adLoading ? "Loading Ad..." : `Watch Ad ${adsWatched + 1}/${requiredAds}`}
             </Button>
           </div>
         </DialogContent>
