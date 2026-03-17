@@ -14,7 +14,7 @@ import BrandLogo from "@/components/BrandLogo";
 import SplashScreen from "@/components/SplashScreen";
 
 // OpenRouter API integration
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 
 type Message = {
   id: string;
