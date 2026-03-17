@@ -71,6 +71,15 @@ const OpenPayAIPage = () => {
 
   useEffect(() => {
     loadUserData();
+    // Test API connectivity on mount
+    testAPIConnectivity().then(isConnected => {
+      if (!isConnected) {
+        console.error("❌ API connectivity test failed on mount");
+        toast.error("AI service is not available. Please check your internet connection.");
+      } else {
+        console.log("✅ API connectivity test passed on mount");
+      }
+    });
   }, []);
 
   const loadUserData = async () => {
@@ -404,6 +413,43 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
     }
   };
 
+  const testAPIConnectivity = async () => {
+    console.log("🧪 Testing API connectivity...");
+    try {
+      const testResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://openpay.app",
+          "X-Title": "OpenPay AI Test"
+        },
+        body: JSON.stringify({
+          model: "nvidia/nemotron-3-super-120b-a12b:free",
+          messages: [
+            {
+              role: "user",
+              content: "Hello, this is a test. Are you working?"
+            }
+          ],
+          max_tokens: 10
+        })
+      });
+
+      if (testResponse.ok) {
+        const data = await testResponse.json();
+        console.log("✅ API connectivity test successful:", data);
+        return true;
+      } else {
+        console.error("❌ API connectivity test failed:", testResponse.status);
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ API connectivity test error:", error);
+      return false;
+    }
+  };
+
   const processUserMessage = async (message: string) => {
     const lowerMessage = message.toLowerCase();
     
@@ -456,6 +502,8 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return;
 
+    console.log("📝 User sending message:", inputMessage);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -468,7 +516,9 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
     setIsTyping(true);
 
     try {
+      console.log("🤖 Processing message with AI...");
       const aiResponse = await processUserMessage(inputMessage);
+      console.log("✅ AI response received:", aiResponse);
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -477,7 +527,7 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
         timestamp: new Date().toISOString(),
         type: pendingPayment ? "payment" : "text"
       };
-
+      
       setMessages(prev => [...prev, assistantMessage]);
       
       // Save both messages
@@ -485,9 +535,10 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
         saveMessage(userMessage),
         saveMessage(assistantMessage)
       ]);
-
+      
+      console.log("💾 Messages saved to database");
     } catch (error) {
-      console.error("Error processing message:", error);
+      console.error("❌ Error processing message:", error);
       toast.error("Failed to process your message");
     } finally {
       setIsTyping(false);
