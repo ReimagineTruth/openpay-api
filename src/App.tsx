@@ -156,9 +156,11 @@ const AppRoutes = () => {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
         
-        // Only redirect if not already on dashboard or auth callback
-        if (location.pathname !== '/dashboard' && 
-            location.pathname !== '/auth/callback') {
+        // Only redirect if not already on a valid page and not coming from background
+        const validPaths = ['/dashboard', '/auth/callback', '/mining', '/menu', '/activity', '/send', '/receive', '/contacts', '/settings', '/profile'];
+        const isValidPath = validPaths.some(path => location.pathname === path) || location.pathname.startsWith('/topup') || location.pathname.startsWith('/buttons');
+        
+        if (!isValidPath) {
           console.log('Redirecting to dashboard from:', location.pathname);
           navigateRef.current('/dashboard', { replace: true });
         }

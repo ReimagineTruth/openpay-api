@@ -828,7 +828,7 @@ const MiningPage = () => {
                 <CircleDollarSign className="h-3 w-3 text-yellow-400" />
                 <span>{currentDailyRate.toFixed(2)} OPEN / DAY</span>
                 {(isPiBrowserUserAgent() || isPiEnvironment()) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-paypal-blue/20 px-2 py-0.5 text-[10px] font-bold text-paypal-blue">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">
                     <Zap className="h-2.5 w-2.5" />
                     Pi Browser
                   </span>
