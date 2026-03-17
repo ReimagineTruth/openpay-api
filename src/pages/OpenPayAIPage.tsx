@@ -637,6 +637,10 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
                 <CardTitle className="text-sm flex items-center gap-2">
                   <PieChart className="h-4 w-4 text-blue-600" />
                   Spending Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Spending categories breakdown will appear here.</p>
               </CardContent>
             </Card>
 
