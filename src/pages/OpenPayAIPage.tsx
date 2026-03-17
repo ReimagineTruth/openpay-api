@@ -174,7 +174,7 @@ const OpenPayAIPage = () => {
       type: "balance",
       title: "Current Balance",
       description: "Available funds in your wallet",
-      value: `₱${userBalance.toFixed(2)}`,
+      value: `$${userBalance.toFixed(2)}`,
       trend: "stable"
     });
 
@@ -184,7 +184,7 @@ const OpenPayAIPage = () => {
       type: "spending",
       title: "Monthly Spending",
       description: "Total spent this month",
-      value: `₱${todaySpending.toFixed(2)}`,
+      value: `$${todaySpending.toFixed(2)}`,
       trend: todaySpending > 10000 ? "up" : "stable"
     });
 
@@ -337,14 +337,14 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
 - Assist with mining and staking operations
 
 ## Current User Context:
-- Balance: ₱${userBalance.toFixed(2)}
-- Monthly spending: ₱${spendingCategories.reduce((sum, cat) => sum + cat.amount, 0).toFixed(2)}
+- Balance: $${userBalance.toFixed(2)}
+- Monthly spending: $${spendingCategories.reduce((sum, cat) => sum + cat.amount, 0).toFixed(2)}
 - Top spending categories: ${spendingCategories.slice(0, 3).map(c => c.name).join(", ")}
 - Budget alerts: ${budgetAlerts.length} active alerts
 
 ## Response Guidelines:
 - Be comprehensive but clear and concise
-- Use Philippine Peso (₱) for amounts
+- Use US Dollar ($) for amounts
 - Provide specific, actionable advice
 - Include step-by-step instructions when helpful
 - Mention relevant fees or limits
@@ -428,7 +428,7 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
 
     // Check for balance requests
     if (lowerMessage.includes("balance")) {
-      return `Your current balance is ₱${userBalance.toFixed(2)}. ${userBalance < 1000 ? '⚠️ Low balance warning' : '✅ Good balance status'}`;
+      return `Your current balance is $${userBalance.toFixed(2)}. ${userBalance < 1000 ? '⚠️ Low balance warning' : '✅ Good balance status'}`;
     }
 
     // Check for spending analysis
@@ -436,8 +436,8 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
       const totalSpent = spendingCategories.reduce((sum, cat) => sum + cat.amount, 0);
       const topCategory = spendingCategories[0];
       
-      return `This month you've spent ₱${totalSpent.toFixed(2)}. 
-        ${topCategory ? `Your top spending category is ${topCategory.name} at ₱${topCategory.amount.toFixed(2)} (${topCategory.percentage.toFixed(1)}%).` : ''}
+      return `This month you've spent $${totalSpent.toFixed(2)}. 
+        ${topCategory ? `Your top spending category is ${topCategory.name} at $${topCategory.amount.toFixed(2)} (${topCategory.percentage.toFixed(1)}%).` : ''}
         ${budgetAlerts.length > 0 ? `⚠️ You have ${budgetAlerts.length} budget alert(s) to review.` : '✅ Your spending looks normal.'}`;
     }
 
@@ -499,7 +499,7 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
 
     try {
       // Here you would integrate with your payment system
-      toast.success(`Payment of ₱${pendingPayment.amount.toFixed(2)} to @${pendingPayment.recipient} initiated`);
+      toast.success(`Payment of $${pendingPayment.amount.toFixed(2)} to @${pendingPayment.recipient} initiated`);
       
       setPendingPayment(null);
       setShowPaymentConfirm(false);
@@ -508,7 +508,7 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
       const confirmationMessage: Message = {
         id: (Date.now() + 2).toString(),
         role: "assistant",
-        content: `✅ Payment of ₱${pendingPayment.amount.toFixed(2)} to @${pendingPayment.recipient} has been processed successfully.`,
+        content: `✅ Payment of $${pendingPayment.amount.toFixed(2)} to @${pendingPayment.recipient} has been processed successfully.`,
         timestamp: new Date().toISOString(),
         type: "text"
       };
@@ -586,26 +586,6 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
                 <CardTitle className="text-sm flex items-center gap-2">
                   <PieChart className="h-4 w-4 text-blue-600" />
                   Spending Categories
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {spendingCategories.slice(0, 5).map((category, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <span className="text-xs">{category.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-medium">₱{category.amount.toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">{category.percentage.toFixed(1)}%</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </CardContent>
             </Card>
 
@@ -623,7 +603,7 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
                     {budgetAlerts.map((alert, index) => (
                       <Alert key={index} className="p-2">
                         <AlertDescription className="text-xs">
-                          <strong>{alert.category}</strong>: ₱{alert.spent.toFixed(2)} / ₱{alert.limit.toFixed(2)} ({alert.percentage.toFixed(0)}%)
+                          <strong>{alert.category}</strong>: ${alert.spent.toFixed(2)} / ${alert.limit.toFixed(2)} ({alert.percentage.toFixed(0)}%)
                         </AlertDescription>
                       </Alert>
                     ))}
@@ -909,19 +889,19 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Amount:</span>
-                    <span className="font-semibold">₱{pendingPayment.amount.toFixed(2)}</span>
+                    <span className="font-semibold">${pendingPayment.amount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Recipient:</span>
-                    <span className="font-semibold">@{pendingPayment.recipient}</span>
+                    <span className="font-semibold">@${pendingPayment.recipient}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Fee:</span>
-                    <span className="font-semibold">₱0.00</span>
+                    <span className="font-semibold">$0.00</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between font-semibold">
                     <span>Total:</span>
-                    <span>₱{pendingPayment.amount.toFixed(2)}</span>
+                    <span>${pendingPayment.amount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
