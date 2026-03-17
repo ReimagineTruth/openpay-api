@@ -49,6 +49,7 @@ import ButtonsDonatePage from "./pages/buttons/ButtonsDonatePage";
 import ButtonsSubscribePage from "./pages/buttons/ButtonsSubscribePage";
 import ButtonsEmbedsPage from "./pages/buttons/ButtonsEmbedsPage";
 import OpenPayGuidePage from "./pages/OpenPayGuidePage";
+import OpenPayAIPage from "./pages/OpenPayAIPage";
 import PublicLedgerPage from "./pages/PublicLedgerPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import TermsPage from "./pages/TermsPage";
@@ -247,6 +248,7 @@ const AppRoutes = () => {
         <Route path="/currency-converter" element={<CurrencyConverterPage />} />
         <Route path="/remittance-center" element={<RemittanceCenterPage />} />
         <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/ai" element={<OpenPayAIPage />} />
         <Route path="/request-payment" element={<RequestMoney />} />
         <Route path="/send-invoice" element={<SendInvoice />} />
         <Route path="/disputes" element={<DisputesPage />} />

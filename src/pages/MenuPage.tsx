@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
-import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck, History, MessageSquare } from "lucide-react";
+import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck, History, MessageSquare, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { clearAllAppSecurityUnlocks } from "@/lib/appSecurity";
 import { canAccessRemittanceMerchant, isRemittanceUiEnabled } from "@/lib/remittanceAccess";
@@ -177,6 +177,7 @@ const MenuPage = () => {
       items: [
         { icon: Wallet, label: "Wallet", action: () => navigate("/dashboard") },
         { icon: TrendingUp, label: "Analytics", action: () => navigate("/dashboard?section=analytics") },
+        { icon: Bot, label: "OpenPay AI", action: () => navigate("/ai") },
         { icon: Users, label: "User profile", action: () => navigate("/profile") },
         { icon: ShieldCheck, label: "Two-Factor Auth", action: () => navigate("/two-factor") },
         { icon: UserCheck, label: "KYC Verification", action: () => navigate("/kyc") },
