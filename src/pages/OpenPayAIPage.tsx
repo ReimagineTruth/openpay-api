@@ -260,7 +260,14 @@ const OpenPayAIPage = () => {
   };
 
   const callOpenRouterAPI = async (prompt: string) => {
+    if (!OPENROUTER_API_KEY) {
+      console.error("OpenRouter API key not found");
+      return "AI service is not configured. Please check your environment variables.";
+    }
+
     try {
+      console.log("Calling OpenRouter API with key:", OPENROUTER_API_KEY?.substring(0, 10) + "...");
+      
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -298,7 +305,21 @@ const OpenPayAIPage = () => {
         })
       });
 
+      console.log("OpenRouter API response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("OpenRouter API error response:", errorText);
+        return `AI service error (${response.status}): ${errorText}`;
+      }
+
       const data = await response.json();
+      console.log("OpenRouter API response data:", data);
+      
+      if (!data.choices || data.choices.length === 0) {
+        return "No response from AI service. Please try again.";
+      }
+      
       return data.choices[0]?.message?.content || "Sorry, I couldn't process your request.";
     } catch (error) {
       console.error("OpenRouter API error:", error);
@@ -307,8 +328,10 @@ const OpenPayAIPage = () => {
   };
 
   const processUserMessage = async (message: string) => {
-    // Check for payment commands
-    const paymentRegex = /send|transfer|pay\s+(\d+(?:\.\d{2})?)\s*(?:php|₱)?\s*(?:to\s*)?@?(\w+)/i;
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for payment commands (improved regex)
+    const paymentRegex = /(?:send|transfer|pay)\s+(\d+(?:\.\d{2})?)\s*(?:php|₱)?\s*(?:to\s*)?@?(\w+)/i;
     const paymentMatch = message.match(paymentRegex);
 
     if (paymentMatch) {
@@ -322,12 +345,12 @@ const OpenPayAIPage = () => {
     }
 
     // Check for balance requests
-    if (message.toLowerCase().includes("balance")) {
+    if (lowerMessage.includes("balance")) {
       return `Your current balance is ₱${userBalance.toFixed(2)}. ${userBalance < 1000 ? '⚠️ Low balance warning' : '✅ Good balance status'}`;
     }
 
     // Check for spending analysis
-    if (message.toLowerCase().includes("spending") || message.toLowerCase().includes("analyze")) {
+    if (lowerMessage.includes("spending") || lowerMessage.includes("analyze")) {
       const totalSpent = spendingCategories.reduce((sum, cat) => sum + cat.amount, 0);
       const topCategory = spendingCategories[0];
       
@@ -336,8 +359,13 @@ const OpenPayAIPage = () => {
         ${budgetAlerts.length > 0 ? `⚠️ You have ${budgetAlerts.length} budget alert(s) to review.` : '✅ Your spending looks normal.'}`;
     }
 
-    // Default to AI for complex queries
-    return await callOpenRouterAPI(message);
+    // Try AI for complex queries
+    try {
+      return await callOpenRouterAPI(message);
+    } catch (error) {
+      console.error("AI fallback error:", error);
+      return "I'm here to help with basic financial tasks. You can ask me to:\n• Check your balance\n• Analyze spending\n• Send money (e.g., 'Send 100 to @username')\n• Create budgets\n\nFor advanced AI features, please check your connection and try again.";
+    }
   };
 
   const handleSendMessage = async () => {
