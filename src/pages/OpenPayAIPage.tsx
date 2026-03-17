@@ -375,24 +375,27 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
         })
       });
 
-      console.log("OpenRouter API response status:", response.status);
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", response.headers);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("OpenRouter API error response:", errorText);
+        console.error("❌ OpenRouter API error response:", errorText);
         return `AI service error (${response.status}): ${errorText}`;
       }
 
       const data = await response.json();
-      console.log("OpenRouter API response data:", data);
+      console.log("✅ OpenRouter API response data:", data);
       
       if (!data.choices || data.choices.length === 0) {
+        console.error("❌ No choices in response");
         return "No response from AI service. Please try again.";
       }
       
       const aiResponse = data.choices[0]?.message?.content || "I apologize, but I couldn't generate a response. Please try again.";
       
-      console.log("OpenRouter API response length:", aiResponse.length);
+      console.log("✅ AI Response length:", aiResponse.length);
+      console.log("✅ AI Response preview:", aiResponse.substring(0, 100) + "...");
       
       return aiResponse;
     } catch (error) {
@@ -403,6 +406,11 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
 
   const processUserMessage = async (message: string) => {
     const lowerMessage = message.toLowerCase();
+    
+    // Test API connectivity first
+    if (!OPENROUTER_API_KEY) {
+      return "⚠️ AI service is not configured. Please check your environment variables and restart the app.";
+    }
     
     // Check for payment commands (improved regex)
     const paymentRegex = /(?:send|transfer|pay)\s+(\d+(?:\.\d{2})?)\s*(?:php|₱)?\s*(?:to\s*)?@?(\w+)/i;
@@ -415,7 +423,7 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
       setPendingPayment({ amount, recipient });
       setShowPaymentConfirm(true);
       
-      return "I can help you send money. Please confirm the payment details below.";
+      return "I can help you send money. Please confirm payment details below.";
     }
 
     // Check for balance requests
@@ -435,10 +443,13 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
 
     // Try AI for complex queries
     try {
-      return await callOpenRouterAPI(message);
+      console.log("🤖 Attempting AI response for:", message);
+      const aiResponse = await callOpenRouterAPI(message);
+      console.log("✅ AI response successful");
+      return aiResponse;
     } catch (error) {
-      console.error("AI fallback error:", error);
-      return "I'm here to help with basic financial tasks. You can ask me to:\n• Check your balance\n• Analyze spending\n• Send money (e.g., 'Send 100 to @username')\n• Create budgets\n\nFor advanced AI features, please check your connection and try again.";
+      console.error("❌ AI fallback error:", error);
+      return "I'm here to help with basic financial tasks. You can ask me to:\n\n• Check your balance\n• Analyze spending\n• Send money (e.g., 'Send 100 to @username')\n• Create budgets\n• Get help with any OpenPay feature\n\nFor advanced AI features, please check your connection and try again.";
     }
   };
 
