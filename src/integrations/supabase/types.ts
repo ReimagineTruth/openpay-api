@@ -49,6 +49,50 @@ export type Database = {
           },
         ]
       }
+      api_access_logs: {
+        Row: {
+          app_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: string | null
+          method: string
+          response_time_ms: number | null
+          status_code: number
+          user_id: string | null
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number
+          user_id?: string | null
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_access_logs_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "developer_apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_notifications: {
         Row: {
           created_at: string
@@ -102,6 +146,101 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      developer_apps: {
+        Row: {
+          app_description: string
+          app_name: string
+          app_url: string
+          client_id: string
+          client_secret_hash: string
+          client_secret_last4: string
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          rate_limit_per_minute: number
+          redirect_uris: string[]
+          scopes: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_description?: string
+          app_name: string
+          app_url?: string
+          client_id?: string
+          client_secret_hash?: string
+          client_secret_last4?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          rate_limit_per_minute?: number
+          redirect_uris?: string[]
+          scopes?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_description?: string
+          app_name?: string
+          app_url?: string
+          client_id?: string
+          client_secret_hash?: string
+          client_secret_last4?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          rate_limit_per_minute?: number
+          redirect_uris?: string[]
+          scopes?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      developer_webhooks: {
+        Row: {
+          app_id: string
+          created_at: string
+          events: string[]
+          id: string
+          is_active: boolean
+          secret_hash: string
+          updated_at: string
+          webhook_url: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          secret_hash?: string
+          updated_at?: string
+          webhook_url: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          secret_hash?: string
+          updated_at?: string
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_webhooks_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "developer_apps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       disputes: {
         Row: {
@@ -990,6 +1129,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      oauth_authorizations: {
+        Row: {
+          access_token_hash: string
+          app_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token_hash: string | null
+          revoked_at: string | null
+          scopes: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_hash?: string
+          app_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token_hash?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_hash?: string
+          app_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token_hash?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_authorizations_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "developer_apps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       open_partner_leads: {
         Row: {
