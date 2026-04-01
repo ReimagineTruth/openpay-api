@@ -67,13 +67,9 @@ const TwoFactorAuthPage = () => {
   };
 
   const generateTOTPSecret = (): string => {
-    // Generate a random base32 secret
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return secret;
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    return Array.from(bytes).map(b => chars[b % chars.length]).join('');
   };
 
   const generateQRCode = async (secret: string, issuer: string, accountName: string): Promise<string> => {
