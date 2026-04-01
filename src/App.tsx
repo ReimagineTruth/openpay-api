@@ -96,6 +96,8 @@ import AdminKycReview from "./pages/AdminKycReview";
 import LiveCustomerServicePage from "./pages/LiveCustomerServicePage";
 import SwapWithdrawalPage from "./pages/SwapWithdrawalPage";
 import ConfirmPinPage from "./pages/ConfirmPinPage";
+import SmartContractApiPage from "./pages/SmartContractApiPage";
+import DeveloperDashboardPage from "./pages/DeveloperDashboardPage";
 import NotFound from "./pages/NotFound";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { useRealtimePushNotifications } from "./hooks/useRealtimePushNotifications";
