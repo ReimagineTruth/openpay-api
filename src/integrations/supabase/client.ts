@@ -5,14 +5,6 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-const offlineAwareFetch: typeof fetch = (input, init) => {
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return Promise.reject(new Error("No internet connection"));
-  }
-
-  return fetch(input, init);
-};
-
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -21,23 +13,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  },
-  global: {
-    fetch: offlineAwareFetch,
-  },
+  }
 });
-
-if (typeof window !== "undefined") {
-  const syncAutoRefreshState = () => {
-    if (navigator.onLine) {
-      supabase.auth.startAutoRefresh();
-      return;
-    }
-
-    supabase.auth.stopAutoRefresh();
-  };
-
-  syncAutoRefreshState();
-  window.addEventListener("online", syncAutoRefreshState);
-  window.addEventListener("offline", syncAutoRefreshState);
-}
