@@ -222,7 +222,7 @@ const SupportWidget = () => {
         .order("name");
       setSupportCategories((catData || []) as SupportCategory[]);
 
-      const { data: priorityData } = await supabase
+      const { data: priorityData } = await (supabase as any)
         .from("support_priorities")
         .select("id, level, description, color, auto_assign_hours")
         .order("auto_assign_hours");
