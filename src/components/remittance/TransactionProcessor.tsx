@@ -102,14 +102,14 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
     if (!selectedStore) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_transactions")
         .select("*")
         .eq("merchant_id", selectedStore.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setTransactions(data || []);
+      setTransactions((data || []) as RemittanceTransaction[]);
     } catch (error) {
       console.error("Error loading transactions:", error);
       toast.error("Failed to load transactions");
