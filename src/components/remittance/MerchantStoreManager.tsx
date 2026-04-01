@@ -141,14 +141,14 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_merchant_fees")
         .select("*")
         .in("merchant_id", stores.map(s => s.id))
         .eq("is_active", true);
 
       if (error) throw error;
-      setFees(data || []);
+      setFees((data || []) as MerchantFee[]);
     } catch (error) {
       console.error("Error loading fees:", error);
     }
