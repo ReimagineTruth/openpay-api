@@ -255,7 +255,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
 
   const handleDeleteStore = async (storeId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("remittance_merchants")
         .delete()
         .eq("id", storeId);

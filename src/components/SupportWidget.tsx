@@ -311,7 +311,7 @@ const SupportWidget = () => {
 
   useEffect(() => {
     const loadMessages = async (conversationId: string) => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("support_messages")
         .select("id, conversation_id, sender_id, sender_role, message, attachment_url, attachment_type, message_status, priority, category, created_at, read_at")
         .eq("conversation_id", conversationId)
