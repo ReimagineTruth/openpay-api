@@ -120,14 +120,14 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
     if (!selectedStore) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_merchant_fees")
         .select("*")
         .eq("merchant_id", selectedStore.id)
         .eq("is_active", true);
 
       if (error) throw error;
-      setFees(data || []);
+      setFees((data || []) as MerchantFee[]);
     } catch (error) {
       console.error("Error loading fees:", error);
     }
