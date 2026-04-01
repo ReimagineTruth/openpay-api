@@ -219,7 +219,7 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
 
   const handleProcessTransaction = async (transactionId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("remittance_transactions")
         .update({
           status: newStatus,
