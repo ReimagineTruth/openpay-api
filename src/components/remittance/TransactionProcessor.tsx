@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRightLeft, DollarSign, User, Phone, Mail, Globe, Receipt, CheckCircle, Clock, AlertCircle, Search, Filter, Download, QrCode } from "lucide-react";
+import { ArrowRightLeft, DollarSign, User, Phone, Mail, Globe, Receipt, CheckCircle, Clock, AlertCircle, Search, Filter, Download, QrCode, Store } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { QRCodeSVG } from "qrcode.react";
