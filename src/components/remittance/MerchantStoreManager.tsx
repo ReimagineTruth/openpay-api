@@ -127,7 +127,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setStores(data || []);
+      setStores((data || []) as any);
     } catch (error) {
       console.error("Error loading stores:", error);
       toast.error("Failed to load stores");
