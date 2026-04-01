@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRightLeft, DollarSign, User, Phone, Mail, Globe, Receipt, CheckCircle, Clock, AlertCircle, Search, Filter, Download, QrCode } from "lucide-react";
+import { ArrowRightLeft, DollarSign, User, Phone, Mail, Globe, Receipt, CheckCircle, Clock, AlertCircle, Search, Filter, Download, QrCode, Store } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { QRCodeSVG } from "qrcode.react";
@@ -102,14 +102,14 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
     if (!selectedStore) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_transactions")
         .select("*")
         .eq("merchant_id", selectedStore.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setTransactions(data || []);
+      setTransactions((data || []) as RemittanceTransaction[]);
     } catch (error) {
       console.error("Error loading transactions:", error);
       toast.error("Failed to load transactions");
@@ -120,14 +120,14 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
     if (!selectedStore) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_merchant_fees")
         .select("*")
         .eq("merchant_id", selectedStore.id)
         .eq("is_active", true);
 
       if (error) throw error;
-      setFees(data || []);
+      setFees((data || []) as MerchantFee[]);
     } catch (error) {
       console.error("Error loading fees:", error);
     }
@@ -190,7 +190,7 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
         notes: transactionForm.notes || null,
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_transactions")
         .insert(transactionData)
         .select()
@@ -199,9 +199,9 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
       if (error) throw error;
 
       // Update merchant revenue
-      await supabase.rpc("update_merchant_revenue", {
+      await (supabase as any).rpc("update_merchant_revenue", {
         p_merchant_id: selectedStore.id,
-        p_transaction_id: data.id,
+        p_transaction_id: (data as any).id,
         p_fee_amount: feeAmount,
       });
 
@@ -219,7 +219,7 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
 
   const handleProcessTransaction = async (transactionId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("remittance_transactions")
         .update({
           status: newStatus,

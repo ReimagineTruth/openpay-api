@@ -215,14 +215,14 @@ const SupportWidget = () => {
       setFaqItems((itemRows || []) as SupportFaqItem[]);
 
       // Load support categories and priorities
-      const { data: catData } = await supabase
+      const { data: catData } = await (supabase as any)
         .from("support_categories")
         .select("id, name, description, icon, color, is_active")
         .eq("is_active", true)
         .order("name");
       setSupportCategories((catData || []) as SupportCategory[]);
 
-      const { data: priorityData } = await supabase
+      const { data: priorityData } = await (supabase as any)
         .from("support_priorities")
         .select("id, level, description, color, auto_assign_hours")
         .order("auto_assign_hours");
@@ -311,7 +311,7 @@ const SupportWidget = () => {
 
   useEffect(() => {
     const loadMessages = async (conversationId: string) => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("support_messages")
         .select("id, conversation_id, sender_id, sender_role, message, attachment_url, attachment_type, message_status, priority, category, created_at, read_at")
         .eq("conversation_id", conversationId)

@@ -127,7 +127,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setStores(data || []);
+      setStores((data || []) as any);
     } catch (error) {
       console.error("Error loading stores:", error);
       toast.error("Failed to load stores");
@@ -141,14 +141,14 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_merchant_fees")
         .select("*")
         .in("merchant_id", stores.map(s => s.id))
         .eq("is_active", true);
 
       if (error) throw error;
-      setFees(data || []);
+      setFees((data || []) as MerchantFee[]);
     } catch (error) {
       console.error("Error loading fees:", error);
     }
@@ -167,7 +167,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
       };
 
       if (editingStore) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchants")
           .update(storeData)
           .eq("id", editingStore.id);
@@ -175,7 +175,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
         if (error) throw error;
         toast.success("Store updated successfully");
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchants")
           .insert(storeData);
 
@@ -220,7 +220,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
       };
 
       if (editingFee) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchant_fees")
           .update(feeData)
           .eq("id", editingFee.id);
@@ -228,7 +228,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
         if (error) throw error;
         toast.success("Fee updated successfully");
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchant_fees")
           .insert(feeData);
 
@@ -255,7 +255,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
 
   const handleDeleteStore = async (storeId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("remittance_merchants")
         .delete()
         .eq("id", storeId);

@@ -305,7 +305,7 @@ const KycPage = () => {
               )}
             </div>
 
-            {currentApplication.status === 'rejected' && (
+            {(currentApplication.status as string) === 'rejected' && (
               <Button 
                 onClick={() => window.location.reload()} 
                 className="w-full mt-6 bg-paypal-blue hover:bg-[#004dc5]"

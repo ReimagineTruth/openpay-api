@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, DollarSign, Calendar, Download, Filter, BarChart3, PieChart, Activity } from "lucide-react";
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, Legend } from "recharts";
 
 interface MerchantStore {
   id: string;
@@ -62,7 +62,7 @@ const RevenueTracker: React.FC<RevenueTrackerProps> = ({ selectedStore }) => {
       setLoading(true);
       const { startDate, endDate } = getDateRange(dateRange);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_merchant_revenue")
         .select("*")
         .eq("merchant_id", selectedStore.id)
@@ -71,7 +71,7 @@ const RevenueTracker: React.FC<RevenueTrackerProps> = ({ selectedStore }) => {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setRevenueData(data || []);
+      setRevenueData((data || []) as RevenueData[]);
     } catch (error) {
       console.error("Error loading revenue data:", error);
     } finally {
@@ -85,7 +85,7 @@ const RevenueTracker: React.FC<RevenueTrackerProps> = ({ selectedStore }) => {
     try {
       const { startDate, endDate } = getDateRange(dateRange);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_transactions")
         .select("*")
         .eq("merchant_id", selectedStore.id)
@@ -95,7 +95,7 @@ const RevenueTracker: React.FC<RevenueTrackerProps> = ({ selectedStore }) => {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setTransactionData(data || []);
+      setTransactionData((data || []) as TransactionData[]);
     } catch (error) {
       console.error("Error loading transaction data:", error);
     }
