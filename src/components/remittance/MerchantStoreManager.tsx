@@ -228,7 +228,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
         if (error) throw error;
         toast.success("Fee updated successfully");
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchant_fees")
           .insert(feeData);
 
