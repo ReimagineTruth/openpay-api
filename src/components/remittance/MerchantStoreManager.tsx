@@ -167,7 +167,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
       };
 
       if (editingStore) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchants")
           .update(storeData)
           .eq("id", editingStore.id);
