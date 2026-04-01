@@ -171,7 +171,7 @@ const AppRoutes = () => {
           '/whitepaper', '/gdpr', '/legal', '/merchant-onboarding', '/merchant-products',
           '/virtual-card', '/kyc', '/kyc-status', '/remittance-merchant', '/openpay-official',
           '/openapp', '/openpay-desktop', '/live-customer-service', '/support', '/topup-history',
-          '/swap-withdrawal', '/confirm-pin'
+          '/swap-withdrawal', '/confirm-pin', '/smart-contract-api', '/developer-dashboard'
         ];
         const isValidPath = validPaths.some(path => location.pathname === path) || 
                            location.pathname.startsWith('/topup') || 
