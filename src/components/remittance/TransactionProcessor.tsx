@@ -190,7 +190,7 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
         notes: transactionForm.notes || null,
       };
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_transactions")
         .insert(transactionData)
         .select()
@@ -199,9 +199,9 @@ const TransactionProcessor: React.FC<TransactionProcessorProps> = ({ selectedSto
       if (error) throw error;
 
       // Update merchant revenue
-      await supabase.rpc("update_merchant_revenue", {
+      await (supabase as any).rpc("update_merchant_revenue", {
         p_merchant_id: selectedStore.id,
-        p_transaction_id: data.id,
+        p_transaction_id: (data as any).id,
         p_fee_amount: feeAmount,
       });
 
