@@ -308,6 +308,8 @@ const AppRoutes = () => {
         <Route path="/topup-history" element={<TopUpHistoryPage />} />
         <Route path="/swap-withdrawal" element={<SwapWithdrawalPage />} />
         <Route path="/confirm-pin" element={<ConfirmPinPage />} />
+        <Route path="/smart-contract-api" element={<SmartContractApiPage />} />
+        <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </PageTransition>
