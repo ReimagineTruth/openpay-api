@@ -62,7 +62,7 @@ const RevenueTracker: React.FC<RevenueTrackerProps> = ({ selectedStore }) => {
       setLoading(true);
       const { startDate, endDate } = getDateRange(dateRange);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("remittance_merchant_revenue")
         .select("*")
         .eq("merchant_id", selectedStore.id)
@@ -71,7 +71,7 @@ const RevenueTracker: React.FC<RevenueTrackerProps> = ({ selectedStore }) => {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setRevenueData(data || []);
+      setRevenueData((data || []) as RevenueData[]);
     } catch (error) {
       console.error("Error loading revenue data:", error);
     } finally {
