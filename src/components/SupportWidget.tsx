@@ -215,7 +215,7 @@ const SupportWidget = () => {
       setFaqItems((itemRows || []) as SupportFaqItem[]);
 
       // Load support categories and priorities
-      const { data: catData } = await supabase
+      const { data: catData } = await (supabase as any)
         .from("support_categories")
         .select("id, name, description, icon, color, is_active")
         .eq("is_active", true)
