@@ -175,7 +175,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
         if (error) throw error;
         toast.success("Store updated successfully");
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchants")
           .insert(storeData);
 
