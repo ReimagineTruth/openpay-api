@@ -220,7 +220,7 @@ const MerchantStoreManager: React.FC<MerchantStoreManagerProps> = ({ onStoreSele
       };
 
       if (editingFee) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("remittance_merchant_fees")
           .update(feeData)
           .eq("id", editingFee.id);
