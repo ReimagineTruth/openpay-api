@@ -292,6 +292,8 @@ const MenuPage = () => {
         { icon: BookOpen, label: "API Docs", action: () => navigate("/openpay-api-docs") },
         { icon: BookOpen, label: "POS Docs", action: () => navigate("/openpay-pos-docs") },
         { icon: BookOpen, label: "Merchant Docs", action: () => navigate("/openpay-merchant-portal-docs") },
+        { icon: BookOpen, label: "Smart Contract API", action: () => navigate("/smart-contract-api") },
+        { icon: BookOpen, label: "Developer Dashboard", action: () => navigate("/developer-dashboard") },
       ],
     },
     ...(canOpenAdminDashboard
