@@ -70,15 +70,6 @@ const OpenPayAIPage = () => {
 
   useEffect(() => {
     loadUserData();
-    // Test API connectivity on mount
-    testAPIConnectivity().then(isConnected => {
-      if (!isConnected) {
-        console.error("❌ API connectivity test failed on mount");
-        toast.error("AI service is not available. Please check your internet connection.");
-      } else {
-        console.log("✅ API connectivity test passed on mount");
-      }
-    });
   }, []);
 
   const loadUserData = async () => {
