@@ -286,12 +286,7 @@ const OpenPayAIPage = () => {
   const processUserMessage = async (message: string) => {
     const lowerMessage = message.toLowerCase();
     
-    // Test API connectivity first
-    if (!OPENROUTER_API_KEY) {
-      return "⚠️ AI service is not configured. Please check your environment variables and restart the app.";
-    }
-    
-    // Check for payment commands (improved regex)
+    // Check for payment commands
     const paymentRegex = /(?:send|transfer|pay)\s+(\d+(?:\.\d{2})?)\s*(?:php|₱)?\s*(?:to\s*)?@?(\w+)/i;
     const paymentMatch = message.match(paymentRegex);
 
@@ -305,30 +300,13 @@ const OpenPayAIPage = () => {
       return "I can help you send money. Please confirm payment details below.";
     }
 
-    // Check for balance requests
-    if (lowerMessage.includes("balance")) {
-      return `Your current balance is $${userBalance.toFixed(2)}. ${userBalance < 1000 ? '⚠️ Low balance warning' : '✅ Good balance status'}`;
-    }
-
-    // Check for spending analysis
-    if (lowerMessage.includes("spending") || lowerMessage.includes("analyze")) {
-      const totalSpent = spendingCategories.reduce((sum, cat) => sum + cat.amount, 0);
-      const topCategory = spendingCategories[0];
-      
-      return `This month you've spent $${totalSpent.toFixed(2)}. 
-        ${topCategory ? `Your top spending category is ${topCategory.name} at $${topCategory.amount.toFixed(2)} (${topCategory.percentage.toFixed(1)}%).` : ''}
-        ${budgetAlerts.length > 0 ? `⚠️ You have ${budgetAlerts.length} budget alert(s) to review.` : '✅ Your spending looks normal.'}`;
-    }
-
-    // Try AI for complex queries
+    // Use AI for all queries
     try {
-      console.log("🤖 Attempting AI response for:", message);
-      const aiResponse = await callOpenRouterAPI(message);
-      console.log("✅ AI response successful");
+      const aiResponse = await callAI(message);
       return aiResponse;
     } catch (error) {
-      console.error("❌ AI fallback error:", error);
-      return "I'm here to help with basic financial tasks. You can ask me to:\n\n• Check your balance\n• Analyze spending\n• Send money (e.g., 'Send 100 to @username')\n• Create budgets\n• Get help with any OpenPay feature\n\nFor advanced AI features, please check your connection and try again.";
+      console.error("AI error:", error);
+      return "I'm having trouble connecting. Please try again.";
     }
   };
 
