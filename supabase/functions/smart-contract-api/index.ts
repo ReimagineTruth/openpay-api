@@ -18,7 +18,10 @@ serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/smart-contract-api\/?/, "").replace(/\/$/, "");
+  // Support x-target-path header (from supabase.functions.invoke) or URL path
+  const headerPath = req.headers.get("x-target-path") || "";
+  const urlPath = url.pathname.replace(/^\/smart-contract-api\/?/, "").replace(/\/$/, "");
+  const path = headerPath || urlPath;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
