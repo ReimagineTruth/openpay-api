@@ -3571,30 +3571,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Dashboard Preferences Section */}
-      {!dashboardPreferences.showMerchantTransferFeature && (
-        <div className="mx-4 mt-4 paypal-surface rounded-3xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-foreground">Hidden Features</h3>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-              <div>
-                <p className="text-sm font-medium">Transfer to Merchant Wallet</p>
-                <p className="text-xs text-muted-foreground">Move funds from personal to merchant wallet</p>
-              </div>
-              <button
-                onClick={() => updateDashboardPreferences({ showMerchantTransferFeature: true })}
-                className="px-3 py-1 bg-paypal-blue text-white text-xs rounded-full hover:bg-[#004dc5] transition-colors"
-              >
-                Show
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      
       <BottomNav active="home" />
       <TransactionReceipt open={receiptOpen} onOpenChange={setReceiptOpen} receipt={receiptData} />
 
