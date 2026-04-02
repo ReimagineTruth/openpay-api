@@ -13,8 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import BrandLogo from "@/components/BrandLogo";
 import SplashScreen from "@/components/SplashScreen";
 
-// OpenRouter SDK integration
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+// AI chat via backend edge function
 
 type Message = {
   id: string;
@@ -71,15 +70,6 @@ const OpenPayAIPage = () => {
 
   useEffect(() => {
     loadUserData();
-    // Test API connectivity on mount
-    testAPIConnectivity().then(isConnected => {
-      if (!isConnected) {
-        console.error("❌ API connectivity test failed on mount");
-        toast.error("AI service is not available. Please check your internet connection.");
-      } else {
-        console.log("✅ API connectivity test passed on mount");
-      }
-    });
   }, []);
 
   const loadUserData = async () => {
@@ -268,197 +258,35 @@ const OpenPayAIPage = () => {
       });
   };
 
-  const callOpenRouterAPI = async (prompt: string) => {
-    if (!OPENROUTER_API_KEY) {
-      console.error("OpenRouter API key not found");
-      return "AI service is not configured. Please check your environment variables.";
-    }
-
+  const callAI = async (prompt: string) => {
     try {
-      console.log("Calling OpenRouter API with key:", OPENROUTER_API_KEY?.substring(0, 10) + "...");
-      
-      // Dynamic import of OpenRouter SDK
-      const { OpenRouter } = await import("@openrouter/sdk");
-      const openrouter = new OpenRouter({
-        apiKey: OPENROUTER_API_KEY
+      const context = `Balance: $${userBalance.toFixed(2)}, Monthly spending: $${spendingCategories.reduce((sum, cat) => sum + cat.amount, 0).toFixed(2)}, Top categories: ${spendingCategories.slice(0, 3).map(c => c.name).join(", ")}, Budget alerts: ${budgetAlerts.length}`;
+
+      const { data, error } = await supabase.functions.invoke("openpay-ai-chat", {
+        body: { message: prompt, context },
       });
 
-      const openPayKnowledge = `
-You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fintech platform. You have complete knowledge of all OpenPay features and can help users with any aspect of the platform.
-
-## OpenPay Platform Features You Know:
-
-### Core Banking Features:
-- **Wallet Management**: Balance checking, transaction history, wallet security
-- **Payments**: Send money, receive money, request payments, express send
-- **Top-up Methods**: PayPal, credit/debit cards, bank transfer, Apple Pay, Google Pay, Venmo, USDT, USDC, Solana Pay
-- **Currency Exchange**: Multi-currency support with real-time rates
-- **Virtual Cards**: Create and manage virtual payment cards
-
-### Merchant Services:
-- **Merchant Portal**: Product catalog, order management, analytics
-- **POS System**: Point-of-sale for in-person payments
-- **Payment Links**: Create customizable payment links and buttons
-- **QR Code Payments**: Generate and scan QR codes for payments
-- **Payment Buttons**: Embeddable payment buttons for websites
-- **Invoice System**: Create and send professional invoices
-- **Product Management**: Add/edit products, inventory tracking
-
-### Advanced Features:
-- **Mining**: Pi Network mining with ad verification requirements
-- **Staking**: Earn rewards by staking tokens
-- **Affiliate Program**: Referral system with rewards
-- **Two-Factor Authentication**: Enhanced security with 2FA
-- **KYC Verification**: Identity verification for higher limits
-- **Pi Ad Network**: Watch ads to earn rewards
-- **Remittance Services**: International money transfers
-
-### Security & Support:
-- **Transaction History**: Complete transaction records and search
-- **Dispute Resolution**: Handle payment disputes and chargebacks
-- **Notifications**: Real-time alerts for transactions and account activity
-- **Customer Support**: Help center and support tickets
-- **Fraud Detection**: Advanced security monitoring
-
-### User Management:
-- **Profile Management**: Personal information and preferences
-- **Contact Management**: Save frequently contacted users
-- **Settings**: App customization and security settings
-- **Dashboard**: Financial overview with analytics and insights
-
-### Technical Details:
-- **Multi-Currency**: Support for PHP, USD, and other currencies
-- **Blockchain Integration**: Solana and other blockchain networks
-- **API Access**: Developer APIs for integration
-- **Mobile App**: iOS and Android applications
-- **Web Platform**: Full-featured web interface
-
-## Your Capabilities:
-- Answer questions about ANY OpenPay feature
-- Guide users through complex processes
-- Explain fees, limits, and requirements
-- Help with troubleshooting and error resolution
-- Provide step-by-step instructions for any feature
-- Assist with account setup and verification
-- Explain security best practices
-- Help with merchant onboarding and setup
-- Guide users through payment processes
-- Assist with mining and staking operations
-
-## Current User Context:
-- Balance: $${userBalance.toFixed(2)}
-- Monthly spending: $${spendingCategories.reduce((sum, cat) => sum + cat.amount, 0).toFixed(2)}
-- Top spending categories: ${spendingCategories.slice(0, 3).map(c => c.name).join(", ")}
-- Budget alerts: ${budgetAlerts.length} active alerts
-
-## Response Guidelines:
-- Be comprehensive but clear and concise
-- Use US Dollar ($) for amounts
-- Provide specific, actionable advice
-- Include step-by-step instructions when helpful
-- Mention relevant fees or limits
-- Suggest related OpenPay features when appropriate
-- Always prioritize user security and best practices
-      `;
-
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://openpay.app",
-          "X-Title": "OpenPay AI"
-        },
-        body: JSON.stringify({
-          model: "nvidia/nemotron-3-super-120b-a12b:free",
-          messages: [
-            {
-              role: "system",
-              content: openPayKnowledge
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ]
-        })
-      });
-
-      console.log("📡 Response status:", response.status);
-      console.log("📡 Response headers:", response.headers);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ OpenRouter API error response:", errorText);
-        return `AI service error (${response.status}): ${errorText}`;
+      if (error) {
+        console.error("AI edge function error:", error);
+        return "I'm having trouble connecting to AI services. Please try again later.";
       }
 
-      const data = await response.json();
-      console.log("✅ OpenRouter API response data:", data);
-      
-      if (!data.choices || data.choices.length === 0) {
-        console.error("❌ No choices in response");
-        return "No response from AI service. Please try again.";
+      if (data?.error) {
+        console.error("AI response error:", data.error);
+        return data.error;
       }
-      
-      const aiResponse = data.choices[0]?.message?.content || "I apologize, but I couldn't generate a response. Please try again.";
-      
-      console.log("✅ AI Response length:", aiResponse.length);
-      console.log("✅ AI Response preview:", aiResponse.substring(0, 100) + "...");
-      
-      return aiResponse;
+
+      return data?.reply || "I couldn't generate a response. Please try again.";
     } catch (error) {
-      console.error("OpenRouter API error:", error);
-      return "I'm having trouble connecting to my AI services. Please try again later.";
-    }
-  };
-
-  const testAPIConnectivity = async () => {
-    console.log("🧪 Testing API connectivity...");
-    try {
-      const testResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://openpay.app",
-          "X-Title": "OpenPay AI Test"
-        },
-        body: JSON.stringify({
-          model: "nvidia/nemotron-3-super-120b-a12b:free",
-          messages: [
-            {
-              role: "user",
-              content: "Hello, this is a test. Are you working?"
-            }
-          ],
-          max_tokens: 10
-        })
-      });
-
-      if (testResponse.ok) {
-        const data = await testResponse.json();
-        console.log("✅ API connectivity test successful:", data);
-        return true;
-      } else {
-        console.error("❌ API connectivity test failed:", testResponse.status);
-        return false;
-      }
-    } catch (error) {
-      console.error("❌ API connectivity test error:", error);
-      return false;
+      console.error("AI call error:", error);
+      return "I'm having trouble connecting to AI services. Please try again later.";
     }
   };
 
   const processUserMessage = async (message: string) => {
     const lowerMessage = message.toLowerCase();
     
-    // Test API connectivity first
-    if (!OPENROUTER_API_KEY) {
-      return "⚠️ AI service is not configured. Please check your environment variables and restart the app.";
-    }
-    
-    // Check for payment commands (improved regex)
+    // Check for payment commands
     const paymentRegex = /(?:send|transfer|pay)\s+(\d+(?:\.\d{2})?)\s*(?:php|₱)?\s*(?:to\s*)?@?(\w+)/i;
     const paymentMatch = message.match(paymentRegex);
 
@@ -472,30 +300,13 @@ You are OpenPay AI, a comprehensive smart financial assistant for the OpenPay fi
       return "I can help you send money. Please confirm payment details below.";
     }
 
-    // Check for balance requests
-    if (lowerMessage.includes("balance")) {
-      return `Your current balance is $${userBalance.toFixed(2)}. ${userBalance < 1000 ? '⚠️ Low balance warning' : '✅ Good balance status'}`;
-    }
-
-    // Check for spending analysis
-    if (lowerMessage.includes("spending") || lowerMessage.includes("analyze")) {
-      const totalSpent = spendingCategories.reduce((sum, cat) => sum + cat.amount, 0);
-      const topCategory = spendingCategories[0];
-      
-      return `This month you've spent $${totalSpent.toFixed(2)}. 
-        ${topCategory ? `Your top spending category is ${topCategory.name} at $${topCategory.amount.toFixed(2)} (${topCategory.percentage.toFixed(1)}%).` : ''}
-        ${budgetAlerts.length > 0 ? `⚠️ You have ${budgetAlerts.length} budget alert(s) to review.` : '✅ Your spending looks normal.'}`;
-    }
-
-    // Try AI for complex queries
+    // Use AI for all queries
     try {
-      console.log("🤖 Attempting AI response for:", message);
-      const aiResponse = await callOpenRouterAPI(message);
-      console.log("✅ AI response successful");
+      const aiResponse = await callAI(message);
       return aiResponse;
     } catch (error) {
-      console.error("❌ AI fallback error:", error);
-      return "I'm here to help with basic financial tasks. You can ask me to:\n\n• Check your balance\n• Analyze spending\n• Send money (e.g., 'Send 100 to @username')\n• Create budgets\n• Get help with any OpenPay feature\n\nFor advanced AI features, please check your connection and try again.";
+      console.error("AI error:", error);
+      return "I'm having trouble connecting. Please try again.";
     }
   };
 
