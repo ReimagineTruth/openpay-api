@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key, x-client-id",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key, x-client-id, x-target-path",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
 };
@@ -18,7 +18,6 @@ serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = new URL(req.url);
-  // Support x-target-path header (from supabase.functions.invoke) or URL path
   const headerPath = req.headers.get("x-target-path") || "";
   const urlPath = url.pathname.replace(/^\/smart-contract-api\/?/, "").replace(/\/$/, "");
   const path = headerPath || urlPath;
@@ -29,7 +28,7 @@ serve(async (req: Request) => {
     if (!supabaseUrl || !serviceKey) throw new Error("Server configuration error");
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Public endpoints that don't require auth
+    // Public endpoints (no auth required)
     if (path === "health") {
       return json({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
     }
@@ -50,7 +49,6 @@ serve(async (req: Request) => {
     let userId: string | null = null;
 
     if (clientId && apiKey) {
-      // Third-party app authentication
       const { data: app } = await supabase
         .from("developer_apps")
         .select("id, user_id, is_active, rate_limit_per_minute, scopes")
@@ -61,9 +59,7 @@ serve(async (req: Request) => {
       if (!app) return json({ error: "Invalid client credentials" }, 401);
       appId = app.id;
 
-      // Check if there's a user-authorized OAuth token
       if (authHeader.startsWith("Bearer ")) {
-        const token = authHeader.replace("Bearer ", "");
         const { data: authZ } = await supabase
           .from("oauth_authorizations")
           .select("user_id, scopes, expires_at, revoked_at")
@@ -76,7 +72,6 @@ serve(async (req: Request) => {
         }
       }
     } else if (authHeader.startsWith("Bearer ")) {
-      // Direct user authentication
       const token = authHeader.replace("Bearer ", "");
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (error || !user) return json({ error: "Unauthorized" }, 401);
@@ -85,7 +80,7 @@ serve(async (req: Request) => {
       return json({ error: "Authentication required. Provide x-client-id + x-api-key or Bearer token." }, 401);
     }
 
-    // Log API access
+    // Log API access for third-party apps
     if (appId) {
       await supabase.from("api_access_logs").insert({
         app_id: appId,
@@ -99,9 +94,6 @@ serve(async (req: Request) => {
 
     // Route handling
     switch (path) {
-      case "health":
-        return json({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
-
       case "balance": {
         if (!userId) return json({ error: "User authorization required" }, 403);
         const { data: wallet } = await supabase
@@ -206,14 +198,6 @@ serve(async (req: Request) => {
         return json({ events: events || [] });
       }
 
-      case "currencies": {
-        const { data: currencies } = await supabase
-          .from("supported_currencies")
-          .select("iso_code, display_code, display_name, symbol, flag, usd_rate")
-          .eq("is_active", true);
-        return json({ currencies: currencies || [] });
-      }
-
       case "apps/register": {
         if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
         if (!userId) return json({ error: "Authentication required" }, 401);
@@ -221,13 +205,11 @@ serve(async (req: Request) => {
         const { app_name, app_description, app_url, redirect_uris, scopes } = body;
         if (!app_name) return json({ error: "app_name required" }, 400);
 
-        // Generate client secret
         const secretBytes = new Uint8Array(32);
         crypto.getRandomValues(secretBytes);
         const clientSecret = "ops_" + Array.from(secretBytes).map(b => b.toString(16).padStart(2, "0")).join("");
         const secretLast4 = clientSecret.slice(-4);
 
-        // Hash the secret
         const encoder = new TextEncoder();
         const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(clientSecret));
         const secretHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
@@ -255,12 +237,39 @@ serve(async (req: Request) => {
         });
       }
 
+      case "lookup": {
+        if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+        const body = await req.json();
+        const { username, account_number } = body;
+        if (!username && !account_number) return json({ error: "username or account_number required" }, 400);
+
+        if (username) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id, full_name, username, avatar_url")
+            .eq("username", username)
+            .single();
+          if (!profile) return json({ error: "User not found" }, 404);
+          return json({ user: profile });
+        }
+        const { data: acct } = await supabase
+          .from("user_accounts")
+          .select("user_id, account_name, account_username, account_number")
+          .eq("account_number", account_number)
+          .single();
+        if (!acct) return json({ error: "Account not found" }, 404);
+        return json({ account: acct });
+      }
+
       default:
-        return json({ error: "Unknown endpoint", available: [
-          "GET /health", "GET /balance", "GET /profile", "GET /transactions",
-          "POST /send", "GET|POST /invoices", "GET /ledger", "GET /currencies",
-          "POST /apps/register"
-        ]}, 404);
+        return json({
+          error: "Unknown endpoint",
+          available: [
+            "GET /health", "GET /balance", "GET /profile", "GET /transactions",
+            "POST /send", "GET|POST /invoices", "GET /ledger", "GET /currencies",
+            "POST /apps/register", "POST /lookup"
+          ],
+        }, 404);
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unexpected error";
