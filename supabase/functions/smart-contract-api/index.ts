@@ -29,6 +29,18 @@ serve(async (req: Request) => {
     if (!supabaseUrl || !serviceKey) throw new Error("Server configuration error");
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // Public endpoints that don't require auth
+    if (path === "health") {
+      return json({ status: "ok", version: "1.0.0", timestamp: new Date().toISOString() });
+    }
+    if (path === "currencies") {
+      const { data: currencies } = await supabase
+        .from("supported_currencies")
+        .select("iso_code, display_code, display_name, symbol, flag, usd_rate")
+        .eq("is_active", true);
+      return json({ currencies: currencies || [] });
+    }
+
     // Authenticate via client_id + API key OR Bearer token
     const clientId = req.headers.get("x-client-id") || "";
     const apiKey = req.headers.get("x-api-key") || "";
