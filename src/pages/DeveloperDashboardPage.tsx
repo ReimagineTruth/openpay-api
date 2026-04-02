@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,19 +63,29 @@ const DeveloperDashboardPage = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast.error("Please sign in"); return; }
 
-      const res = await supabase.functions.invoke("smart-contract-api", {
+      const requestBody = {
+        app_name: newApp.app_name,
+        app_description: newApp.app_description,
+        app_url: newApp.app_url,
+        redirect_uris: newApp.redirect_uris.split(",").map(u => u.trim()).filter(Boolean),
+        scopes: ["read:balance", "read:profile", "read:transactions", "write:send", "read:invoices", "write:invoices"],
+      };
+
+      // Call edge function directly via fetch for proper header support
+      const apiUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/smart-contract-api`;
+      const res = await fetch(apiUrl, {
         method: "POST",
-        body: {
-          ...newApp,
-          redirect_uris: newApp.redirect_uris.split(",").map(u => u.trim()).filter(Boolean),
-          scopes: ["read:balance", "read:profile", "read:transactions", "write:send", "read:invoices", "write:invoices"],
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          "x-target-path": "apps/register",
         },
-        headers: { "x-target-path": "apps/register" },
+        body: JSON.stringify(requestBody),
       });
 
-      if (res.error) throw new Error(res.error.message);
-      const result = res.data;
-      if (result?.error) throw new Error(result.error);
+      const result = await res.json();
+      if (!res.ok || result?.error) throw new Error(result?.error || "Failed to create app");
 
       if (result?.app?.client_secret) {
         setNewSecret(result.app.client_secret);
