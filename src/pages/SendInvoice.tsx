@@ -486,15 +486,15 @@ const SendInvoice = () => {
       </div>
 
       <div className="px-4 space-y-4">
-        <div className="bg-card rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <h2 className="font-semibold text-gray-900">Create invoice</h2>
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <h2 className="font-semibold" style={{ color: '#0a3fa9' }}>Create invoice</h2>
           <Input
             placeholder="Search person by name, username, email, or account number"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-white text-gray-900 placeholder:text-gray-500 border-gray-300"
+            className="bg-white text-gray-800 placeholder:text-gray-400"
           />
-          <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900">
+          <div className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-muted-foreground">
             {selectedRecipient ? (
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -506,8 +506,8 @@ const SendInvoice = () => {
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{selectedRecipient.full_name}</p>
-                    {selectedRecipient.username && <p className="text-xs text-gray-600">@{selectedRecipient.username}</p>}
+                    <p className="text-sm font-semibold text-gray-800">{selectedRecipient.full_name}</p>
+                    {selectedRecipient.username && <p className="text-xs text-muted-foreground">@{selectedRecipient.username}</p>}
                   </div>
                 </div>
                 <Button
@@ -521,15 +521,15 @@ const SendInvoice = () => {
               </div>
             ) : (
               <div>
-                <p className="text-xs uppercase tracking-wide text-gray-600">Select recipient</p>
-                <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-gray-200">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Select recipient</p>
+                <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-border">
                   {isAccountNumberSearch && accountLookupLoading && (
-                    <p className="border-b border-gray-200 px-3 py-2 text-sm text-gray-600">Searching account number...</p>
+                    <p className="border-b border-border px-3 py-2 text-sm text-muted-foreground">Searching account number...</p>
                   )}
                   {isAccountNumberSearch && !accountLookupLoading && accountLookupResult && (
                     <button
                       onClick={() => { setRecipientId(accountLookupResult.id); setSelectedRecipient(accountLookupResult); }}
-                      className="w-full border-b border-gray-200 px-3 py-2 text-left hover:bg-gray-50"
+                      className="w-full border-b border-border px-3 py-2 text-left hover:bg-muted"
                     >
                       <div className="flex items-center gap-2">
                         {accountLookupResult.avatar_url ? (
@@ -540,11 +540,11 @@ const SendInvoice = () => {
                           </div>
                         )}
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{accountLookupResult.full_name}</p>
-                          {accountLookupResult.username && <p className="text-sm text-gray-600">@{accountLookupResult.username}</p>}
-                          <p className="text-xs text-gray-600">Matched by account number</p>
+                          <p className="font-medium text-gray-800">{accountLookupResult.full_name}</p>
+                          {accountLookupResult.username && <p className="text-sm text-muted-foreground">@{accountLookupResult.username}</p>}
+                          <p className="text-xs text-muted-foreground">Matched by account number</p>
                         </div>
-                        <Info className="h-4 w-4 text-gray-600" />
+                        <Info className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </button>
                   )}
@@ -552,7 +552,7 @@ const SendInvoice = () => {
                     <button
                       key={p.id}
                       onClick={() => { setRecipientId(p.id); setSelectedRecipient(p); }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                      className="w-full text-left px-3 py-2 hover:bg-muted"
                     >
                       <div className="flex items-center gap-2">
                         {p.avatar_url ? (
@@ -563,14 +563,14 @@ const SendInvoice = () => {
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-gray-900">{p.full_name}</p>
-                          {p.username && <p className="text-sm text-gray-600">@{p.username}</p>}
+                          <p className="font-medium text-gray-800">{p.full_name}</p>
+                          {p.username && <p className="text-sm text-muted-foreground">@{p.username}</p>}
                         </div>
                       </div>
                     </button>
                   ))}
                   {filteredWithoutAccountMatch.length === 0 && !accountLookupResult && !accountLookupLoading && (
-                    <p className="px-3 py-4 text-sm text-gray-600">No users found</p>
+                    <p className="px-3 py-4 text-sm text-muted-foreground">No users found</p>
                   )}
                 </div>
               </div>
@@ -583,10 +583,10 @@ const SendInvoice = () => {
             placeholder="Amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="bg-white text-gray-900 placeholder:text-gray-500 border-gray-300"
+            className="bg-white text-gray-800 placeholder:text-gray-400"
           />
           <div>
-            <p className="mb-1 text-sm text-gray-700">Invoice currency</p>
+            <p className="mb-1 text-sm text-muted-foreground">Invoice currency</p>
             <div className="relative">
               {(invoiceCurrencyCode === "PI" || invoiceCurrencyCode === "OUSD") && (
                 <img
@@ -598,7 +598,7 @@ const SendInvoice = () => {
               <select
                 value={invoiceCurrencyCode}
                 onChange={(e) => setInvoiceCurrencyCode(e.target.value)}
-                className={`h-10 w-full rounded-xl border border-gray-300 bg-white text-sm text-gray-900 ${invoiceCurrencyCode === "PI" || invoiceCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
+                className={`h-10 w-full rounded-xl border border-input bg-white text-sm text-gray-800 ${invoiceCurrencyCode === "PI" || invoiceCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
               >
                 {currencies.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -612,23 +612,23 @@ const SendInvoice = () => {
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="bg-white text-gray-900 [&::-webkit-calendar-picker-indicator]:text-gray-900 [&::-webkit-datetime-edit-text-wrapper]:text-gray-900 border-gray-300"
+            className="bg-white text-gray-800 [&::-webkit-calendar-picker-indicator]:text-gray-800 [&::-webkit-datetime-edit-text-wrapper]:text-gray-800"
           />
           <Textarea
             placeholder="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="bg-white text-gray-900 placeholder:text-gray-500 border-gray-300"
+            className="bg-white text-gray-800 placeholder:text-gray-400"
           />
           <Button onClick={handleCreate} disabled={loading || !recipientId} className="w-full">
             {loading ? "Sending..." : "Send Invoice"}
           </Button>
         </div>
 
-        <div className="bg-card rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <h2 className="font-semibold text-gray-900">Received invoices</h2>
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <h2 className="font-semibold" style={{ color: '#0a3fa9' }}>Received invoices</h2>
           <div>
-            <p className="mb-1 text-sm text-gray-700">Payment currency</p>
+            <p className="mb-1 text-sm text-muted-foreground">Payment currency</p>
             <div className="relative">
               {(payCurrencyCode === "PI" || payCurrencyCode === "OUSD") && (
                 <img
@@ -640,7 +640,7 @@ const SendInvoice = () => {
               <select
                 value={payCurrencyCode}
                 onChange={(e) => setPayCurrencyCode(e.target.value)}
-                className={`h-10 w-full rounded-xl border border-gray-300 bg-white text-sm text-gray-900 ${payCurrencyCode === "PI" || payCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
+                className={`h-10 w-full rounded-xl border border-input bg-white text-sm text-gray-800 ${payCurrencyCode === "PI" || payCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
               >
                 {currencies.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -650,7 +650,7 @@ const SendInvoice = () => {
               </select>
             </div>
           </div>
-          {received.length === 0 && <p className="text-sm text-gray-600">No received invoices</p>}
+          {received.length === 0 && <p className="text-sm text-muted-foreground">No received invoices</p>}
           {received.map((invoice) => {
             const sender = profileMap.get(invoice.sender_id);
             const parsed = parseOriginalAmount(invoice.description);
@@ -658,27 +658,27 @@ const SendInvoice = () => {
             const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
-              <div key={invoice.id} className="border border-gray-200 rounded-xl p-3">
+              <div key={invoice.id} className="border border-border rounded-xl p-3">
                 <div className="flex items-center gap-2">
                   {sender?.avatar_url ? (
                     <img src={sender.avatar_url} alt={sender.full_name} className="h-10 w-10 rounded-full border border-border object-cover" />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-900">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-gray-800">
                       {(sender?.full_name || "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
                   )}
-                  <p className="font-medium text-gray-900">{sender?.full_name || "Unknown user"}</p>
+                  <p className="font-medium text-gray-800">{sender?.full_name || "Unknown user"}</p>
                 </div>
-                <p className="text-sm text-gray-600">{format(new Date(invoice.created_at), "MMM d, yyyy")}</p>
-                <p className="font-semibold mt-1 text-gray-900">{formatCurrency(invoice.amount)}</p>
+                <p className="text-sm text-muted-foreground">{format(new Date(invoice.created_at), "MMM d, yyyy")}</p>
+                <p className="font-semibold mt-1">{formatCurrency(invoice.amount)}</p>
                 {originalCurrency && Number.isFinite(Number(originalAmount)) && (
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Original: {originalMeta?.symbol || ""}{Number(originalAmount).toFixed(2)} {originalCurrency}
                   </p>
                 )}
-                {invoice.description && <p className="text-sm text-gray-600 mt-1">{invoice.description}</p>}
-                {invoice.due_date && <p className="text-sm text-gray-600 mt-1">Due: {invoice.due_date}</p>}
-                <p className="text-sm mt-1 capitalize text-gray-900">Status: {invoice.status}</p>
+                {invoice.description && <p className="text-sm text-muted-foreground mt-1">{invoice.description}</p>}
+                {invoice.due_date && <p className="text-sm text-muted-foreground mt-1">Due: {invoice.due_date}</p>}
+                <p className="text-sm mt-1 capitalize">Status: {invoice.status}</p>
                 {invoice.status === "pending" && (
                   <div className="mt-3 flex gap-2">
                     <Button className="flex-1" disabled={loading} onClick={() => handlePay(invoice)}>
@@ -700,9 +700,9 @@ const SendInvoice = () => {
           })}
         </div>
 
-        <div className="bg-card rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <h2 className="font-semibold text-gray-900">Sent invoices</h2>
-          {sent.length === 0 && <p className="text-sm text-gray-600">No sent invoices</p>}
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <h2 className="font-semibold" style={{ color: '#0a3fa9' }}>Sent invoices</h2>
+          {sent.length === 0 && <p className="text-sm text-muted-foreground">No sent invoices</p>}
           {sent.map((invoice) => {
             const recipient = profileMap.get(invoice.recipient_id);
             const parsed = parseOriginalAmount(invoice.description);
@@ -710,27 +710,27 @@ const SendInvoice = () => {
             const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
-              <div key={invoice.id} className="border border-gray-200 rounded-xl p-3">
+              <div key={invoice.id} className="border border-border rounded-xl p-3">
                 <div className="flex items-center gap-2">
                   {recipient?.avatar_url ? (
                     <img src={recipient.avatar_url} alt={recipient.full_name} className="h-10 w-10 rounded-full border border-border object-cover" />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-900">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-gray-800">
                       {(recipient?.full_name || "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
                   )}
-                  <p className="font-medium text-gray-900">{recipient?.full_name || "Unknown user"}</p>
+                  <p className="font-medium text-gray-800">{recipient?.full_name || "Unknown user"}</p>
                 </div>
-                <p className="text-sm text-gray-600">{format(new Date(invoice.created_at), "MMM d, yyyy")}</p>
-                <p className="font-semibold mt-1 text-gray-900">{formatCurrency(invoice.amount)}</p>
+                <p className="text-sm text-muted-foreground">{format(new Date(invoice.created_at), "MMM d, yyyy")}</p>
+                <p className="font-semibold mt-1">{formatCurrency(invoice.amount)}</p>
                 {originalCurrency && Number.isFinite(Number(originalAmount)) && (
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Original: {originalMeta?.symbol || ""}{Number(originalAmount).toFixed(2)} {originalCurrency}
                   </p>
                 )}
-                {invoice.description && <p className="text-sm text-gray-600 mt-1">{invoice.description}</p>}
-                {invoice.due_date && <p className="text-sm text-gray-600 mt-1">Due: {invoice.due_date}</p>}
-                <p className="text-sm mt-1 capitalize text-gray-900">Status: {invoice.status}</p>
+                {invoice.description && <p className="text-sm text-muted-foreground mt-1">{invoice.description}</p>}
+                {invoice.due_date && <p className="text-sm text-muted-foreground mt-1">Due: {invoice.due_date}</p>}
+                <p className="text-sm mt-1 capitalize">Status: {invoice.status}</p>
               </div>
             );
           })}
@@ -773,11 +773,11 @@ const SendInvoice = () => {
                 </div>
               )}
               <div>
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-gray-800">
                   {confirmAction.type === "create" ? confirmAction.recipient.full_name : confirmAction.sender?.full_name || "Unknown user"}
                 </p>
                 {(confirmAction.type === "create" ? confirmAction.recipient.username : confirmAction.sender?.username) && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     @{confirmAction.type === "create" ? confirmAction.recipient.username : confirmAction.sender?.username}
                   </p>
                 )}
@@ -785,10 +785,10 @@ const SendInvoice = () => {
             </div>
           )}
 
-          <div className="mt-4 space-y-2 rounded-2xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900">
+          <div className="mt-4 space-y-2 rounded-2xl border border-border p-3 text-sm">
             <p className="flex items-center justify-between">
-              <span className="text-gray-600">Amount</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Amount</span>
+              <span className="font-semibold text-gray-800">
                 {confirmAction?.type === "create"
                   ? (() => {
                     const meta = currencies.find((c) => c.code === confirmAction.currencyCode);
@@ -801,8 +801,8 @@ const SendInvoice = () => {
               </span>
             </p>
             <p className="flex items-center justify-between">
-              <span className="text-gray-600">Converted (USD)</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Converted (USD)</span>
+              <span className="font-semibold text-gray-800">
                 ${confirmAction?.type === "create"
                   ? (() => {
                     const meta = currencies.find((c) => c.code === confirmAction.currencyCode);
@@ -816,8 +816,8 @@ const SendInvoice = () => {
               </span>
             </p>
             <p className="flex items-start justify-between gap-2">
-              <span className="text-gray-600">Description</span>
-              <span className="max-w-[70%] break-all text-right text-gray-900">
+              <span className="text-muted-foreground">Description</span>
+              <span className="max-w-[70%] break-all text-right text-gray-800">
                 {confirmAction?.type === "create"
                   ? confirmAction.description || "No description"
                   : confirmAction?.type === "pay" || confirmAction?.type === "reject"
@@ -826,8 +826,8 @@ const SendInvoice = () => {
               </span>
             </p>
             <p className="flex items-center justify-between">
-              <span className="text-gray-600">Due date</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Due date</span>
+              <span className="font-semibold text-gray-800">
                 {confirmAction?.type === "create"
                   ? confirmAction.dueDate || "No due date"
                   : confirmAction?.type === "pay" || confirmAction?.type === "reject"

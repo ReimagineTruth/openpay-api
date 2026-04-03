@@ -655,10 +655,10 @@ const RequestMoney = () => {
       </div>
 
       <div className="px-4 space-y-4">
-        <div className="bg-card rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="font-semibold text-gray-900">Receive via QR</h2>
+              <h2 className="font-semibold" style={{ color: '#0a3fa9' }}>Receive via QR</h2>
               <p className="text-sm text-gray-600">{selfProfile?.full_name || "Your account"}</p>
               {selfProfile?.username && <p className="text-sm text-gray-600">@{selfProfile.username}</p>}
               {/* Debug info removed */}
@@ -668,7 +668,7 @@ const RequestMoney = () => {
               Scan QR code
             </Button>
           </div>
-          <div className="flex justify-center rounded-2xl border border-gray-200 bg-white p-4">
+          <div className="flex justify-center rounded-2xl border border-border bg-white p-4">
             {receiveQrValue ? (
               <QRCodeSVG
                 value={receiveQrValue}
@@ -683,23 +683,23 @@ const RequestMoney = () => {
                 }}
               />
             ) : (
-              <p className="text-sm text-gray-600">Loading QR code...</p>
+              <p className="text-sm text-muted-foreground">Loading QR code...</p>
             )}
           </div>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-white/70">
             Ask sender to scan this QR to open Express Send with your account.
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <h2 className="font-semibold text-gray-900">Create request</h2>
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <h2 className="font-semibold" style={{ color: '#0a3fa9' }}>Create request</h2>
           <Input
             placeholder="Search person by name, username, email, or account number"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-white text-gray-900 placeholder:text-gray-500 border-gray-300"
+            className="bg-white text-gray-800 placeholder:text-gray-400"
           />
-          <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900">
+          <div className="rounded-xl border border-border bg-white px-3 py-2 text-sm text-muted-foreground">
             {selectedPayer ? (
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -726,15 +726,15 @@ const RequestMoney = () => {
               </div>
             ) : (
               <div>
-                <p className="text-xs uppercase tracking-wide text-gray-600">Select recipient</p>
-                <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-gray-200">
+                <p className="text-xs uppercase tracking-wide text-white/70">Select recipient</p>
+                <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-border">
                   {isAccountNumberSearch && accountLookupLoading && (
-                    <p className="border-b border-gray-200 px-3 py-2 text-sm text-gray-600">Searching account number...</p>
+                    <p className="border-b border-border px-3 py-2 text-sm text-white/70">Searching account number...</p>
                   )}
                   {isAccountNumberSearch && !accountLookupLoading && accountLookupResult && (
                     <button
                       onClick={() => { setPayerId(accountLookupResult.id); setSelectedPayer(accountLookupResult); }}
-                      className="w-full border-b border-gray-200 px-3 py-2 text-left hover:bg-gray-50"
+                      className="w-full border-b border-border px-3 py-2 text-left hover:bg-muted"
                     >
                       <div className="flex items-center gap-2">
                         {accountLookupResult.avatar_url ? (
@@ -747,9 +747,9 @@ const RequestMoney = () => {
                         <div className="flex-1">
                           <p className="font-medium text-gray-800">{accountLookupResult.full_name}</p>
                           {accountLookupResult.username && <p className="text-sm text-gray-600">@{accountLookupResult.username}</p>}
-                          <p className="text-xs text-gray-600">Matched by account number</p>
+                          <p className="text-xs text-white/70">Matched by account number</p>
                         </div>
-                        <Info className="h-4 w-4 text-gray-600" />
+                        <Info className="h-4 w-4 text-white/70" />
                       </div>
                     </button>
                   )}
@@ -757,7 +757,7 @@ const RequestMoney = () => {
                     <button
                       key={p.id}
                       onClick={() => { setPayerId(p.id); setSelectedPayer(p); }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                      className="w-full text-left px-3 py-2 hover:bg-muted"
                     >
                       <div className="flex items-center gap-2">
                         {p.avatar_url ? (
@@ -775,7 +775,7 @@ const RequestMoney = () => {
                     </button>
                   ))}
                   {filteredWithoutAccountMatch.length === 0 && !accountLookupResult && !accountLookupLoading && (
-                    <p className="px-3 py-4 text-sm text-gray-600">No users found</p>
+                    <p className="px-3 py-4 text-sm text-white/70">No users found</p>
                   )}
                 </div>
               </div>
@@ -788,10 +788,10 @@ const RequestMoney = () => {
             placeholder="Amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="bg-white text-gray-900 placeholder:text-gray-500 border-gray-300"
+            className="bg-white text-gray-800 placeholder:text-gray-400"
           />
           <div>
-            <p className="mb-1 text-sm text-gray-700">Requested currency</p>
+            <p className="mb-1 text-sm text-muted-foreground">Requested currency</p>
             <div className="relative">
               {(createCurrencyCode === "PI" || createCurrencyCode === "OUSD") && (
                 <img
@@ -803,7 +803,7 @@ const RequestMoney = () => {
               <select
                 value={createCurrencyCode}
                 onChange={(e) => setCreateCurrencyCode(e.target.value)}
-                className={`h-10 w-full rounded-xl border border-gray-300 bg-white text-sm text-gray-900 ${createCurrencyCode === "PI" || createCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
+                className={`h-10 w-full rounded-xl border border-input bg-white text-sm text-gray-800 ${createCurrencyCode === "PI" || createCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
               >
                 {currencies.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -817,17 +817,17 @@ const RequestMoney = () => {
             placeholder="Note (optional)"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="bg-white text-gray-900 placeholder:text-gray-500 border-gray-300"
+            className="bg-white text-gray-800 placeholder:text-gray-400"
           />
           <Button onClick={handleCreate} disabled={loading || !payerId} className="w-full">
             {loading ? "Sending..." : "Send Request"}
           </Button>
         </div>
 
-        <div className="bg-card rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <h2 className="font-semibold text-gray-900">Incoming requests</h2>
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <h2 className="font-semibold" style={{ color: '#0a3fa9' }}>Incoming requests</h2>
           <div>
-            <p className="mb-1 text-sm text-gray-700">Payment currency</p>
+            <p className="mb-1 text-sm text-muted-foreground">Payment currency</p>
             <div className="relative">
               {(payCurrencyCode === "PI" || payCurrencyCode === "OUSD") && (
                 <img
@@ -839,7 +839,7 @@ const RequestMoney = () => {
               <select
                 value={payCurrencyCode}
                 onChange={(e) => setPayCurrencyCode(e.target.value)}
-                className={`h-10 w-full rounded-xl border border-gray-300 bg-white text-sm text-gray-900 ${payCurrencyCode === "PI" || payCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
+                className={`h-10 w-full rounded-xl border border-input bg-white text-sm text-gray-800 ${payCurrencyCode === "PI" || payCurrencyCode === "OUSD" ? "pl-10 pr-3" : "px-3"}`}
               >
                 {currencies.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -849,7 +849,7 @@ const RequestMoney = () => {
               </select>
             </div>
           </div>
-          {incoming.length === 0 && <p className="text-sm text-gray-600">No incoming requests</p>}
+          {incoming.length === 0 && <p className="text-sm text-muted-foreground">No incoming requests</p>}
           {incoming.map((request) => {
             const requester = profileMap.get(request.requester_id);
             const parsed = parseOriginalAmount(request.note);
@@ -857,29 +857,29 @@ const RequestMoney = () => {
             const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
-              <div key={request.id} className="border border-gray-200 rounded-xl p-3">
+              <div key={request.id} className="border border-border rounded-xl p-3">
                 <div className="flex items-center gap-2">
                   {requester?.avatar_url ? (
                     <img src={requester.avatar_url} alt={requester.full_name} className="h-10 w-10 rounded-full border border-border object-cover" />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-900">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-gray-800">
                       {(requester?.full_name || "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   <div>
-                    <p className="font-medium text-gray-900">{requester?.full_name || "Unknown user"}</p>
-                    {requester?.username && <p className="text-sm text-gray-600">@{requester.username}</p>}
+                    <p className="font-medium text-gray-800">{requester?.full_name || "Unknown user"}</p>
+                    {requester?.username && <p className="text-sm text-muted-foreground">@{requester.username}</p>}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{format(new Date(request.created_at), "MMM d, yyyy")}</p>
-                <p className="font-semibold mt-1 text-gray-900">{formatCurrency(request.amount)}</p>
+                <p className="text-sm text-muted-foreground">{format(new Date(request.created_at), "MMM d, yyyy")}</p>
+                <p className="font-semibold mt-1">{formatCurrency(request.amount)}</p>
                 {originalCurrency && Number.isFinite(Number(originalAmount)) && (
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Original: {originalMeta?.symbol || ""}{Number(originalAmount).toFixed(2)} {originalCurrency}
                   </p>
                 )}
-                {request.note && <p className="text-sm text-gray-600 mt-1">{request.note}</p>}
-                <p className="text-sm mt-1 capitalize text-gray-900">Status: {request.status}</p>
+                {request.note && <p className="text-sm text-muted-foreground mt-1">{request.note}</p>}
+                <p className="text-sm mt-1 capitalize">Status: {request.status}</p>
                 {request.status === "pending" && (
                   <div className="flex gap-2 mt-3">
                     <Button className="flex-1" disabled={loading} onClick={() => handlePay(request)}>
@@ -900,9 +900,9 @@ const RequestMoney = () => {
           })}
         </div>
 
-        <div className="bg-card rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-          <h2 className="font-semibold text-gray-900">Sent requests</h2>
-          {outgoing.length === 0 && <p className="text-sm text-gray-600">No requests sent yet</p>}
+        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+          <h2 className="font-semibold" style={{ color: '#0a3fa9' }}>Sent requests</h2>
+          {outgoing.length === 0 && <p className="text-sm text-muted-foreground">No requests sent yet</p>}
           {outgoing.map((request) => {
             const payer = profileMap.get(request.payer_id);
             const parsed = parseOriginalAmount(request.note);
@@ -910,29 +910,29 @@ const RequestMoney = () => {
             const originalAmount = parsed?.amount;
             const originalMeta = originalCurrency ? currencies.find((c) => c.code === originalCurrency) : null;
             return (
-              <div key={request.id} className="border border-gray-200 rounded-xl p-3">
+              <div key={request.id} className="border border-border rounded-xl p-3">
                 <div className="flex items-center gap-2">
                   {payer?.avatar_url ? (
                     <img src={payer.avatar_url} alt={payer.full_name} className="h-10 w-10 rounded-full border border-border object-cover" />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-900">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-gray-800">
                       {(payer?.full_name || "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   <div>
-                    <p className="font-medium text-gray-900">{payer?.full_name || "Unknown user"}</p>
+                    <p className="font-medium text-gray-800">{payer?.full_name || "Unknown user"}</p>
                     {payer?.username && <p className="text-sm text-gray-600">@{payer.username}</p>}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{format(new Date(request.created_at), "MMM d, yyyy")}</p>
-                <p className="font-semibold mt-1 text-gray-900">{formatCurrency(request.amount)}</p>
+                <p className="text-sm text-muted-foreground">{format(new Date(request.created_at), "MMM d, yyyy")}</p>
+                <p className="font-semibold mt-1">{formatCurrency(request.amount)}</p>
                 {originalCurrency && Number.isFinite(Number(originalAmount)) && (
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Original: {originalMeta?.symbol || ""}{Number(originalAmount).toFixed(2)} {originalCurrency}
                   </p>
                 )}
-                {request.note && <p className="text-sm text-gray-600 mt-1">{request.note}</p>}
-                <p className="text-sm mt-1 capitalize text-gray-900">Status: {request.status}</p>
+                {request.note && <p className="text-sm text-muted-foreground mt-1">{request.note}</p>}
+                <p className="text-sm mt-1 capitalize">Status: {request.status}</p>
               </div>
             );
           })}
@@ -948,9 +948,9 @@ const RequestMoney = () => {
           <DialogDescription className="text-xs text-muted-foreground">
             Point your camera at an OpenPay receive QR code.
           </DialogDescription>
-          <div id="openpay-receive-scanner" className="min-h-[260px] overflow-hidden rounded-2xl border border-gray-200" />
+          <div id="openpay-receive-scanner" className="min-h-[260px] overflow-hidden rounded-2xl border border-border" />
           {scanError && <p className="text-sm text-red-500">{scanError}</p>}
-          <p className="text-xs text-gray-600">If camera does not open in Pi Browser, enable camera permission for this app and retry.</p>
+          <p className="text-xs text-muted-foreground">If camera does not open in Pi Browser, enable camera permission for this app and retry.</p>
         </DialogContent>
       </Dialog>
 
@@ -1017,10 +1017,10 @@ const RequestMoney = () => {
             </div>
           )}
 
-          <div className="mt-4 space-y-2 rounded-2xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900">
+          <div className="mt-4 space-y-2 rounded-2xl border border-border p-3 text-sm">
             <p className="flex items-center justify-between">
-              <span className="text-gray-600">Amount</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Amount</span>
+              <span className="font-semibold text-gray-800">
                 {confirmAction?.type === "create"
                   ? (() => {
                     const meta = currencies.find((c) => c.code === confirmAction.currencyCode);
@@ -1033,8 +1033,8 @@ const RequestMoney = () => {
               </span>
             </p>
             <p className="flex items-center justify-between">
-              <span className="text-gray-600">Converted (USD)</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Converted (USD)</span>
+              <span className="font-semibold text-gray-800">
                 ${confirmAction?.type === "create"
                   ? (() => {
                     const meta = currencies.find((c) => c.code === confirmAction.currencyCode);
@@ -1048,8 +1048,8 @@ const RequestMoney = () => {
               </span>
             </p>
             <p className="flex items-start justify-between gap-2">
-              <span className="text-gray-600">Note</span>
-              <span className="max-w-[70%] break-all text-right text-gray-900">
+              <span className="text-muted-foreground">Note</span>
+              <span className="max-w-[70%] break-all text-right text-gray-800">
                 {confirmAction?.type === "create"
                   ? confirmAction.note || "No note"
                   : confirmAction?.type === "pay" || confirmAction?.type === "reject"
