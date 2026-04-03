@@ -71,21 +71,13 @@ const DeveloperDashboardPage = () => {
         scopes: ["read:balance", "read:profile", "read:transactions", "write:send", "read:invoices", "write:invoices"],
       };
 
-      // Call edge function directly via fetch for proper header support
-      const apiUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/smart-contract-api`;
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`,
-          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          "x-target-path": "apps/register",
-        },
-        body: JSON.stringify(requestBody),
+      const { data: result, error: fnError } = await supabase.functions.invoke("smart-contract-api", {
+        body: requestBody,
+        headers: { "x-target-path": "apps/register" },
       });
 
-      const result = await res.json();
-      if (!res.ok || result?.error) throw new Error(result?.error || "Failed to create app");
+      if (fnError) throw new Error(fnError.message || "Failed to create app");
+      if (result?.error) throw new Error(result.error);
 
       if (result?.app?.client_secret) {
         setNewSecret(result.app.client_secret);
