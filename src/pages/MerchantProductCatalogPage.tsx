@@ -183,6 +183,10 @@ const MerchantProductCatalogPage = () => {
       p_redirect_url: null,
       p_call_to_action: "Pay",
       p_expires_in_minutes: null,
+      p_fee_payer: "customer",
+      p_fee_amount: 0,
+      p_merchant_settlement_amount: null,
+      p_openpay_fee_account: null,
     });
     setCreatingLink(false);
     if (error) {
