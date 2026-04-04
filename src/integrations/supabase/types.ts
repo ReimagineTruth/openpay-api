@@ -2393,69 +2393,39 @@ export type Database = {
           total_amount: number
         }[]
       }
-      create_merchant_payment_link:
-        | {
-            Args: {
-              p_after_payment_type?: string
-              p_call_to_action?: string
-              p_collect_address?: boolean
-              p_collect_customer_email?: boolean
-              p_collect_customer_name?: boolean
-              p_collect_phone?: boolean
-              p_confirmation_message?: string
-              p_currency?: string
-              p_custom_amount?: number
-              p_description?: string
-              p_expires_in_minutes?: number
-              p_items?: Json
-              p_link_type: string
-              p_mode: string
-              p_redirect_url?: string
-              p_secret_key: string
-              p_title?: string
-            }
-            Returns: {
-              currency: string
-              expires_at: string
-              key_mode: string
-              link_id: string
-              link_token: string
-              total_amount: number
-            }[]
-          }
-        | {
-            Args: {
-              p_after_payment_type?: string
-              p_call_to_action?: string
-              p_collect_address?: boolean
-              p_collect_customer_email?: boolean
-              p_collect_customer_name?: boolean
-              p_collect_phone?: boolean
-              p_confirmation_message?: string
-              p_currency?: string
-              p_custom_amount?: number
-              p_description?: string
-              p_expires_in_minutes?: number
-              p_fee_amount?: number
-              p_fee_payer?: string
-              p_items?: Json
-              p_link_type: string
-              p_merchant_settlement_amount?: number
-              p_mode: string
-              p_openpay_fee_account?: string
-              p_redirect_url?: string
-              p_secret_key: string
-              p_title?: string
-            }
-            Returns: {
-              currency: string
-              expires_at: string
-              key_mode: string
-              link_id: string
-              link_token: string
-              total_amount: number
-            }[]
-          }
+      create_merchant_payment_link: {
+        Args: {
+          p_after_payment_type?: string
+          p_call_to_action?: string
+          p_collect_address?: boolean
+          p_collect_customer_email?: boolean
+          p_collect_customer_name?: boolean
+          p_collect_phone?: boolean
+          p_confirmation_message?: string
+          p_currency?: string
+          p_custom_amount?: number
+          p_description?: string
+          p_expires_in_minutes?: number
+          p_fee_amount?: number
+          p_fee_payer?: string
+          p_items?: Json
+          p_link_type: string
+          p_merchant_settlement_amount?: number
+          p_mode: string
+          p_openpay_fee_account?: string
+          p_redirect_url?: string
+          p_secret_key: string
+          p_title?: string
+        }
+        Returns: {
+          currency: string
+          expires_at: string
+          key_mode: string
+          link_id: string
+          link_token: string
+          total_amount: number
+        }[]
+      }
       create_my_merchant_api_key: {
         Args: { p_key_name?: string; p_mode: string }
         Returns: {
