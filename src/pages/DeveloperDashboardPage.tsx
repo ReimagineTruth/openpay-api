@@ -290,6 +290,91 @@ const DeveloperDashboardPage = () => {
               </Card>
             )}
           </TabsContent>
+
+          <TabsContent value="pi-rpc" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Terminal className="h-4 w-4 text-primary" />
+                  Pi Network RPC Tester
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Test JSON-RPC calls to Pi Testnet or Mainnet. Based on the{" "}
+                  <a href="https://minepi.com/blog/rpc-server/" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    Pi RPC Server announcement
+                  </a>.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Network</Label>
+                    <Select value={rpcNetwork} onValueChange={(v: "testnet" | "mainnet") => setRpcNetwork(v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="testnet">Testnet (rpc.testnet.minepi.com)</SelectItem>
+                        <SelectItem value="mainnet">Mainnet (rpc.minepi.com)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">RPC Method</Label>
+                    <Select value={rpcMethod} onValueChange={setRpcMethod}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="getHealth">getHealth</SelectItem>
+                        <SelectItem value="getLatestLedger">getLatestLedger</SelectItem>
+                        <SelectItem value="getNetwork">getNetwork</SelectItem>
+                        <SelectItem value="getFeeStats">getFeeStats</SelectItem>
+                        <SelectItem value="getTransaction">getTransaction</SelectItem>
+                        <SelectItem value="getLedgerEntries">getLedgerEntries</SelectItem>
+                        <SelectItem value="simulateTransaction">simulateTransaction</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs">Params (optional JSON array)</Label>
+                  <Textarea
+                    value={rpcParams}
+                    onChange={e => setRpcParams(e.target.value)}
+                    placeholder='e.g. ["hash_here"] or leave empty'
+                    className="font-mono text-xs h-16"
+                  />
+                </div>
+
+                <Button onClick={callPiRpc} disabled={rpcLoading} className="gap-2">
+                  {rpcLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                  {rpcLoading ? "Calling..." : "Send RPC Call"}
+                </Button>
+
+                {rpcResult && (
+                  <div className="relative">
+                    <button
+                      className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+                      onClick={() => copyToClipboard(rpcResult, "Result")}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                    <pre className="rounded-lg bg-muted/80 border border-border p-4 font-mono text-xs overflow-x-auto max-h-80 overflow-y-auto text-foreground whitespace-pre-wrap">
+                      {rpcResult}
+                    </pre>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground space-y-1 border-t border-border pt-3">
+                  <p className="font-medium text-foreground">Equivalent cURL:</p>
+                  <pre className="rounded bg-muted/50 p-2 font-mono text-[10px] overflow-x-auto">
+{`curl https://${rpcNetwork === "mainnet" ? "rpc.minepi.com" : "rpc.testnet.minepi.com"} \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"${rpcMethod}"${rpcParams.trim() ? `,"params":${rpcParams.trim()}` : ""}}'`}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
