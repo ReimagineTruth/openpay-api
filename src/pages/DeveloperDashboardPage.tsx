@@ -135,7 +135,6 @@ const DeveloperDashboardPage = () => {
       setRpcLoading(false);
     }
   };
-  };
 
   if (loading) {
     return (
