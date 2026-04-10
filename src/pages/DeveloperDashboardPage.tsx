@@ -111,6 +111,32 @@ const DeveloperDashboardPage = () => {
     toast.success(`${label} copied`);
   };
 
+  const callPiRpc = async () => {
+    setRpcLoading(true);
+    setRpcResult("");
+    try {
+      const endpoint = rpcNetwork === "mainnet" ? "pi-rpc/mainnet" : "pi-rpc";
+      let parsedParams: unknown[] = [];
+      if (rpcParams.trim()) {
+        try { parsedParams = JSON.parse(rpcParams); } catch { parsedParams = [rpcParams.trim()]; }
+      }
+      const rpcBody: Record<string, unknown> = { jsonrpc: "2.0", id: 1, method: rpcMethod };
+      if (parsedParams.length > 0) rpcBody.params = parsedParams;
+
+      const { data, error } = await supabase.functions.invoke("smart-contract-api", {
+        body: rpcBody,
+        headers: { "x-target-path": endpoint },
+      });
+      if (error) throw error;
+      setRpcResult(JSON.stringify(data, null, 2));
+    } catch (err: any) {
+      setRpcResult(JSON.stringify({ error: err.message || "RPC call failed" }, null, 2));
+    } finally {
+      setRpcLoading(false);
+    }
+  };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
