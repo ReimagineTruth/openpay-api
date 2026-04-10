@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Key, Trash2, Copy, Eye, EyeOff, Globe, BarChart3, Webhook } from "lucide-react";
+import { ArrowLeft, Plus, Key, Trash2, Copy, Eye, EyeOff, Globe, BarChart3, Webhook, Terminal, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +43,11 @@ const DeveloperDashboardPage = () => {
   const [creating, setCreating] = useState(false);
   const [newSecret, setNewSecret] = useState("");
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [rpcNetwork, setRpcNetwork] = useState<"testnet" | "mainnet">("testnet");
+  const [rpcMethod, setRpcMethod] = useState("getHealth");
+  const [rpcParams, setRpcParams] = useState("");
+  const [rpcResult, setRpcResult] = useState("");
+  const [rpcLoading, setRpcLoading] = useState(false);
 
   const loadApps = async () => {
     const { data } = await supabase.from("developer_apps").select("*").order("created_at", { ascending: false });
