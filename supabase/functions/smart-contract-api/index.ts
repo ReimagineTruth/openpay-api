@@ -40,6 +40,45 @@ serve(async (req: Request) => {
       return json({ currencies: currencies || [] });
     }
 
+    // Pi RPC proxy — forwards JSON-RPC calls to Pi Testnet/Mainnet RPC server
+    if (path === "pi-rpc" || path === "pi-rpc/testnet" || path === "pi-rpc/mainnet") {
+      if (req.method !== "POST") return json({ error: "POST required for JSON-RPC" }, 405);
+
+      const network = path.includes("mainnet") ? "mainnet" : "testnet";
+      const rpcUrl = network === "mainnet"
+        ? "https://rpc.minepi.com"
+        : "https://rpc.testnet.minepi.com";
+
+      const body = await req.json();
+
+      // Validate JSON-RPC structure
+      if (!body.jsonrpc || !body.method) {
+        return json({ error: "Invalid JSON-RPC request. Required: jsonrpc, method" }, 400);
+      }
+
+      // Block dangerous methods
+      const blockedMethods = ["sendTransaction", "submitTransaction"];
+      if (blockedMethods.includes(body.method)) {
+        return json({ error: `Method '${body.method}' is not allowed through the proxy. Submit transactions directly.` }, 403);
+      }
+
+      try {
+        const rpcResponse = await fetch(rpcUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const rpcData = await rpcResponse.text();
+        return new Response(rpcData, {
+          status: rpcResponse.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (rpcErr: unknown) {
+        const msg = rpcErr instanceof Error ? rpcErr.message : "RPC request failed";
+        return json({ error: msg, network, rpc_url: rpcUrl }, 502);
+      }
+    }
+
     // Authenticate via client_id + API key OR Bearer token
     const clientId = req.headers.get("x-client-id") || "";
     const apiKey = req.headers.get("x-api-key") || "";
