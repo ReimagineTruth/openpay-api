@@ -306,7 +306,8 @@ serve(async (req: Request) => {
           available: [
             "GET /health", "GET /balance", "GET /profile", "GET /transactions",
             "POST /send", "GET|POST /invoices", "GET /ledger", "GET /currencies",
-            "POST /apps/register", "POST /lookup"
+            "POST /apps/register", "POST /lookup",
+            "POST /pi-rpc", "POST /pi-rpc/testnet", "POST /pi-rpc/mainnet"
           ],
         }, 404);
     }
