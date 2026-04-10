@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Key, Trash2, Copy, Eye, EyeOff, Globe, BarChart3, Webhook } from "lucide-react";
+import { ArrowLeft, Plus, Key, Trash2, Copy, Eye, EyeOff, Globe, BarChart3, Webhook, Terminal, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +43,11 @@ const DeveloperDashboardPage = () => {
   const [creating, setCreating] = useState(false);
   const [newSecret, setNewSecret] = useState("");
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [rpcNetwork, setRpcNetwork] = useState<"testnet" | "mainnet">("testnet");
+  const [rpcMethod, setRpcMethod] = useState("getHealth");
+  const [rpcParams, setRpcParams] = useState("");
+  const [rpcResult, setRpcResult] = useState("");
+  const [rpcLoading, setRpcLoading] = useState(false);
 
   const loadApps = async () => {
     const { data } = await supabase.from("developer_apps").select("*").order("created_at", { ascending: false });
@@ -105,6 +111,32 @@ const DeveloperDashboardPage = () => {
     toast.success(`${label} copied`);
   };
 
+  const callPiRpc = async () => {
+    setRpcLoading(true);
+    setRpcResult("");
+    try {
+      const endpoint = rpcNetwork === "mainnet" ? "pi-rpc/mainnet" : "pi-rpc";
+      let parsedParams: unknown[] = [];
+      if (rpcParams.trim()) {
+        try { parsedParams = JSON.parse(rpcParams); } catch { parsedParams = [rpcParams.trim()]; }
+      }
+      const rpcBody: Record<string, unknown> = { jsonrpc: "2.0", id: 1, method: rpcMethod };
+      if (parsedParams.length > 0) rpcBody.params = parsedParams;
+
+      const { data, error } = await supabase.functions.invoke("smart-contract-api", {
+        body: rpcBody,
+        headers: { "x-target-path": endpoint },
+      });
+      if (error) throw error;
+      setRpcResult(JSON.stringify(data, null, 2));
+    } catch (err: any) {
+      setRpcResult(JSON.stringify({ error: err.message || "RPC call failed" }, null, 2));
+    } finally {
+      setRpcLoading(false);
+    }
+  };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -145,9 +177,10 @@ const DeveloperDashboardPage = () => {
         )}
 
         <Tabs defaultValue="apps">
-          <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1">
+          <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 flex-wrap">
             <TabsTrigger value="apps" className="gap-1"><Globe className="h-3.5 w-3.5" /> Apps ({apps.length})</TabsTrigger>
             <TabsTrigger value="logs" className="gap-1"><BarChart3 className="h-3.5 w-3.5" /> API Logs</TabsTrigger>
+            <TabsTrigger value="pi-rpc" className="gap-1"><Terminal className="h-3.5 w-3.5" /> Pi RPC</TabsTrigger>
           </TabsList>
 
           <TabsContent value="apps" className="space-y-4 mt-4">
@@ -256,6 +289,91 @@ const DeveloperDashboardPage = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="pi-rpc" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Terminal className="h-4 w-4 text-primary" />
+                  Pi Network RPC Tester
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Test JSON-RPC calls to Pi Testnet or Mainnet. Based on the{" "}
+                  <a href="https://minepi.com/blog/rpc-server/" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    Pi RPC Server announcement
+                  </a>.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Network</Label>
+                    <Select value={rpcNetwork} onValueChange={(v: "testnet" | "mainnet") => setRpcNetwork(v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="testnet">Testnet (rpc.testnet.minepi.com)</SelectItem>
+                        <SelectItem value="mainnet">Mainnet (rpc.minepi.com)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">RPC Method</Label>
+                    <Select value={rpcMethod} onValueChange={setRpcMethod}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="getHealth">getHealth</SelectItem>
+                        <SelectItem value="getLatestLedger">getLatestLedger</SelectItem>
+                        <SelectItem value="getNetwork">getNetwork</SelectItem>
+                        <SelectItem value="getFeeStats">getFeeStats</SelectItem>
+                        <SelectItem value="getTransaction">getTransaction</SelectItem>
+                        <SelectItem value="getLedgerEntries">getLedgerEntries</SelectItem>
+                        <SelectItem value="simulateTransaction">simulateTransaction</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs">Params (optional JSON array)</Label>
+                  <Textarea
+                    value={rpcParams}
+                    onChange={e => setRpcParams(e.target.value)}
+                    placeholder='e.g. ["hash_here"] or leave empty'
+                    className="font-mono text-xs h-16"
+                  />
+                </div>
+
+                <Button onClick={callPiRpc} disabled={rpcLoading} className="gap-2">
+                  {rpcLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                  {rpcLoading ? "Calling..." : "Send RPC Call"}
+                </Button>
+
+                {rpcResult && (
+                  <div className="relative">
+                    <button
+                      className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+                      onClick={() => copyToClipboard(rpcResult, "Result")}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                    <pre className="rounded-lg bg-muted/80 border border-border p-4 font-mono text-xs overflow-x-auto max-h-80 overflow-y-auto text-foreground whitespace-pre-wrap">
+                      {rpcResult}
+                    </pre>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground space-y-1 border-t border-border pt-3">
+                  <p className="font-medium text-foreground">Equivalent cURL:</p>
+                  <pre className="rounded bg-muted/50 p-2 font-mono text-[10px] overflow-x-auto">
+{`curl https://${rpcNetwork === "mainnet" ? "rpc.minepi.com" : "rpc.testnet.minepi.com"} \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":1,"method":"${rpcMethod}"${rpcParams.trim() ? `,"params":${rpcParams.trim()}` : ""}}'`}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
