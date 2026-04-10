@@ -177,9 +177,10 @@ const DeveloperDashboardPage = () => {
         )}
 
         <Tabs defaultValue="apps">
-          <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1">
+          <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 flex-wrap">
             <TabsTrigger value="apps" className="gap-1"><Globe className="h-3.5 w-3.5" /> Apps ({apps.length})</TabsTrigger>
             <TabsTrigger value="logs" className="gap-1"><BarChart3 className="h-3.5 w-3.5" /> API Logs</TabsTrigger>
+            <TabsTrigger value="pi-rpc" className="gap-1"><Terminal className="h-3.5 w-3.5" /> Pi RPC</TabsTrigger>
           </TabsList>
 
           <TabsContent value="apps" className="space-y-4 mt-4">
