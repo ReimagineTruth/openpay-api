@@ -68,6 +68,15 @@ const QUICK_TOPICS = [
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openpay-ai-chat`;
 
+const formatAccountNumber = (accountNumber: string) => {
+  if (!accountNumber) return '';
+  // Format: OPXXXXXX...XXXX (show first 6 chars after OP, then ..., then last 4 chars)
+  if (accountNumber.length <= 12) return accountNumber;
+  const prefix = accountNumber.substring(0, 8); // OP + first 6 chars
+  const suffix = accountNumber.substring(accountNumber.length - 4);
+  return `${prefix}...${suffix}`;
+};
+
 const OpenPayAIPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -535,7 +544,7 @@ function SidebarContent({ insights, spendingCategories, budgetAlerts, userProfil
             {userProfile.referral_code && <div className="flex justify-between"><span className="text-muted-foreground">Referral</span><span className="font-medium">{userProfile.referral_code}</span></div>}
             {userAccount && (
               <>
-                <div className="flex justify-between"><span className="text-muted-foreground">Account #</span><span className="font-medium">{userAccount.account_number}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Account #</span><span className="font-medium">{formatAccountNumber(userAccount.account_number)}</span></div>
                 {userAccount.account_username && <div className="flex justify-between"><span className="text-muted-foreground">Acct User</span><span className="font-medium">{userAccount.account_username}</span></div>}
               </>
             )}

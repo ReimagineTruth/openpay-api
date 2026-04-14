@@ -386,7 +386,7 @@ const MerchantCheckoutPage = () => {
   const merchantSettlementAmount = isSessionCheckout
     ? Number(sessionData?.merchant_settlement_amount ?? (feePayer === "merchant" ? subtotalAmount - checkoutFeeAmount : subtotalAmount))
     : amount;
-  const getPiCodeLabel = (code: string) => (code === "PI" ? "PI" : code === "OUSD" ? "OPEN USD" : `PI ${code}`);
+  const getPiCodeLabel = (code: string) => (code === "PI" ? "PI" : code === "OUSD" ? "OUSD" : `PI ${code}`);
 
   if (isSessionCheckout && loadingSession && !sessionData) {
     return <SplashScreen message="Loading checkout..." />;

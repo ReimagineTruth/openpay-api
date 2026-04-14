@@ -428,16 +428,18 @@ const MerchantProductCatalogPage = () => {
           {shareTab === "direct" && (
             <div className="mt-4 rounded-2xl border border-border p-3">
               <p className="text-sm font-semibold text-foreground">Checkout link</p>
-              <div className="mt-2 flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-3 py-2">
-                <p className="flex-1 truncate text-sm text-foreground">{createdUrl}</p>
-                <Button className="h-9 rounded-full bg-paypal-blue px-4 text-white hover:bg-[#004dc5]" onClick={() => void handleCopy(createdUrl, "Checkout link")}>
-                  <Copy className="mr-1 h-4 w-4" />
-                  Copy
-                </Button>
-                <Button variant="outline" className="h-9 rounded-full px-4" onClick={() => window.open(createdUrl, "_blank")}>
-                  <ExternalLink className="mr-1 h-4 w-4" />
-                  Open
-                </Button>
+              <div className="mt-2 rounded-xl border border-border bg-secondary/40 p-3">
+                <p className="mb-3 break-all text-sm text-foreground">{createdUrl}</p>
+                <div className="flex gap-2">
+                  <Button className="h-9 rounded-full bg-paypal-blue px-4 text-white hover:bg-[#004dc5]" onClick={() => void handleCopy(createdUrl, "Checkout link")}>
+                    <Copy className="mr-1 h-4 w-4" />
+                    Copy
+                  </Button>
+                  <Button variant="outline" className="h-9 rounded-full px-4" onClick={() => window.open(createdUrl, "_blank")}>
+                    <ExternalLink className="mr-1 h-4 w-4" />
+                    Open
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -445,7 +447,9 @@ const MerchantProductCatalogPage = () => {
           {shareTab === "embed" && (
             <div className="mt-4 rounded-2xl border border-border p-3">
               <p className="text-sm font-semibold text-foreground">Embed code</p>
-              <pre className="mt-2 overflow-x-auto rounded-xl bg-slate-950 p-3 text-xs text-slate-100"><code>{shareEmbedCode}</code></pre>
+              <div className="mt-2 rounded-xl bg-slate-950 p-3">
+                <code className="block break-all text-xs text-slate-100 font-mono">{shareEmbedCode}</code>
+              </div>
               <Button className="mt-2 h-9 rounded-full bg-paypal-blue px-4 text-white hover:bg-[#004dc5]" onClick={() => void handleCopy(shareEmbedCode, "Embed code")}>
                 <Copy className="mr-1 h-4 w-4" />
                 Copy code

@@ -112,6 +112,24 @@ CREATE TABLE IF NOT EXISTS public.disputes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 10. payment_links
+CREATE TABLE IF NOT EXISTS public.payment_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  type TEXT NOT NULL, -- 'link', 'button', 'qr', 'iframe', 'widget'
+  item_name TEXT NOT NULL,
+  description TEXT,
+  price_type TEXT NOT NULL DEFAULT 'one_set_price',
+  price NUMERIC NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  quantity INTEGER,
+  embed_code TEXT,
+  qr_code_url TEXT,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- 10. virtual_cards
 CREATE TABLE IF NOT EXISTS public.virtual_cards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
