@@ -1,5 +1,6 @@
 import PiNetwork from 'pi-backend';
 import { supabase } from '@/integrations/supabase/client';
+import { PiSDKConfig, initializePiSDKWarnings, waitForPiSDK } from './piSDKConfig';
 
 export interface PiWithdrawalRequest {
   amount: number;
@@ -44,10 +45,16 @@ class PiWithdrawalService {
 
   private async initializePiNetwork() {
     try {
+      // Initialize Pi SDK warning suppression
+      const cleanupWarnings = initializePiSDKWarnings();
+      
+      // Wait for Pi SDK to be available
+      await waitForPiSDK();
+      
       // Get Pi Network credentials from environment
       // Note: In production, these should be stored securely on the backend
-      const apiKey = import.meta.env.VITE_PI_API_KEY || "fudrvmlzm7ucqu94smlgeudrryccqxpymkr1vqk6nw0yoli8ikirbzrn9siv4hi9";
-      const walletPrivateSeed = import.meta.env.VITE_PI_WALLET_PRIVATE_SEED || "SDZWK2Z4JA3KTQIGAEUSKWFLZBDILJAWLUNAUFHURFIF5BWNNH3PB5Y3";
+      const apiKey = PiSDKConfig.api.key;
+      const walletPrivateSeed = PiSDKConfig.wallet.privateSeed;
 
       if (!apiKey || !walletPrivateSeed) {
         console.error('Pi Network credentials not found in environment variables');
@@ -57,6 +64,9 @@ class PiWithdrawalService {
       this.pi = new PiNetwork(apiKey, walletPrivateSeed);
       this.isInitialized = true;
       console.log('Pi Network withdrawal service initialized successfully');
+      
+      // Cleanup warning suppression
+      cleanupWarnings();
     } catch (error) {
       console.error('Failed to initialize Pi Network:', error);
       this.isInitialized = false;

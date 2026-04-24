@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { initializePiSDKWarnings } from "@/lib/piSDKConfig";
 import { 
   ArrowLeft, 
   Send, 
@@ -54,6 +55,11 @@ const PiWithdrawalPage = () => {
     checkUser();
     loadWithdrawalHistory();
     loadUserBalance();
+    
+    // Initialize Pi SDK warning suppression
+    const cleanup = initializePiSDKWarnings();
+    
+    return cleanup;
   }, []);
 
   const checkUser = async () => {
