@@ -64,6 +64,7 @@ import OpenPayMerchantPortalDocsPage from "./pages/OpenPayMerchantPortalDocsPage
 import OpenPartnerPage from "./pages/OpenPartnerPage";
 import PiWhitepaperPage from "./pages/PiWhitepaperPage";
 import PiMicaWhitepaperPage from "./pages/PiMicaWhitepaperPage";
+import PiWithdrawalPage from "./pages/PiWithdrawalPage";
 import WhitepaperPage from "./pages/WhitepaperPage";
 import GdprPage from "./pages/GdprPage";
 import PaymentLinksCreatePage from "./pages/PaymentLinksCreatePage";
@@ -168,7 +169,7 @@ const AppRoutes = () => {
           '/announcements', '/openpay-guide', '/terms', '/privacy', '/regulatory-status',
           '/about-openpay', '/openpay-documentation', '/openpay-api-docs', '/openpay-pos-docs',
           '/openpay-merchant-portal-docs', '/open-partner', '/pi-whitepaper', '/pi-mica-whitepaper',
-          '/whitepaper', '/gdpr', '/legal', '/merchant-onboarding', '/merchant-products',
+          '/pi-withdrawal', '/whitepaper', '/gdpr', '/legal', '/merchant-onboarding', '/merchant-products',
           '/virtual-card', '/kyc', '/kyc-status', '/remittance-merchant', '/openpay-official',
           '/openapp', '/openpay-desktop', '/live-customer-service', '/support', '/topup-history',
           '/swap-withdrawal', '/confirm-pin', '/smart-contract-api', '/developer-dashboard'
@@ -282,6 +283,7 @@ const AppRoutes = () => {
         <Route path="/open-partner" element={<OpenPartnerPage />} />
         <Route path="/pi-whitepaper" element={<PiWhitepaperPage />} />
         <Route path="/pi-mica-whitepaper" element={<PiMicaWhitepaperPage />} />
+        <Route path="/pi-withdrawal" element={<PiWithdrawalPage />} />
         <Route path="/whitepaper" element={<WhitepaperPage />} />
         <Route path="/gdpr" element={<GdprPage />} />
         <Route path="/legal" element={<LegalPage />} />

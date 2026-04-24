@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
-import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck, History, MessageSquare, Bot } from "lucide-react";
+import { Send, ArrowLeftRight, CircleDollarSign, FileText, Wallet, Activity, HelpCircle, Info, Scale, LogOut, Clapperboard, ShieldAlert, FileCheck, Lock, Users, Store, BookOpen, Download, Megaphone, Smartphone, CreditCard, ShieldCheck, Handshake, Monitor, Copy, X, TrendingUp, Pickaxe, Coins, Pointer, UserCheck, History, MessageSquare, Bot, ArrowUpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { clearAllAppSecurityUnlocks } from "@/lib/appSecurity";
 import { canAccessRemittanceMerchant, isRemittanceUiEnabled } from "@/lib/remittanceAccess";
@@ -164,6 +164,7 @@ const MenuPage = () => {
         { icon: Send, label: "Express Send", action: () => navigate("/send") },
         { icon: ArrowLeftRight, label: "Transfer", action: () => navigate("/topup") },
         { icon: ArrowLeftRight, label: "Swap", action: () => navigate("/swap-withdrawal") },
+        { icon: ArrowUpCircle, label: "Pi Withdrawal", action: () => navigate("/pi-withdrawal") },
         { icon: CircleDollarSign, label: "Request", action: () => navigate("/request-payment") },
         { icon: FileText, label: "Invoice", action: () => navigate("/send-invoice") },
         { icon: History, label: "Top-Up History", action: () => navigate("/topup-history") },
