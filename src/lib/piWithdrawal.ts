@@ -1,6 +1,6 @@
 import PiNetwork from 'pi-backend';
 import { supabase } from '@/integrations/supabase/client';
-import { PiSDKConfig, initializePiSDKWarnings, waitForPiSDK } from './piSDKConfig';
+import { PiSDKConfig, initializePiSDKWarnings } from './piSDKConfig';
 
 export interface PiWithdrawalRequest {
   amount: number;
@@ -43,39 +43,54 @@ class PiWithdrawalService {
     this.initializePiNetwork();
   }
 
-  private async initializePiNetwork() {
+  private initializePiNetwork() {
     try {
+      console.log('=== Starting Pi Network Service Initialization ===');
+      
       // Initialize Pi SDK warning suppression
       const cleanupWarnings = initializePiSDKWarnings();
-      
-      // Wait for Pi SDK to be available
-      await waitForPiSDK();
       
       // Get Pi Network credentials from environment
       // Note: In production, these should be stored securely on the backend
       const apiKey = PiSDKConfig.api.key;
       const walletPrivateSeed = PiSDKConfig.wallet.privateSeed;
 
+      console.log('API Key available:', !!apiKey);
+      console.log('Wallet Seed available:', !!walletPrivateSeed);
+      console.log('API Key length:', apiKey?.length || 0);
+      console.log('Wallet Seed length:', walletPrivateSeed?.length || 0);
+
       if (!apiKey || !walletPrivateSeed) {
         console.error('Pi Network credentials not found in environment variables');
+        this.isInitialized = false;
         return;
       }
 
+      console.log('Creating PiNetwork instance...');
+      // pi-backend is a backend service, doesn't need frontend Pi SDK
       this.pi = new PiNetwork(apiKey, walletPrivateSeed);
+      console.log('PiNetwork instance created successfully');
+      
       this.isInitialized = true;
-      console.log('Pi Network withdrawal service initialized successfully');
+      console.log('✅ Pi Network withdrawal service initialized successfully');
+      console.log('=== Pi Network Service Initialization Complete ===');
       
       // Cleanup warning suppression
       cleanupWarnings();
     } catch (error) {
-      console.error('Failed to initialize Pi Network:', error);
+      console.error('❌ Failed to initialize Pi Network:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error name:', error instanceof Error ? error.name : 'Unknown');
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       this.isInitialized = false;
     }
   }
 
   private async ensureInitialized(): Promise<boolean> {
     if (!this.isInitialized) {
-      await this.initializePiNetwork();
+      // Try to reinitialize if it failed before
+      this.initializePiNetwork();
     }
     return this.isInitialized && this.pi !== null;
   }
