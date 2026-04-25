@@ -76,14 +76,8 @@ const PiWithdrawalPage = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Try main service first, fallback to simple service
-        let history: PiWithdrawalRecord[];
-        try {
-          history = await piWithdrawalService.getUserWithdrawalHistory(user.id);
-        } catch (mainServiceError) {
-          console.warn('Main Pi service failed for history, using fallback service:', mainServiceError);
-          history = await piWithdrawalSimpleService.getUserWithdrawalHistory(user.id);
-        }
+        // Use real Pi Network A2U service
+        const history = await piWithdrawalService.getUserWithdrawalHistory(user.id);
         setWithdrawalHistory(history);
       }
     } catch (error) {
@@ -134,15 +128,8 @@ const PiWithdrawalPage = () => {
       setProcessingProgress(30);
       setProcessingStep('Processing with Pi Network...');
 
-      // Try main service first, fallback to simple service if it fails
-      let result: PiWithdrawalResult;
-      try {
-        result = await piWithdrawalService.processCompleteWithdrawal(withdrawalRequest);
-      } catch (mainServiceError) {
-        console.warn('Main Pi service failed, using fallback service:', mainServiceError);
-        setProcessingStep('Using fallback service...');
-        result = await piWithdrawalSimpleService.processCompleteWithdrawal(withdrawalRequest);
-      }
+      // Use real Pi Network A2U service
+      const result = await piWithdrawalService.processCompleteWithdrawal(withdrawalRequest);
 
       setProcessingProgress(70);
       setProcessingStep('Finalizing transaction...');
