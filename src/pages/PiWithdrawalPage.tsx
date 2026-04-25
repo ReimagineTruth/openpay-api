@@ -89,12 +89,87 @@ const PiWithdrawalPage = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // For now, use a mock balance since the table might not exist yet
-        // In production, this would query the user_balances table
-        setUserBalance(1000); // Mock balance for testing
+        try {
+          // Try to get real balance from user_balances table
+          const { data: balanceData, error } = await supabase
+            .from('user_balances' as any)
+            .select('pi_balance')
+            .eq('user_uid', user.id)
+            .single();
+          
+          if (error) {
+            console.warn('Balance table not found, using default balance:', error);
+            // If table doesn't exist, set a reasonable default balance
+            setUserBalance(1000);
+          } else if (balanceData) {
+            setUserBalance((balanceData as any).pi_balance || 1000);
+          } else {
+            // No balance record found, set default
+            setUserBalance(1000);
+          }
+        } catch (dbError) {
+          console.warn('Database error for balance, using default:', dbError);
+          setUserBalance(1000);
+        }
       }
     } catch (error) {
       console.error('Error loading user balance:', error);
+      setUserBalance(1000); // Fallback balance
+    }
+  };
+
+  const updateUserBalance = async (withdrawalAmount: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        try {
+          // Get current balance
+          const { data: currentBalance } = await supabase
+            .from('user_balances' as any)
+            .select('pi_balance')
+            .eq('user_uid', user.id)
+            .single();
+          
+          if (currentBalance) {
+            const newBalance = (currentBalance as any).pi_balance - withdrawalAmount;
+            
+            // Update balance in database
+            const { error: updateError } = await supabase
+              .from('user_balances' as any)
+              .update({ pi_balance: newBalance })
+              .eq('user_uid', user.id);
+            
+            if (updateError) {
+              console.warn('Failed to update balance in database:', updateError);
+            } else {
+              // Update local state
+              setUserBalance(newBalance);
+              console.log(`Updated user balance: ${(currentBalance as any).pi_balance} - ${withdrawalAmount} = ${newBalance}`);
+            }
+          } else {
+            // Create new balance record if doesn't exist
+            const newBalance = 1000 - withdrawalAmount;
+            const { error: insertError } = await supabase
+              .from('user_balances' as any)
+              .insert({
+                user_uid: user.id,
+                pi_balance: newBalance,
+                created_at: new Date().toISOString()
+              });
+            
+            if (insertError) {
+              console.warn('Failed to create balance record:', insertError);
+            } else {
+              setUserBalance(newBalance);
+              console.log(`Created new balance record: ${newBalance}`);
+            }
+          }
+        } catch (dbError) {
+          console.warn('Database error updating balance:', dbError);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating user balance:', error);
     }
   };
 
@@ -143,7 +218,7 @@ const PiWithdrawalPage = () => {
         
         // Reload data
         await loadWithdrawalHistory();
-        await loadUserBalance();
+        await updateUserBalance(parseFloat(amount));
         
         // Reset form
         setAmount("");
