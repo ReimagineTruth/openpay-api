@@ -125,7 +125,7 @@ class PiWithdrawalService {
         };
       }
 
-      // Create payment in Pi Network
+      // Create payment in Pi Network - validate payment data structure
       const paymentData = {
         amount: request.amount,
         memo: request.memo || `A2U Withdrawal - ${new Date().toISOString()}`,
@@ -137,6 +137,28 @@ class PiWithdrawalService {
         },
         uid: request.userUid
       };
+
+      // Validate payment data according to Pi SDK requirements
+      if (!paymentData.amount || paymentData.amount <= 0) {
+        return {
+          success: false,
+          error: 'Invalid payment amount'
+        };
+      }
+
+      if (!paymentData.uid || typeof paymentData.uid !== 'string') {
+        return {
+          success: false,
+          error: 'Invalid user UID'
+        };
+      }
+
+      if (!paymentData.memo || typeof paymentData.memo !== 'string') {
+        return {
+          success: false,
+          error: 'Invalid payment memo'
+        };
+      }
 
       const paymentId = await this.pi.createPayment(paymentData);
 
@@ -165,9 +187,34 @@ class PiWithdrawalService {
 
     } catch (error) {
       console.error('Error creating withdrawal:', error);
+      
+      // Handle specific Pi Network errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('You need to complete the ongoing payment first')) {
+        return {
+          success: false,
+          error: 'Please complete any pending payments before creating a new withdrawal'
+        };
+      }
+      
+      if (errorMessage.includes('insufficient')) {
+        return {
+          success: false,
+          error: 'Insufficient balance for this withdrawal'
+        };
+      }
+      
+      if (errorMessage.includes('unauthorized') || errorMessage.includes('authentication')) {
+        return {
+          success: false,
+          error: 'Authentication failed. Please check your Pi Network credentials'
+        };
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: errorMessage || 'Unknown error occurred'
       };
     }
   }
@@ -223,13 +270,33 @@ class PiWithdrawalService {
 
       const completedPayment = await this.pi.completePayment(paymentId, txid);
 
+      // Validate the completed payment structure according to Pi SDK documentation
+      if (!completedPayment) {
+        throw new Error('No payment data returned from completePayment');
+      }
+
+      // Check payment status fields
+      if (!completedPayment.status) {
+        console.warn('Payment status object is missing');
+      }
+
       // Update withdrawal record with completion status
       await this.updateWithdrawalRecord(paymentId, {
-        status: 'completed',
+        status: completedPayment.status?.developer_completed ? 'completed' : 'pending',
         transaction_verified: completedPayment.transaction?.verified || false,
-        developer_completed: completedPayment.status.developer_completed,
-        from_address: completedPayment.from_address,
-        to_address: completedPayment.to_address
+        developer_completed: completedPayment.status?.developer_completed || false,
+        from_address: completedPayment.from_address || '',
+        to_address: completedPayment.to_address || ''
+      });
+
+      // Log payment completion details for debugging
+      console.log('Payment completed successfully:', {
+        paymentId,
+        txid,
+        status: completedPayment.status,
+        transactionVerified: completedPayment.transaction?.verified,
+        fromAddress: completedPayment.from_address,
+        toAddress: completedPayment.to_address
       });
 
       return {
