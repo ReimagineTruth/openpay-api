@@ -394,22 +394,24 @@ class PiWithdrawalService {
   }
 
   private async checkUserBalance(userUid: string, amount: number): Promise<boolean> {
-    // This is a placeholder implementation
-    // In a real application, you would check the user's actual balance
-    // This could be from your database, blockchain, or other sources
+    // Check user's actual balance from the wallets table
     try {
       const { data, error } = await supabase
-        .from('user_balances' as any)
-        .select('pi_balance')
-        .eq('user_uid', userUid)
+        .from('wallets' as any)
+        .select('balance')
+        .eq('user_id', userUid)
         .single();
 
       if (error || !data) {
         console.error('Error checking user balance:', error);
-        return false;
+        // If wallet not found, check if we have a default balance to use
+        console.log('Balance table not found, using default balance:', error);
+        return false; // Don't allow withdrawal if balance can't be verified
       }
 
-      return (data as any).pi_balance >= amount;
+      const currentBalance = (data as any).balance || 0;
+      console.log(`Current balance: ${currentBalance}, Requested amount: ${amount}`);
+      return currentBalance >= amount;
     } catch (error) {
       console.error('Error checking user balance:', error);
       return false;

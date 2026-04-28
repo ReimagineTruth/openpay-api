@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import AuthMark from "@/components/AuthMark";
 import AuthFooter from "@/components/AuthFooter";
@@ -257,6 +257,9 @@ const AdminMrwainAuth = () => {
             <DialogTitle className="text-center text-lg font-semibold text-paypal-blue">
               Check Your Email
             </DialogTitle>
+            <DialogDescription className="text-center text-sm text-muted-foreground">
+              We've sent a confirmation link to your email address
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 text-center">
             <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
