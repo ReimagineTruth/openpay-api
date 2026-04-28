@@ -28,12 +28,11 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  piWithdrawalService, 
+  piWithdrawalApiService, 
   PiWithdrawalRequest, 
   PiWithdrawalResult, 
   PiWithdrawalRecord 
-} from "@/lib/piWithdrawal";
-import { piWithdrawalSimpleService } from "@/lib/piWithdrawalSimple";
+} from "@/lib/piWithdrawalApi";
 
 const PiWithdrawalPage = () => {
   const navigate = useNavigate();
@@ -76,8 +75,8 @@ const PiWithdrawalPage = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Use real Pi Network A2U service
-        const history = await piWithdrawalService.getUserWithdrawalHistory(user.id);
+        // Use Pi Network API service
+        const history = await piWithdrawalApiService.getWithdrawalHistory();
         setWithdrawalHistory(history);
       }
     } catch (error) {
@@ -196,15 +195,14 @@ const PiWithdrawalPage = () => {
           source: 'openpay_app',
           timestamp: new Date().toISOString(),
           currency: selectedCurrency
-        },
-        userUid: user.id
+        }
       };
 
       setProcessingProgress(30);
       setProcessingStep('Processing with Pi Network...');
 
-      // Use real Pi Network A2U service
-      const result = await piWithdrawalService.processCompleteWithdrawal(withdrawalRequest);
+      // Use Pi Network API service
+      const result = await piWithdrawalApiService.processCompleteWithdrawal(withdrawalRequest);
 
       setProcessingProgress(70);
       setProcessingStep('Finalizing transaction...');
@@ -218,7 +216,13 @@ const PiWithdrawalPage = () => {
         
         // Reload data
         await loadWithdrawalHistory();
-        await updateUserBalance(parseFloat(amount));
+        
+        // Update balance from API response or fallback to manual update
+        if (result.newBalance) {
+          setUserBalance(result.newBalance);
+        } else {
+          await updateUserBalance(parseFloat(amount));
+        }
         
         // Reset form
         setAmount("");
