@@ -54,22 +54,41 @@ serve(async (req) => {
       }
 
       // Initialize Pi Network with environment variables
-      const apiKey = Deno.env.get('PI_API_KEY') || "fudrvmlzm7ucqu94smlgeudrryccqxpymkr1vqk6nw0yoli8ikirbzrn9siv4hi9"
-      const walletPrivateSeed = Deno.env.get('PI_WALLET_PRIVATE_SEED') || "SDZWK2Z4JA3KTQIGAEUSKWFLZBDILJAWLUNAUFHURFIF5BWNNH3PB5Y3"
+      const apiKey = Deno.env.get('PI_API_KEY')
+      const walletPrivateSeed = Deno.env.get('PI_WALLET_PRIVATE_SEED')
       
       // Pi Network Horizon configuration
-      const mainnetUrl = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_URL') || "https://api.mainnet.minepi.com"
-      const mainnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_PASSPHRASE') || "Pi Network"
-      const testnetUrl = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_URL') || "https://api.testnet.minepi.com"
-      const testnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_PASSPHRASE') || "Pi Testnet"
-      const platformBaseUrl = Deno.env.get('PI_BACKEND_PLATFORM_BASE_URL') || "https://api.minepi.com"
+      const mainnetUrl = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_URL')
+      const mainnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_PASSPHRASE')
+      const testnetUrl = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_URL')
+      const testnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_PASSPHRASE')
+      const platformBaseUrl = Deno.env.get('PI_BACKEND_PLATFORM_BASE_URL')
 
-      console.log('Pi Network Configuration:', {
-        apiKey: !!apiKey,
-        walletPrivateSeed: !!walletPrivateSeed,
-        mainnetUrl,
-        testnetUrl,
-        platformBaseUrl
+      console.log('Pi Network Environment Variables Status:', {
+        PI_API_KEY: !!apiKey,
+        PI_WALLET_PRIVATE_SEED: !!walletPrivateSeed,
+        PI_BACKEND_HORIZON_MAINNET_URL: !!mainnetUrl,
+        PI_BACKEND_HORIZON_MAINNET_PASSPHRASE: !!mainnetPassphrase,
+        PI_BACKEND_HORIZON_TESTNET_URL: !!testnetUrl,
+        PI_BACKEND_HORIZON_TESTNET_PASSPHRASE: !!testnetPassphrase,
+        PI_BACKEND_PLATFORM_BASE_URL: !!platformBaseUrl
+      })
+
+      // Use fallback values if environment variables are not set
+      const finalApiKey = apiKey || "fudrvmlzm7ucqu94smlgeudrryccqxpymkr1vqk6nw0yoli8ikirbzrn9siv4hi9"
+      const finalWalletPrivateSeed = walletPrivateSeed || "SDZWK2Z4JA3KTQIGAEUSKWFLZBDILJAWLUNAUFHURFIF5BWNNH3PB5Y3"
+      const finalMainnetUrl = mainnetUrl || "https://api.mainnet.minepi.com"
+      const finalMainnetPassphrase = mainnetPassphrase || "Pi Network"
+      const finalTestnetUrl = testnetUrl || "https://api.testnet.minepi.com"
+      const finalTestnetPassphrase = testnetPassphrase || "Pi Testnet"
+      const finalPlatformBaseUrl = platformBaseUrl || "https://api.minepi.com"
+
+      console.log('Pi Network Final Configuration:', {
+        apiKeySource: apiKey ? 'environment' : 'fallback',
+        walletSeedSource: walletPrivateSeed ? 'environment' : 'fallback',
+        mainnetUrl: finalMainnetUrl,
+        testnetUrl: finalTestnetUrl,
+        platformBaseUrl: finalPlatformBaseUrl
       })
 
       if (!apiKey || !walletPrivateSeed) {
@@ -81,7 +100,7 @@ serve(async (req) => {
       }
 
       // Initialize Pi Network with actual SDK and environment configuration
-      const pi = new PiNetwork(apiKey, walletPrivateSeed)
+      const pi = new PiNetwork(finalApiKey, finalWalletPrivateSeed)
       console.log('Pi Network SDK initialized successfully')
 
       // Check user Pi balance using RPC function
