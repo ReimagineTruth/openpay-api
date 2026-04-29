@@ -3257,6 +3257,35 @@ export type Database = {
         Args: { p_min_payout?: number }
         Returns: Json
       }
+      get_user_pi_balance: {
+        Args: never
+        Returns: {
+          pi_balance: number
+          frozen_balance: number
+          available_balance: number
+          daily_withdrawal_limit: number
+          daily_withdrawn: number
+          daily_remaining: number
+          total_withdrawn: number
+          withdrawal_count: number
+        }[]
+      }
+      get_pi_withdrawal_history: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          amount: number
+          memo: string
+          status: string
+          payment_id: string
+          txid: string | null
+          created_at: string
+          updated_at: string
+          network: string
+          transaction_verified: boolean
+          fee_amount: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

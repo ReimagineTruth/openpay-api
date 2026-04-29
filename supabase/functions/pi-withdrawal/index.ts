@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import PiNetwork from "https://esm.sh/pi-backend@1.2.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,47 +67,9 @@ serve(async (req) => {
         )
       }
 
-      // For now, create a mock Pi Network implementation
-      // TODO: Replace with actual pi-backend import when environment is properly configured
-      const mockPiNetwork = {
-        createPayment: async (paymentData: any) => {
-          console.log('Mock createPayment called with:', paymentData)
-          return `mock_payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-        },
-        submitPayment: async (paymentId: string) => {
-          console.log('Mock submitPayment called with:', paymentId)
-          return `mock_txid_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-        },
-        completePayment: async (paymentId: string, txid: string) => {
-          console.log('Mock completePayment called with:', { paymentId, txid })
-          return {
-            identifier: paymentId,
-            user_uid: user.id,
-            amount: amount,
-            memo: memo || `A2U Withdrawal from OpenPay`,
-            metadata: metadata,
-            from_address: 'mock_from_address',
-            to_address: 'mock_to_address',
-            direction: 'app_to_user',
-            created_at: new Date().toISOString(),
-            network: 'Pi Network',
-            status: {
-              developer_approved: true,
-              transaction_verified: true,
-              developer_completed: true,
-              cancelled: false,
-              user_cancelled: false
-            },
-            transaction: {
-              txid: txid,
-              verified: true,
-              _link: `https://explorer.minepi.com/transactions/${txid}`
-            }
-          }
-        }
-      }
-
-      const pi = mockPiNetwork
+      // Initialize Pi Network with actual SDK
+      const pi = new PiNetwork(apiKey, walletPrivateSeed)
+      console.log('Pi Network SDK initialized successfully')
 
       // Check user Pi balance using RPC function
       const { data: balanceData, error: balanceError } = await supabaseClient
