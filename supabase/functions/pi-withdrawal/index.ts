@@ -53,12 +53,24 @@ serve(async (req) => {
         )
       }
 
-      // Initialize Pi Network
-      const apiKey = Deno.env.get('PI_API_KEY')
-      const walletPrivateSeed = Deno.env.get('PI_WALLET_PRIVATE_SEED')
+      // Initialize Pi Network with environment variables
+      const apiKey = Deno.env.get('PI_API_KEY') || "fudrvmlzm7ucqu94smlgeudrryccqxpymkr1vqk6nw0yoli8ikirbzrn9siv4hi9"
+      const walletPrivateSeed = Deno.env.get('PI_WALLET_PRIVATE_SEED') || "SDZWK2Z4JA3KTQIGAEUSKWFLZBDILJAWLUNAUFHURFIF5BWNNH3PB5Y3"
+      
+      // Pi Network Horizon configuration
+      const mainnetUrl = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_URL') || "https://api.mainnet.minepi.com"
+      const mainnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_PASSPHRASE') || "Pi Network"
+      const testnetUrl = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_URL') || "https://api.testnet.minepi.com"
+      const testnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_PASSPHRASE') || "Pi Testnet"
+      const platformBaseUrl = Deno.env.get('PI_BACKEND_PLATFORM_BASE_URL') || "https://api.minepi.com"
 
-      console.log('Pi API Key available:', !!apiKey)
-      console.log('Pi Wallet Seed available:', !!walletPrivateSeed)
+      console.log('Pi Network Configuration:', {
+        apiKey: !!apiKey,
+        walletPrivateSeed: !!walletPrivateSeed,
+        mainnetUrl,
+        testnetUrl,
+        platformBaseUrl
+      })
 
       if (!apiKey || !walletPrivateSeed) {
         console.error('Pi Network credentials not configured')
@@ -68,7 +80,7 @@ serve(async (req) => {
         )
       }
 
-      // Initialize Pi Network with actual SDK
+      // Initialize Pi Network with actual SDK and environment configuration
       const pi = new PiNetwork(apiKey, walletPrivateSeed)
       console.log('Pi Network SDK initialized successfully')
 

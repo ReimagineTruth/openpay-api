@@ -48,13 +48,30 @@ Set the required environment variables in your Supabase project:
 ### Via Supabase Dashboard:
 1. Go to Project Settings > Edge Functions
 2. Add these secrets:
-   - `PI_API_KEY`: Your Pi Network API key
-   - `PI_WALLET_PRIVATE_SEED`: Your Pi wallet private seed (starts with 'S')
+
+**Required Pi Network Variables:**
+- `PI_API_KEY`: `fudrvmlzm7ucqu94smlgeudrryccqxpymkr1vqk6nw0yoli8ikirbzrn9siv4hi9`
+- `PI_WALLET_PRIVATE_SEED`: `SDZWK2Z4JA3KTQIGAEUSKWFLZBDILJAWLUNAUFHURFIF5BWNNH3PB5Y3`
+
+**Pi Network Horizon Configuration:**
+- `PI_BACKEND_HORIZON_MAINNET_URL`: `https://api.mainnet.minepi.com`
+- `PI_BACKEND_HORIZON_MAINNET_PASSPHRASE`: `Pi Network`
+- `PI_BACKEND_HORIZON_TESTNET_URL`: `https://api.testnet.minepi.com`
+- `PI_BACKEND_HORIZON_TESTNET_PASSPHRASE`: `Pi Testnet`
+- `PI_BACKEND_PLATFORM_BASE_URL`: `https://api.minepi.com`
 
 ### Via CLI:
 ```bash
-supabase secrets set PI_API_KEY="your_pi_api_key"
-supabase secrets set PI_WALLET_PRIVATE_SEED="S_your_wallet_private_seed"
+# Core Pi Network credentials
+supabase secrets set PI_API_KEY="fudrvmlzm7ucqu94smlgeudrryccqxpymkr1vqk6nw0yoli8ikirbzrn9siv4hi9"
+supabase secrets set PI_WALLET_PRIVATE_SEED="SDZWK2Z4JA3KTQIGAEUSKWFLZBDILJAWLUNAUFHURFIF5BWNNH3PB5Y3"
+
+# Horizon configuration
+supabase secrets set PI_BACKEND_HORIZON_MAINNET_URL="https://api.mainnet.minepi.com"
+supabase secrets set PI_BACKEND_HORIZON_MAINNET_PASSPHRASE="Pi Network"
+supabase secrets set PI_BACKEND_HORIZON_TESTNET_URL="https://api.testnet.minepi.com"
+supabase secrets set PI_BACKEND_HORIZON_TESTNET_PASSPHRASE="Pi Testnet"
+supabase secrets set PI_BACKEND_PLATFORM_BASE_URL="https://api.minepi.com"
 ```
 
 ## Step 4: Verify Pi Network Credentials

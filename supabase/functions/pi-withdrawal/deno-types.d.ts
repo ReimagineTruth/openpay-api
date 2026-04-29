@@ -46,6 +46,17 @@ declare namespace Deno {
   }
 }
 
+// Pi Network environment variables
+declare interface PiNetworkEnv {
+  PI_API_KEY?: string;
+  PI_WALLET_PRIVATE_SEED?: string;
+  PI_BACKEND_HORIZON_MAINNET_URL?: string;
+  PI_BACKEND_HORIZON_MAINNET_PASSPHRASE?: string;
+  PI_BACKEND_HORIZON_TESTNET_URL?: string;
+  PI_BACKEND_HORIZON_TESTNET_PASSPHRASE?: string;
+  PI_BACKEND_PLATFORM_BASE_URL?: string;
+}
+
 declare global {
   var Deno: typeof Deno;
   var crypto: {
