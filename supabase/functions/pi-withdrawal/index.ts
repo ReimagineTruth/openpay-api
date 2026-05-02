@@ -136,7 +136,7 @@ async function submitStellarPayment(
   const cfg = HORIZON[payment.network];
   if (!cfg) throw new Error(`Unsupported network: ${payment.network}`);
 
-  const server = new StellarSdk.Horizon.Server(cfg.url);
+  const server = new StellarSdk.Server(cfg.url);
   const sourceKey = StellarSdk.Keypair.fromSecret(walletPrivateSeed);
   const fromAddress = sourceKey.publicKey();
 
