@@ -356,8 +356,9 @@ serve(async (req) => {
         type: "a2u_withdrawal",
         timestamp: new Date().toISOString(),
         user_uid: user.id,
+        pi_uid: piUid,
       },
-      uid: user.id,
+      uid: piUid,
     });
     const paymentId = created.identifier;
 
