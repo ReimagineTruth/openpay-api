@@ -1,288 +1,430 @@
-/// <reference path="./deno-types.d.ts" />
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import PiNetwork from "https://esm.sh/pi-backend@1.2.0"
+// Pi Network A2U Withdrawal Edge Function
+// Implements the A2U flow per https://github.com/pi-apps/pi-nodejs
+// We do NOT use the `pi-backend` npm package because it depends on Node-only
+// libs that don't load cleanly under Deno via esm.sh. Instead we call the Pi
+// Platform API directly with fetch and sign the Stellar payment with
+// @stellar/stellar-sdk, which works in Deno.
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// @ts-ignore - esm.sh provides a Deno-compatible build of stellar-sdk
+import * as StellarSdk from "https://esm.sh/@stellar/stellar-sdk@12.3.0?target=deno";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
+
+const PI_PLATFORM_BASE =
+  Deno.env.get("PI_BACKEND_PLATFORM_BASE_URL") || "https://api.minepi.com";
+
+// Pi Network is built on Stellar. We auto-detect mainnet vs testnet from the
+// `network` field of the created payment (returned by the Pi Platform API).
+const HORIZON = {
+  "Pi Network": {
+    url:
+      Deno.env.get("PI_BACKEND_HORIZON_MAINNET_URL") ||
+      "https://api.mainnet.minepi.com",
+    passphrase:
+      Deno.env.get("PI_BACKEND_HORIZON_MAINNET_PASSPHRASE") || "Pi Network",
+  },
+  "Pi Testnet": {
+    url:
+      Deno.env.get("PI_BACKEND_HORIZON_TESTNET_URL") ||
+      "https://api.testnet.minepi.com",
+    passphrase:
+      Deno.env.get("PI_BACKEND_HORIZON_TESTNET_PASSPHRASE") || "Pi Testnet",
+  },
+} as const;
+
+type PiPayment = {
+  identifier: string;
+  user_uid: string;
+  amount: number;
+  memo: string;
+  metadata: Record<string, unknown>;
+  from_address: string;
+  to_address: string;
+  direction: "user_to_app" | "app_to_user";
+  network: "Pi Network" | "Pi Testnet";
+  status: {
+    developer_approved: boolean;
+    transaction_verified: boolean;
+    developer_completed: boolean;
+    cancelled: boolean;
+    user_cancelled: boolean;
+  };
+  transaction: null | { txid: string; verified: boolean; _link: string };
+};
+
+function piHeaders(apiKey: string) {
+  return {
+    Authorization: `Key ${apiKey}`,
+    "Content-Type": "application/json",
+  };
 }
 
-console.log('Pi withdrawal Edge Function starting up...')
+async function piCreatePayment(
+  apiKey: string,
+  body: { amount: number; memo: string; metadata: Record<string, unknown>; uid: string },
+): Promise<PiPayment> {
+  const r = await fetch(`${PI_PLATFORM_BASE}/v2/payments`, {
+    method: "POST",
+    headers: piHeaders(apiKey),
+    body: JSON.stringify({ payment: body }),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`createPayment failed: ${r.status} ${text}`);
+  return JSON.parse(text) as PiPayment;
+}
+
+async function piGetPayment(apiKey: string, paymentId: string): Promise<PiPayment> {
+  const r = await fetch(`${PI_PLATFORM_BASE}/v2/payments/${paymentId}`, {
+    headers: piHeaders(apiKey),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`getPayment failed: ${r.status} ${text}`);
+  return JSON.parse(text) as PiPayment;
+}
+
+async function piCompletePayment(
+  apiKey: string,
+  paymentId: string,
+  txid: string,
+): Promise<PiPayment> {
+  const r = await fetch(
+    `${PI_PLATFORM_BASE}/v2/payments/${paymentId}/complete`,
+    {
+      method: "POST",
+      headers: piHeaders(apiKey),
+      body: JSON.stringify({ txid }),
+    },
+  );
+  const text = await r.text();
+  if (!r.ok) throw new Error(`completePayment failed: ${r.status} ${text}`);
+  return JSON.parse(text) as PiPayment;
+}
+
+async function piCancelPayment(apiKey: string, paymentId: string) {
+  const r = await fetch(
+    `${PI_PLATFORM_BASE}/v2/payments/${paymentId}/cancel`,
+    { method: "POST", headers: piHeaders(apiKey) },
+  );
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error(`cancelPayment failed: ${r.status} ${t}`);
+  }
+  return await r.json();
+}
+
+async function piGetIncompletePayments(apiKey: string): Promise<PiPayment[]> {
+  const r = await fetch(
+    `${PI_PLATFORM_BASE}/v2/payments/incomplete_server_payments`,
+    { headers: piHeaders(apiKey) },
+  );
+  if (!r.ok) return [];
+  const data = await r.json();
+  return (data?.incomplete_server_payments ?? []) as PiPayment[];
+}
+
+async function submitStellarPayment(
+  payment: PiPayment,
+  walletPrivateSeed: string,
+): Promise<string> {
+  const cfg = HORIZON[payment.network];
+  if (!cfg) throw new Error(`Unsupported network: ${payment.network}`);
+
+  const server = new StellarSdk.Horizon.Server(cfg.url);
+  const sourceKey = StellarSdk.Keypair.fromSecret(walletPrivateSeed);
+  const fromAddress = sourceKey.publicKey();
+
+  if (payment.from_address && payment.from_address !== fromAddress) {
+    throw new Error(
+      `Pi payment.from_address (${payment.from_address}) does not match app wallet (${fromAddress}).`,
+    );
+  }
+
+  const account = await server.loadAccount(fromAddress);
+  const fee = await server.fetchBaseFee();
+
+  const tx = new StellarSdk.TransactionBuilder(account, {
+    fee: String(fee),
+    networkPassphrase: cfg.passphrase,
+  })
+    .addOperation(
+      StellarSdk.Operation.payment({
+        destination: payment.to_address,
+        asset: StellarSdk.Asset.native(),
+        amount: payment.amount.toString(),
+      }),
+    )
+    .addMemo(StellarSdk.Memo.text(payment.identifier))
+    .setTimeout(180)
+    .build();
+
+  tx.sign(sourceKey);
+  const result = await server.submitTransaction(tx);
+  // @ts-ignore stellar-sdk returns hash on success
+  return result.hash as string;
+}
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: req.headers.get("Authorization")! },
         },
-      }
-    )
+      },
+    );
 
-    // Get user from auth
     const {
       data: { user },
       error: authError,
-    } = await supabaseClient.auth.getUser()
+    } = await supabaseClient.auth.getUser();
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      )
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
     }
 
-    const { method } = req
+    const apiKey = Deno.env.get("PI_API_KEY");
+    const walletPrivateSeed = Deno.env.get("PI_WALLET_PRIVATE_SEED");
 
-    if (method === 'POST') {
-      // Handle withdrawal creation
-      const { amount, memo, metadata } = await req.json()
-
-      if (!amount || amount <= 0) {
+    if (req.method === "GET") {
+      const { data: history, error: historyError } = await supabaseClient.rpc(
+        "get_pi_withdrawal_history",
+        { p_limit: 50, p_offset: 0 },
+      );
+      if (historyError) {
         return new Response(
-          JSON.stringify({ error: 'Invalid amount' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        )
-      }
-
-      // Initialize Pi Network with environment variables
-      const apiKey = Deno.env.get('PI_API_KEY')
-      const walletPrivateSeed = Deno.env.get('PI_WALLET_PRIVATE_SEED')
-      
-      // Pi Network Horizon configuration
-      const mainnetUrl = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_URL')
-      const mainnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_MAINNET_PASSPHRASE')
-      const testnetUrl = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_URL')
-      const testnetPassphrase = Deno.env.get('PI_BACKEND_HORIZON_TESTNET_PASSPHRASE')
-      const platformBaseUrl = Deno.env.get('PI_BACKEND_PLATFORM_BASE_URL')
-
-      console.log('Pi Network Environment Variables Status:', {
-        PI_API_KEY: !!apiKey,
-        PI_WALLET_PRIVATE_SEED: !!walletPrivateSeed,
-        PI_BACKEND_HORIZON_MAINNET_URL: !!mainnetUrl,
-        PI_BACKEND_HORIZON_MAINNET_PASSPHRASE: !!mainnetPassphrase,
-        PI_BACKEND_HORIZON_TESTNET_URL: !!testnetUrl,
-        PI_BACKEND_HORIZON_TESTNET_PASSPHRASE: !!testnetPassphrase,
-        PI_BACKEND_PLATFORM_BASE_URL: !!platformBaseUrl
-      })
-
-      // Use fallback values if environment variables are not set
-      const finalApiKey = apiKey || "fudrvmlzm7ucqu94smlgeudrryccqxpymkr1vqk6nw0yoli8ikirbzrn9siv4hi9"
-      const finalWalletPrivateSeed = walletPrivateSeed || "SDZWK2Z4JA3KTQIGAEUSKWFLZBDILJAWLUNAUFHURFIF5BWNNH3PB5Y3"
-      const finalMainnetUrl = mainnetUrl || "https://api.mainnet.minepi.com"
-      const finalMainnetPassphrase = mainnetPassphrase || "Pi Network"
-      const finalTestnetUrl = testnetUrl || "https://api.testnet.minepi.com"
-      const finalTestnetPassphrase = testnetPassphrase || "Pi Testnet"
-      const finalPlatformBaseUrl = platformBaseUrl || "https://api.minepi.com"
-
-      console.log('Pi Network Final Configuration:', {
-        apiKeySource: apiKey ? 'environment' : 'fallback',
-        walletSeedSource: walletPrivateSeed ? 'environment' : 'fallback',
-        mainnetUrl: finalMainnetUrl,
-        testnetUrl: finalTestnetUrl,
-        platformBaseUrl: finalPlatformBaseUrl
-      })
-
-      if (!apiKey || !walletPrivateSeed) {
-        console.error('Pi Network credentials not configured')
-        return new Response(
-          JSON.stringify({ error: 'Pi Network credentials not configured' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        )
-      }
-
-      // Initialize Pi Network with actual SDK and environment configuration
-      const pi = new PiNetwork(finalApiKey, finalWalletPrivateSeed)
-      console.log('Pi Network SDK initialized successfully')
-
-      // Check user Pi balance using RPC function
-      const { data: balanceData, error: balanceError } = await supabaseClient
-        .rpc('get_user_pi_balance')
-
-      if (balanceError) {
-        console.error('Balance check error:', balanceError)
-        return new Response(
-          JSON.stringify({ error: 'Unable to verify user balance', details: balanceError.message }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        )
-      }
-
-      if (!balanceData || balanceData.length === 0) {
-        return new Response(
-          JSON.stringify({ error: 'No balance data found' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        )
-      }
-
-      const userBalance = balanceData[0]
-      const availableBalance = userBalance.available_balance
-
-      if (availableBalance < amount) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Insufficient balance',
-            details: `Available: ${availableBalance} PI, Requested: ${amount} PI`
+          JSON.stringify({
+            error: "Failed to fetch withdrawal history",
+            details: historyError.message,
           }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        )
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+          },
+        );
       }
+      return new Response(JSON.stringify({ history: history || [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
-      // Check daily withdrawal limit
-      if (userBalance.daily_remaining < amount) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Daily withdrawal limit exceeded',
-            details: `Daily remaining: ${userBalance.daily_remaining} PI, Requested: ${amount} PI`
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        )
-      }
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 405,
+      });
+    }
 
-      // Create payment
-      const paymentData = {
-        amount: amount,
-        memo: memo || `A2U Withdrawal from OpenPay`,
-        metadata: {
-          ...metadata,
-          type: 'a2u_withdrawal',
-          timestamp: new Date().toISOString(),
-          user_uid: user.id
-        },
-        uid: user.id
-      }
-
-      const paymentId = await pi.createPayment(paymentData)
-
-      // Store withdrawal record
-      const withdrawalRecord = {
-        id: crypto.randomUUID(),
-        user_uid: user.id,
-        amount: amount,
-        memo: paymentData.memo,
-        metadata: paymentData.metadata,
-        payment_id: paymentId,
-        status: 'pending',
-        from_address: '',
-        to_address: '',
-        direction: 'app_to_user',
-        created_at: new Date().toISOString(),
-        network: 'Pi Network',
-        transaction_verified: false,
-        developer_completed: false
-      }
-
-      const { error: insertError } = await supabaseClient
-        .from('pi_withdrawals')
-        .insert(withdrawalRecord)
-
-      if (insertError) {
-        console.error('Error storing withdrawal record:', insertError)
-      }
-
-      // Submit payment to blockchain
-      const txid = await pi.submitPayment(paymentId)
-
-      // Update withdrawal record with txid
-      await supabaseClient
-        .from('pi_withdrawals')
-        .update({ 
-          txid: txid,
-          status: 'submitted'
-        })
-        .eq('payment_id', paymentId)
-
-      // Complete payment
-      const completedPayment = await pi.completePayment(paymentId, txid)
-
-      // Update final status
-      await supabaseClient
-        .from('pi_withdrawals')
-        .update({ 
-          status: 'completed',
-          transaction_verified: completedPayment.transaction?.verified || false,
-          developer_completed: completedPayment.status?.developer_completed || false,
-          from_address: completedPayment.from_address || '',
-          to_address: completedPayment.to_address || ''
-        })
-        .eq('payment_id', paymentId)
-
-      // Get updated balance after withdrawal
-      const { data: updatedBalanceData, error: updatedBalanceError } = await supabaseClient
-        .rpc('get_user_pi_balance')
-
-      let newBalance = availableBalance - amount
-      if (!updatedBalanceError && updatedBalanceData && updatedBalanceData.length > 0) {
-        newBalance = updatedBalanceData[0].available_balance
-      }
-
+    if (!apiKey || !walletPrivateSeed) {
+      console.error("Pi Network credentials not configured");
       return new Response(
         JSON.stringify({
-          success: true,
-          paymentId: paymentId,
-          txid: txid,
-          completedPayment: completedPayment,
-          newBalance: newBalance,
-          previousBalance: availableBalance
+          error:
+            "Pi Network credentials not configured. Set PI_API_KEY and PI_WALLET_PRIVATE_SEED secrets.",
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      )
-
-    } else if (method === 'GET') {
-      // Handle withdrawal history request using RPC function
-      const { data: history, error: historyError } = await supabaseClient
-        .rpc('get_pi_withdrawal_history', { 
-          p_limit: 50, 
-          p_offset: 0 
-        })
-
-      if (historyError) {
-        console.error('History fetch error:', historyError)
-        return new Response(
-          JSON.stringify({ error: 'Failed to fetch withdrawal history', details: historyError.message }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        )
-      }
-
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        },
+      );
+    }
+    if (!walletPrivateSeed.startsWith("S")) {
       return new Response(
-        JSON.stringify({ history: history || [] }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      )
+        JSON.stringify({
+          error: "PI_WALLET_PRIVATE_SEED is invalid (must start with 'S').",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        },
+      );
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 405 }
-    )
-
-  } catch (error) {
-    console.error('Pi withdrawal error:', error)
-    
-    // Handle specific Pi Network errors
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    
-    let userFriendlyError = 'Withdrawal failed'
-    if (errorMessage.includes('You need to complete the ongoing payment first')) {
-      userFriendlyError = 'Please complete any pending payments before creating a new withdrawal'
-    } else if (errorMessage.includes('insufficient')) {
-      userFriendlyError = 'Insufficient balance for this withdrawal'
-    } else if (errorMessage.includes('unauthorized') || errorMessage.includes('authentication')) {
-      userFriendlyError = 'Authentication failed. Please check your Pi Network credentials'
+    const { amount, memo, metadata } = await req.json();
+    if (!amount || amount <= 0) {
+      return new Response(JSON.stringify({ error: "Invalid amount" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
     }
 
+    // Balance + daily limit checks
+    const { data: balanceData, error: balanceError } = await supabaseClient.rpc(
+      "get_user_pi_balance",
+    );
+    if (balanceError || !balanceData || balanceData.length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: "Unable to verify user balance",
+          details: balanceError?.message,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+    const userBalance = balanceData[0];
+    const availableBalance = Number(userBalance.available_balance);
+    if (availableBalance < amount) {
+      return new Response(
+        JSON.stringify({
+          error: "Insufficient balance",
+          details: `Available: ${availableBalance} PI, Requested: ${amount} PI`,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+    if (Number(userBalance.daily_remaining) < amount) {
+      return new Response(
+        JSON.stringify({
+          error: "Daily withdrawal limit exceeded",
+          details: `Daily remaining: ${userBalance.daily_remaining} PI`,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+
+    // Handle any incomplete server payments first to avoid the
+    // "ongoing payment" error from Pi Platform.
+    const incomplete = await piGetIncompletePayments(apiKey);
+    for (const p of incomplete) {
+      try {
+        if (p.transaction?.txid) {
+          await piCompletePayment(apiKey, p.identifier, p.transaction.txid);
+        } else {
+          await piCancelPayment(apiKey, p.identifier);
+        }
+      } catch (e) {
+        console.error("Failed to clear incomplete payment", p.identifier, e);
+      }
+    }
+
+    // 1) Create A2U payment
+    const created = await piCreatePayment(apiKey, {
+      amount: Number(amount),
+      memo: memo || "A2U Withdrawal from OpenPay",
+      metadata: {
+        ...(metadata ?? {}),
+        type: "a2u_withdrawal",
+        timestamp: new Date().toISOString(),
+        user_uid: user.id,
+      },
+      uid: user.id,
+    });
+    const paymentId = created.identifier;
+
+    // 2) Persist initial record
+    await supabaseClient.from("pi_withdrawals").insert({
+      id: crypto.randomUUID(),
+      user_uid: user.id,
+      amount,
+      memo: created.memo,
+      metadata: created.metadata,
+      payment_id: paymentId,
+      status: "pending",
+      from_address: created.from_address || "",
+      to_address: created.to_address || "",
+      direction: "app_to_user",
+      created_at: new Date().toISOString(),
+      network: created.network,
+      transaction_verified: false,
+      developer_completed: false,
+    });
+
+    // 3) Submit on-chain via Stellar
+    // We need the resolved payment with to_address — `created` already has it.
+    const payment = created.to_address
+      ? created
+      : await piGetPayment(apiKey, paymentId);
+    const txid = await submitStellarPayment(payment, walletPrivateSeed);
+
+    await supabaseClient
+      .from("pi_withdrawals")
+      .update({ txid, status: "submitted" })
+      .eq("payment_id", paymentId);
+
+    // 4) Complete payment in Pi server
+    const completed = await piCompletePayment(apiKey, paymentId, txid);
+
+    await supabaseClient
+      .from("pi_withdrawals")
+      .update({
+        status: "completed",
+        transaction_verified: completed.transaction?.verified || false,
+        developer_completed: completed.status?.developer_completed || false,
+        from_address: completed.from_address || "",
+        to_address: completed.to_address || "",
+      })
+      .eq("payment_id", paymentId);
+
+    const { data: updatedBalanceData } = await supabaseClient.rpc(
+      "get_user_pi_balance",
+    );
+    const newBalance =
+      updatedBalanceData?.[0]?.available_balance ?? availableBalance - amount;
+
     return new Response(
-      JSON.stringify({ 
-        error: userFriendlyError,
-        details: errorMessage
+      JSON.stringify({
+        success: true,
+        paymentId,
+        txid,
+        completedPayment: completed,
+        newBalance,
+        previousBalance: availableBalance,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      },
+    );
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+    console.error("Pi withdrawal error:", errorMessage);
+
+    let userFriendlyError = "Withdrawal failed";
+    if (errorMessage.includes("ongoing payment")) {
+      userFriendlyError =
+        "There is an ongoing payment. Please retry in a moment.";
+    } else if (errorMessage.toLowerCase().includes("insufficient")) {
+      userFriendlyError = "Insufficient balance for this withdrawal";
+    } else if (
+      errorMessage.toLowerCase().includes("unauthorized") ||
+      errorMessage.toLowerCase().includes("authentication")
+    ) {
+      userFriendlyError =
+        "Authentication failed. Please check your Pi Network credentials";
+    }
+
+    return new Response(
+      JSON.stringify({ error: userFriendlyError, details: errorMessage }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
+    );
   }
-})
+});
