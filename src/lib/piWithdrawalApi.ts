@@ -53,11 +53,24 @@ class PiWithdrawalApiService {
       });
 
       if (error) {
-        console.error('API Error:', error);
-        return {
-          success: false,
-          error: error.message || 'API request failed'
-        };
+        // supabase-js doesn't surface the response body on non-2xx — read it ourselves
+        let parsed: { error?: string; details?: string; code?: string } = {};
+        const ctxRes = (error as { context?: { response?: Response } })?.context?.response;
+        if (ctxRes && typeof ctxRes.text === 'function') {
+          try {
+            const txt = await ctxRes.clone().text();
+            parsed = txt ? JSON.parse(txt) : {};
+          } catch {
+            // ignore parse errors
+          }
+        }
+        console.error('API Error:', error, parsed);
+        const friendly = parsed.error
+          ? parsed.details
+            ? `${parsed.error}: ${parsed.details}`
+            : parsed.error
+          : error.message || 'API request failed';
+        return { success: false, error: friendly };
       }
 
       return data as PiWithdrawalResult;
