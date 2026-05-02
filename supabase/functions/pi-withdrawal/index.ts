@@ -7,8 +7,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-// @ts-ignore - esm.sh provides a Deno-compatible build of stellar-sdk
-import * as StellarSdk from "https://esm.sh/@stellar/stellar-sdk@12.3.0?target=deno";
+// @ts-ignore - esm.sh bundled build works in Deno edge runtime
+import StellarSdk from "https://esm.sh/stellar-sdk@11.3.0?bundle&target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
