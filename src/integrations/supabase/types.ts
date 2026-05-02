@@ -734,12 +734,16 @@ export type Database = {
           custom_amount: number | null
           description: string
           expires_at: string | null
+          fee_amount: number | null
+          fee_payer: string | null
           id: string
           is_active: boolean
           key_mode: string
           link_token: string
           link_type: string
+          merchant_settlement_amount: number | null
           merchant_user_id: string
+          openpay_fee_account: string | null
           redirect_url: string | null
           title: string
           updated_at: string
@@ -758,12 +762,16 @@ export type Database = {
           custom_amount?: number | null
           description?: string
           expires_at?: string | null
+          fee_amount?: number | null
+          fee_payer?: string | null
           id?: string
           is_active?: boolean
           key_mode: string
           link_token: string
           link_type: string
+          merchant_settlement_amount?: number | null
           merchant_user_id: string
+          openpay_fee_account?: string | null
           redirect_url?: string | null
           title?: string
           updated_at?: string
@@ -782,12 +790,16 @@ export type Database = {
           custom_amount?: number | null
           description?: string
           expires_at?: string | null
+          fee_amount?: number | null
+          fee_payer?: string | null
           id?: string
           is_active?: boolean
           key_mode?: string
           link_token?: string
           link_type?: string
+          merchant_settlement_amount?: number | null
           merchant_user_id?: string
+          openpay_fee_account?: string | null
           redirect_url?: string | null
           title?: string
           updated_at?: string
@@ -1279,6 +1291,57 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_links: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          embed_code: string | null
+          id: string
+          item_name: string
+          price: number
+          price_type: string
+          qr_code_url: string | null
+          quantity: number | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          embed_code?: string | null
+          id?: string
+          item_name: string
+          price: number
+          price_type?: string
+          qr_code_url?: string | null
+          quantity?: number | null
+          status?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          embed_code?: string | null
+          id?: string
+          item_name?: string
+          price?: number
+          price_type?: string
+          qr_code_url?: string | null
+          quantity?: number | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_requests: {
         Row: {
           amount: number
@@ -1339,6 +1402,148 @@ export type Database = {
           status?: string
           txid?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      pi_transaction_log: {
+        Row: {
+          api_response: Json | null
+          blockchain_data: Json | null
+          created_at: string
+          error_message: string | null
+          id: string
+          processing_time_ms: number | null
+          transaction_data: Json | null
+          transaction_type: string
+          withdrawal_id: string | null
+        }
+        Insert: {
+          api_response?: Json | null
+          blockchain_data?: Json | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          processing_time_ms?: number | null
+          transaction_data?: Json | null
+          transaction_type: string
+          withdrawal_id?: string | null
+        }
+        Update: {
+          api_response?: Json | null
+          blockchain_data?: Json | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          processing_time_ms?: number | null
+          transaction_data?: Json | null
+          transaction_type?: string
+          withdrawal_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pi_transaction_log_withdrawal_id_fkey"
+            columns: ["withdrawal_id"]
+            isOneToOne: false
+            referencedRelation: "pi_withdrawals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pi_withdrawal_audit: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string | null
+          created_by: string
+          id: string
+          new_status: string | null
+          old_status: string | null
+          withdrawal_id: string
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          withdrawal_id: string
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          withdrawal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pi_withdrawal_audit_withdrawal_id_fkey"
+            columns: ["withdrawal_id"]
+            isOneToOne: false
+            referencedRelation: "pi_withdrawals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pi_withdrawals: {
+        Row: {
+          amount: number
+          created_at: string | null
+          developer_completed: boolean | null
+          direction: string
+          from_address: string | null
+          id: string
+          memo: string
+          metadata: Json | null
+          network: string
+          payment_id: string
+          status: string
+          to_address: string | null
+          transaction_verified: boolean | null
+          txid: string | null
+          updated_at: string | null
+          user_uid: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          developer_completed?: boolean | null
+          direction?: string
+          from_address?: string | null
+          id?: string
+          memo: string
+          metadata?: Json | null
+          network?: string
+          payment_id: string
+          status?: string
+          to_address?: string | null
+          transaction_verified?: boolean | null
+          txid?: string | null
+          updated_at?: string | null
+          user_uid: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          developer_completed?: boolean | null
+          direction?: string
+          from_address?: string | null
+          id?: string
+          memo?: string
+          metadata?: Json | null
+          network?: string
+          payment_id?: string
+          status?: string
+          to_address?: string | null
+          transaction_verified?: boolean | null
+          txid?: string | null
+          updated_at?: string | null
+          user_uid?: string
         }
         Relationships: []
       }
@@ -1784,6 +1989,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_balances: {
+        Row: {
+          created_at: string | null
+          id: string
+          pi_balance: number | null
+          updated_at: string | null
+          user_uid: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pi_balance?: number | null
+          updated_at?: string | null
+          user_uid: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pi_balance?: number | null
+          updated_at?: string | null
+          user_uid?: string
+        }
+        Relationships: []
+      }
       user_loan_applications: {
         Row: {
           address_line: string
@@ -1945,6 +2174,60 @@ export type Database = {
           term_months?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_pi_balances: {
+        Row: {
+          created_at: string
+          daily_reset_at: string
+          daily_withdrawal_limit: number
+          daily_withdrawn: number
+          deposit_count: number
+          frozen_balance: number
+          id: string
+          last_deposit_at: string | null
+          last_withdrawal_at: string | null
+          pi_balance: number
+          total_deposited: number
+          total_withdrawn: number
+          updated_at: string
+          user_uid: string
+          withdrawal_count: number
+        }
+        Insert: {
+          created_at?: string
+          daily_reset_at?: string
+          daily_withdrawal_limit?: number
+          daily_withdrawn?: number
+          deposit_count?: number
+          frozen_balance?: number
+          id?: string
+          last_deposit_at?: string | null
+          last_withdrawal_at?: string | null
+          pi_balance?: number
+          total_deposited?: number
+          total_withdrawn?: number
+          updated_at?: string
+          user_uid: string
+          withdrawal_count?: number
+        }
+        Update: {
+          created_at?: string
+          daily_reset_at?: string
+          daily_withdrawal_limit?: number
+          daily_withdrawn?: number
+          deposit_count?: number
+          frozen_balance?: number
+          id?: string
+          last_deposit_at?: string | null
+          last_withdrawal_at?: string | null
+          pi_balance?: number
+          total_deposited?: number
+          total_withdrawn?: number
+          updated_at?: string
+          user_uid?: string
+          withdrawal_count?: number
         }
         Relationships: []
       }
@@ -2213,6 +2496,19 @@ export type Database = {
           },
         ]
       }
+      pi_withdrawal_stats: {
+        Row: {
+          avg_amount: number | null
+          completed_amount: number | null
+          completed_withdrawals: number | null
+          date: string | null
+          failed_amount: number | null
+          failed_withdrawals: number | null
+          total_amount: number | null
+          total_withdrawals: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_dashboard_history:
@@ -2317,10 +2613,18 @@ export type Database = {
           unlocked: boolean
         }[]
       }
+      can_user_withdraw: {
+        Args: { p_amount: number; p_user_uid: string }
+        Returns: boolean
+      }
       claim_mining_rewards: { Args: never; Returns: Json }
       claim_referral_rewards: { Args: never; Returns: Json }
       claim_stake: { Args: { p_position_id: string }; Returns: Json }
       claim_welcome_bonus: { Args: never; Returns: Json }
+      cleanup_old_transaction_logs: {
+        Args: { p_days_old?: number }
+        Returns: number
+      }
       complete_account_onboarding: {
         Args: {
           p_full_name: string
@@ -2667,6 +2971,22 @@ export type Database = {
         }[]
       }
       get_openpay_settlement_user_id: { Args: never; Returns: string }
+      get_pi_withdrawal_history: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          amount: number
+          created_at: string
+          fee_amount: number
+          id: string
+          memo: string
+          network: string
+          payment_id: string
+          status: string
+          transaction_verified: boolean
+          txid: string
+          updated_at: string
+        }[]
+      }
       get_public_ledger: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
@@ -2740,6 +3060,32 @@ export type Database = {
           redirect_url: string
           title: string
           total_amount: number
+        }[]
+      }
+      get_user_pi_balance: {
+        Args: never
+        Returns: {
+          available_balance: number
+          daily_remaining: number
+          daily_withdrawal_limit: number
+          daily_withdrawn: number
+          frozen_balance: number
+          pi_balance: number
+          total_withdrawn: number
+          withdrawal_count: number
+        }[]
+      }
+      get_user_withdrawal_stats: {
+        Args: { p_user_uid: string }
+        Returns: {
+          failed_amount: number
+          failed_withdrawals: number
+          pending_amount: number
+          pending_withdrawals: number
+          successful_amount: number
+          successful_withdrawals: number
+          total_amount: number
+          total_withdrawals: number
         }[]
       }
       is_openpay_core_admin: { Args: never; Returns: boolean }
@@ -3256,35 +3602,6 @@ export type Database = {
       withdraw_mining_earnings: {
         Args: { p_min_payout?: number }
         Returns: Json
-      }
-      get_user_pi_balance: {
-        Args: never
-        Returns: {
-          pi_balance: number
-          frozen_balance: number
-          available_balance: number
-          daily_withdrawal_limit: number
-          daily_withdrawn: number
-          daily_remaining: number
-          total_withdrawn: number
-          withdrawal_count: number
-        }[]
-      }
-      get_pi_withdrawal_history: {
-        Args: { p_limit?: number; p_offset?: number }
-        Returns: {
-          id: string
-          amount: number
-          memo: string
-          status: string
-          payment_id: string
-          txid: string | null
-          created_at: string
-          updated_at: string
-          network: string
-          transaction_verified: boolean
-          fee_amount: number
-        }[]
       }
     }
     Enums: {
