@@ -7,8 +7,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-// @ts-ignore - esm.sh bundled build works in Deno edge runtime
-import StellarSdk from "https://esm.sh/stellar-sdk@11.3.0?bundle&target=deno";
+// Use npm specifier — Supabase Edge Runtime resolves npm packages via Node compat,
+// which avoids the sodium-native binary addon issue you get with esm.sh builds.
+// @ts-ignore
+import StellarSdk from "npm:stellar-sdk@11.3.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
