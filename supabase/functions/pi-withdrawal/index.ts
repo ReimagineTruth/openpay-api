@@ -258,6 +258,29 @@ serve(async (req) => {
       );
     }
 
+    // A2U requires the Pi Network user UID (NOT the Supabase auth UUID).
+    // It is stored on the user when they connect via Pi Network auth.
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const piUid =
+      (typeof meta.pi_uid === "string" && meta.pi_uid) ||
+      (typeof meta.piUid === "string" && meta.piUid) ||
+      "";
+
+    if (!piUid) {
+      return new Response(
+        JSON.stringify({
+          error: "Pi Network account not connected",
+          details:
+            "A2U withdrawals require a Pi Network UID. Sign in with Pi Network from the Pi Browser to link your Pi account, then try again.",
+          code: "pi_account_not_linked",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+
     const { amount, memo, metadata } = await req.json();
     if (!amount || amount <= 0) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
