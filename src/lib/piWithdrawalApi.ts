@@ -4,6 +4,12 @@ export interface PiWithdrawalRequest {
   amount: number;
   memo: string;
   metadata?: Record<string, unknown>;
+  /**
+   * Optional Stellar destination address (G...). When provided AND the user
+   * has no Pi Network UID linked, the edge function falls back to a direct
+   * Stellar Testnet payment instead of the Pi Platform A2U flow.
+   */
+  destination_address?: string;
 }
 
 export interface PiWithdrawalResult {
