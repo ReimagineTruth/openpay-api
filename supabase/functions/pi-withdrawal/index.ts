@@ -266,22 +266,35 @@ serve(async (req) => {
       (typeof meta.piUid === "string" && meta.piUid) ||
       "";
 
+    const body = await req.json();
+    const { amount, memo, metadata, destination_address } = body ?? {};
+
+    // Direct-Stellar fallback: when the user has no Pi UID linked, allow
+    // withdrawing on Testnet to a Stellar address they own. Bypasses the
+    // Pi Platform A2U lifecycle (no createPayment / completePayment).
     if (!piUid) {
-      return new Response(
-        JSON.stringify({
-          error: "Pi Network account not connected",
-          details:
-            "A2U withdrawals require a Pi Network UID. Sign in with Pi Network from the Pi Browser to link your Pi account, then try again.",
-          code: "pi_account_not_linked",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        },
-      );
+      if (!destination_address || typeof destination_address !== "string") {
+        return new Response(
+          JSON.stringify({
+            error: "Pi Network account not connected",
+            details:
+              "A2U requires a Pi UID. Sign in via Pi Browser, or pass `destination_address` (G...) to send Testnet Pi directly to your wallet.",
+            code: "pi_account_not_linked",
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
+      if (!destination_address.startsWith("G")) {
+        return new Response(
+          JSON.stringify({ error: "Invalid Stellar destination address (must start with 'G')" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+        );
+      }
     }
 
-    const { amount, memo, metadata } = await req.json();
     if (!amount || amount <= 0) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
