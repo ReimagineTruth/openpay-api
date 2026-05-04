@@ -44,6 +44,7 @@ const PiWithdrawalPage = () => {
   // Form states
   const [amount, setAmount] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("PI");
   
   // Processing states
