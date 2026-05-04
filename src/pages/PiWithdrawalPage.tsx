@@ -44,6 +44,7 @@ const PiWithdrawalPage = () => {
   // Form states
   const [amount, setAmount] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("PI");
   
   // Processing states
@@ -144,7 +145,8 @@ const PiWithdrawalPage = () => {
           source: 'openpay_app',
           timestamp: new Date().toISOString(),
           currency: selectedCurrency
-        }
+        },
+        ...(destinationAddress.trim() ? { destination_address: destinationAddress.trim() } : {}),
       };
 
       setProcessingProgress(30);
@@ -318,6 +320,22 @@ const PiWithdrawalPage = () => {
                       disabled={loading}
                       rows={3}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="destination">
+                      Destination Stellar Address (Optional)
+                    </Label>
+                    <Input
+                      id="destination"
+                      placeholder="G... (only if your Pi account isn't linked)"
+                      value={destinationAddress}
+                      onChange={(e) => setDestinationAddress(e.target.value)}
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Leave empty to use Pi A2U. Provide a Stellar address (G...) to fall back to a direct Testnet transfer.
+                    </p>
                   </div>
                 </div>
 

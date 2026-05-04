@@ -266,22 +266,35 @@ serve(async (req) => {
       (typeof meta.piUid === "string" && meta.piUid) ||
       "";
 
+    const body = await req.json();
+    const { amount, memo, metadata, destination_address } = body ?? {};
+
+    // Direct-Stellar fallback: when the user has no Pi UID linked, allow
+    // withdrawing on Testnet to a Stellar address they own. Bypasses the
+    // Pi Platform A2U lifecycle (no createPayment / completePayment).
     if (!piUid) {
-      return new Response(
-        JSON.stringify({
-          error: "Pi Network account not connected",
-          details:
-            "A2U withdrawals require a Pi Network UID. Sign in with Pi Network from the Pi Browser to link your Pi account, then try again.",
-          code: "pi_account_not_linked",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        },
-      );
+      if (!destination_address || typeof destination_address !== "string") {
+        return new Response(
+          JSON.stringify({
+            error: "Pi Network account not connected",
+            details:
+              "A2U requires a Pi UID. Sign in via Pi Browser, or pass `destination_address` (G...) to send Testnet Pi directly to your wallet.",
+            code: "pi_account_not_linked",
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
+      if (!destination_address.startsWith("G")) {
+        return new Response(
+          JSON.stringify({ error: "Invalid Stellar destination address (must start with 'G')" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+        );
+      }
     }
 
-    const { amount, memo, metadata } = await req.json();
     if (!amount || amount <= 0) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -329,6 +342,71 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
         },
+      );
+    }
+
+    // ---- Direct Stellar (Testnet) fallback when no Pi UID is linked ----
+    if (!piUid) {
+      const cfg = HORIZON["Pi Testnet"];
+      const server = new StellarSdk.Server(cfg.url);
+      const sourceKey = StellarSdk.Keypair.fromSecret(walletPrivateSeed);
+      const fromAddress = sourceKey.publicKey();
+      const account = await server.loadAccount(fromAddress);
+      const fee = await server.fetchBaseFee();
+
+      const tx = new StellarSdk.TransactionBuilder(account, {
+        fee: String(fee),
+        networkPassphrase: cfg.passphrase,
+      })
+        .addOperation(
+          StellarSdk.Operation.payment({
+            destination: destination_address,
+            asset: StellarSdk.Asset.native(),
+            amount: Number(amount).toFixed(7),
+          }),
+        )
+        .addMemo(StellarSdk.Memo.text((memo || "OpenPay direct").slice(0, 28)))
+        .setTimeout(180)
+        .build();
+      tx.sign(sourceKey);
+      const result = await server.submitTransaction(tx);
+      // @ts-ignore
+      const txid = result.hash as string;
+
+      await supabaseClient.from("pi_withdrawals").insert({
+        id: crypto.randomUUID(),
+        user_uid: user.id,
+        amount,
+        memo: memo || "Direct Stellar withdrawal",
+        metadata: { ...(metadata ?? {}), type: "direct_stellar_testnet" },
+        payment_id: `direct_${txid}`,
+        txid,
+        status: "completed",
+        from_address: fromAddress,
+        to_address: destination_address,
+        direction: "app_to_user",
+        created_at: new Date().toISOString(),
+        network: "Pi Testnet",
+        transaction_verified: true,
+        developer_completed: true,
+      });
+
+      const { data: updatedBalanceData } = await supabaseClient.rpc(
+        "get_user_pi_balance",
+      );
+      const newBalance =
+        updatedBalanceData?.[0]?.available_balance ?? availableBalance - amount;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: "direct_stellar",
+          paymentId: `direct_${txid}`,
+          txid,
+          newBalance,
+          previousBalance: availableBalance,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
       );
     }
 
