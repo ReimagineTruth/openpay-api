@@ -145,7 +145,8 @@ const PiWithdrawalPage = () => {
           source: 'openpay_app',
           timestamp: new Date().toISOString(),
           currency: selectedCurrency
-        }
+        },
+        ...(destinationAddress.trim() ? { destination_address: destinationAddress.trim() } : {}),
       };
 
       setProcessingProgress(30);
