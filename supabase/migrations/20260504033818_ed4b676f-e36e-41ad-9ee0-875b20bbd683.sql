@@ -1,0 +1,2 @@
+ALTER TABLE public.pi_withdrawals
+  ADD COLUMN IF NOT EXISTS fee_amount NUMERIC(20,8) NOT NULL DEFAULT 0;

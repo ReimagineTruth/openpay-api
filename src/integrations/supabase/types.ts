@@ -1496,6 +1496,7 @@ export type Database = {
           created_at: string | null
           developer_completed: boolean | null
           direction: string
+          fee_amount: number
           from_address: string | null
           id: string
           memo: string
@@ -1514,6 +1515,7 @@ export type Database = {
           created_at?: string | null
           developer_completed?: boolean | null
           direction?: string
+          fee_amount?: number
           from_address?: string | null
           id?: string
           memo: string
@@ -1532,6 +1534,7 @@ export type Database = {
           created_at?: string | null
           developer_completed?: boolean | null
           direction?: string
+          fee_amount?: number
           from_address?: string | null
           id?: string
           memo?: string
