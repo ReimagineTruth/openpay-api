@@ -321,6 +321,22 @@ const PiWithdrawalPage = () => {
                       rows={3}
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="destination">
+                      Destination Stellar Address (Optional)
+                    </Label>
+                    <Input
+                      id="destination"
+                      placeholder="G... (only if your Pi account isn't linked)"
+                      value={destinationAddress}
+                      onChange={(e) => setDestinationAddress(e.target.value)}
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Leave empty to use Pi A2U. Provide a Stellar address (G...) to fall back to a direct Testnet transfer.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Processing Progress */}
