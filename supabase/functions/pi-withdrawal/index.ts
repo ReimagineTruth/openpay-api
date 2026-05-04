@@ -345,6 +345,71 @@ serve(async (req) => {
       );
     }
 
+    // ---- Direct Stellar (Testnet) fallback when no Pi UID is linked ----
+    if (!piUid) {
+      const cfg = HORIZON["Pi Testnet"];
+      const server = new StellarSdk.Server(cfg.url);
+      const sourceKey = StellarSdk.Keypair.fromSecret(walletPrivateSeed);
+      const fromAddress = sourceKey.publicKey();
+      const account = await server.loadAccount(fromAddress);
+      const fee = await server.fetchBaseFee();
+
+      const tx = new StellarSdk.TransactionBuilder(account, {
+        fee: String(fee),
+        networkPassphrase: cfg.passphrase,
+      })
+        .addOperation(
+          StellarSdk.Operation.payment({
+            destination: destination_address,
+            asset: StellarSdk.Asset.native(),
+            amount: Number(amount).toFixed(7),
+          }),
+        )
+        .addMemo(StellarSdk.Memo.text((memo || "OpenPay direct").slice(0, 28)))
+        .setTimeout(180)
+        .build();
+      tx.sign(sourceKey);
+      const result = await server.submitTransaction(tx);
+      // @ts-ignore
+      const txid = result.hash as string;
+
+      await supabaseClient.from("pi_withdrawals").insert({
+        id: crypto.randomUUID(),
+        user_uid: user.id,
+        amount,
+        memo: memo || "Direct Stellar withdrawal",
+        metadata: { ...(metadata ?? {}), type: "direct_stellar_testnet" },
+        payment_id: `direct_${txid}`,
+        txid,
+        status: "completed",
+        from_address: fromAddress,
+        to_address: destination_address,
+        direction: "app_to_user",
+        created_at: new Date().toISOString(),
+        network: "Pi Testnet",
+        transaction_verified: true,
+        developer_completed: true,
+      });
+
+      const { data: updatedBalanceData } = await supabaseClient.rpc(
+        "get_user_pi_balance",
+      );
+      const newBalance =
+        updatedBalanceData?.[0]?.available_balance ?? availableBalance - amount;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: "direct_stellar",
+          paymentId: `direct_${txid}`,
+          txid,
+          newBalance,
+          previousBalance: availableBalance,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+      );
+    }
+
     // Handle any incomplete server payments first to avoid the
     // "ongoing payment" error from Pi Platform.
     const incomplete = await piGetIncompletePayments(apiKey);
