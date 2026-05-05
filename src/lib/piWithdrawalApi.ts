@@ -61,7 +61,14 @@ class PiWithdrawalApiService {
       if (error) {
         // supabase-js doesn't surface the response body on non-2xx — read it ourselves
         let parsed: { error?: string; details?: string; code?: string } = {};
-        const ctxRes = (error as { context?: { response?: Response } })?.context?.response;
+        const ctx = (error as { context?: unknown }).context as
+          | Response
+          | { response?: Response }
+          | undefined;
+        const ctxRes: Response | undefined =
+          ctx instanceof Response
+            ? ctx
+            : (ctx as { response?: Response } | undefined)?.response;
         if (ctxRes && typeof ctxRes.text === 'function') {
           try {
             const txt = await ctxRes.clone().text();
